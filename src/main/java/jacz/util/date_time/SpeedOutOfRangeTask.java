@@ -1,0 +1,34 @@
+package jacz.util.date_time;
+
+import jacz.util.concurrency.task_executor.ParallelTask;
+
+/**
+ * Class description
+ * <p/>
+ * User: Alberto<br>
+ * Date: 04-jun-2010<br>
+ * Last Modified: 04-jun-2010
+ */
+public class SpeedOutOfRangeTask implements ParallelTask {
+
+    private SpeedMonitorAction speedMonitorAction;
+
+    private boolean speedAbove;
+
+    private double speed;
+
+    public SpeedOutOfRangeTask(SpeedMonitorAction speedMonitorAction, boolean speedAbove, double speed) {
+        this.speedMonitorAction = speedMonitorAction;
+        this.speedAbove = speedAbove;
+        this.speed = speed;
+    }
+
+    @Override
+    public void performTask() {
+        if (speedAbove) {
+            speedMonitorAction.speedAboveRange(speed);
+        } else {
+            speedMonitorAction.speedBelowRange(speed);
+        }
+    }
+}

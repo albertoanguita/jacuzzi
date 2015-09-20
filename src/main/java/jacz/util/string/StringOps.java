@@ -15,36 +15,6 @@ import java.util.Map;
 public class StringOps {
 
 
-    private enum Accents {
-        a('á', 'a'), e('é', 'e'), i('í', 'i'), o('ó', 'o'), u('ú', 'u'),
-        A('Á', 'A'), E('É', 'E'), I('Í', 'I'), O('Ó', 'O'), U('Ú', 'U');
-
-        private char charWithAccent;
-
-        private char charWithoutAccent;
-
-        private Accents(char charWithAccent, char charWithoutAccent) {
-            this.charWithAccent = charWithAccent;
-            this.charWithoutAccent = charWithoutAccent;
-        }
-
-        private char getCharWithAccent() {
-            return charWithAccent;
-        }
-
-        private char getCharWithoutAccent() {
-            return charWithoutAccent;
-        }
-    }
-
-    public static String eraseAccents(String text) {
-        for (Accents accent : Accents.values()) {
-            text = text.replace(accent.getCharWithAccent(), accent.getCharWithoutAccent());
-        }
-        return text;
-    }
-
-
     /**
      * Transforms a given string route using a mapping of strings
      *
@@ -88,20 +58,6 @@ public class StringOps {
             string.replace(index, index + key.length(), value);
             transformStringWithOneMapping(string, key, value, index + value.length());
         }
-    }
-
-    /**
-     * This method compares two Strings, prior erasing of accents, and ignoring the casing
-     *
-     * @param text1 the first String text
-     * @param text2 the second String text
-     * @return a negative integer if text1 is lesser than text2, 0 if they are equal, and a positive integer if text2
-     *         is lesser than text1
-     */
-    public static int compareTexts(String text1, String text2) {
-        text1 = StringOps.eraseAccents(text1);
-        text2 = StringOps.eraseAccents(text2);
-        return text1.compareToIgnoreCase(text2);
     }
 
     /**

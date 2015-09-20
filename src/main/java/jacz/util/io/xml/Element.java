@@ -9,6 +9,8 @@ public class Element {
 
     private final String name;
 
+    private Element parent;
+
     private Map<String, String> attributes;
 
     private List<Element> children;
@@ -16,14 +18,26 @@ public class Element {
     private String text;
 
     public Element(String name) {
+        this(name, null);
+    }
+
+    public Element(String name, Element parent) {
         this.name = name;
+        this.parent = parent;
         attributes = new HashMap<>();
-        children = new ArrayList<Element>();
+        children = new ArrayList<>();
         text = null;
+        if (parent != null) {
+            parent.addChild(this);
+        }
     }
 
     public String getName() {
         return name;
+    }
+
+    public Element getParent() {
+        return parent;
     }
 
     public Set<String> getAttributeNames() {
@@ -47,11 +61,11 @@ public class Element {
     }
 
     public List<Element> getChildren() {
-        return new ArrayList<Element>(children);
+        return new ArrayList<>(children);
     }
 
     public List<Element> getChildren(String name) {
-        List<Element> nameChildren = new ArrayList<Element>();
+        List<Element> nameChildren = new ArrayList<>();
         for (Element child : children) {
             if (child.getName().equals(name)) {
                 nameChildren.add(child);
@@ -60,8 +74,37 @@ public class Element {
         return nameChildren;
     }
 
+    public List<Element> getChildren(String name, Map<String, String> attributes) {
+        List<Element> nameChildren = new ArrayList<>();
+        for (Element child : children) {
+            if (child.getName().equals(name) && compareAttributes(child, attributes)) {
+                nameChildren.add(child);
+            }
+        }
+        return nameChildren;
+    }
+
+    private boolean compareAttributes(Element element, Map<String, String> attributes) {
+        for (String attr : attributes.keySet()) {
+            if (!element.getAttributeNames().contains(attr) || !element.getAttributeValue(attr).equals(attributes.get(attr))) {
+                return false;
+            }
+        }
+//        for (String attr : getAttributeNames()) {
+//            if (!attributes.containsKey(attr) || !attributes.get(attr).equals(getAttributeValue(attr))) {
+//                return false;
+//            }
+//        }
+        return true;
+    }
+
     public Element getChild(String name) {
         List<Element> children = getChildren(name);
+        return (!children.isEmpty()) ? children.get(0) : null;
+    }
+
+    public Element getChild(String name, Map<String, String> attributes) {
+        List<Element> children = getChildren(name, attributes);
         return (!children.isEmpty()) ? children.get(0) : null;
     }
 
@@ -78,6 +121,7 @@ public class Element {
     public void addChild(Element child) throws IllegalStateException {
         checkCanAddChildren();
         children.add(child);
+        child.parent = this;
     }
 
     public void clearChildren() {

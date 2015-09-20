@@ -45,11 +45,11 @@ public class TestXML {
         xmlWriter.addField("x", Integer.toString(testXML1.x));
         xmlWriter.addField("s", testXML1.s);
         xmlWriter.addField("i", testXML1.i);
-        xmlWriter.beginList("l");
+        xmlWriter.beginStruct("l");
         xmlWriter.addValue("a");
         xmlWriter.addValue("b");
         xmlWriter.addValue("c");
-        xmlWriter.endList();
+        xmlWriter.endStruct();
 
         xmlWriter.write("Test.xml");
     }

@@ -1,0 +1,47 @@
+<root>
+  <field name="x">5</field>
+  <field name="s">hello</field>
+  <field name="i">@@@null@@@</field>
+  <str name="l">
+    <str>
+      <le>1</le>
+      <le>2</le>
+      <le>3</le>
+    </str>
+    <str>
+      <le>4</le>
+      <le>5</le>
+      <le>6</le>
+    </str>
+    <str>
+      <le>7</le>
+      <le>8</le>
+      <le>9</le>
+      <le>10</le>
+    </str>
+  </str>
+  <str name="m">
+    <field name="x">5</field>
+    <field name="s">hello</field>
+  </str>
+  <str name="m2">
+    <str name="l">
+      <le>1</le>
+    </str>
+    <str name="l2">
+      <le>2</le>
+    </str>
+    <str name="l3">
+      <le>3</le>
+      <le>3</le>
+    </str>
+  </str>
+  <str name="m3">
+    <str name="m31">
+      <field name="m31">m31_31</field>
+    </str>
+    <str name="m32">
+      <field name="m32">m32_32</field>
+    </str>
+  </str>
+</root>

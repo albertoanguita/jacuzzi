@@ -29,17 +29,17 @@ public class XMLReader {
         stack = new Stack<>();
     }
 
-    public String getField(String name) {
+    public String getFieldValue(String name) {
         Map<String, String> attributes = new HashMap<>();
         attributes.put(XMLWriter.NAME, name);
         Element element = current.getChild(XMLWriter.FIELD, attributes);
         return (element != null) ? element.getText() : null;
     }
 
-    public void getList(String name) {
+    public void getStruct(String name) {
         Map<String, String> attributes = new HashMap<>();
         attributes.put(XMLWriter.NAME, name);
-        current = current.getChild(XMLWriter.LIST, attributes);
+        current = current.getChild(XMLWriter.STRUCT, attributes);
         stack.push(current.getChildren());
     }
 
@@ -57,42 +57,23 @@ public class XMLReader {
         current = current.getParent();
     }
 
-    public String getValue() {
-        return stack.peek().remove(0).getText();
-    }
-
-    public void getList() {
+    public void getNextStruct() {
         current = stack.peek().remove(0);
         stack.push(current.getChildren());
     }
 
-    public void getMap(String name) {
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put(XMLWriter.NAME, name);
-        current = current.getChild(XMLWriter.MAP, attributes);
-        stack.push(current.getChildren());
+    public String getNextValue() {
+        return stack.peek().remove(0).getText();
     }
 
-    public Duple<String, String> getMapEntry() {
+    public Duple<String, String> getNextFieldAndValue() {
         Element element = stack.peek().remove(0);
         return new Duple<>(element.getAttributeValue(XMLWriter.NAME), element.getText());
     }
 
-    public String getMapList() {
+    public String getNextStructAndName() {
         current = stack.peek().remove(0);
         stack.push(current.getChildren());
         return current.getAttributeValue(XMLWriter.NAME);
     }
-
-    public String getMapMap() {
-        return getMapList();
-    }
-
-
-
-//    public void getList(String name) {
-//        current = null;
-//        return null;
-//    }
-
 }

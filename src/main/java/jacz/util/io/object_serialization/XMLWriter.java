@@ -13,13 +13,11 @@ public class XMLWriter {
 
     static final String FIELD = "field";
 
+    static final String STRUCT = "str";
+
     static final String NAME = "name";
 
-    static final String LIST = "list";
-
     static final String VALUE = "value";
-
-    static final String MAP = "map";
 
     final Element root;
 
@@ -39,16 +37,16 @@ public class XMLWriter {
         element.setText(value.toString());
     }
 
-    public void beginList(String name) {
-        Element element = new Element(LIST, current);
+    public void beginStruct(String name) {
+        Element element = new Element(STRUCT, current);
         if (name != null) {
             element.putAttribute(NAME, name);
         }
         current = element;
     }
 
-    public void beginList() {
-        beginList(null);
+    public void beginStruct() {
+        beginStruct(null);
     }
 
     public void addValue(String value) {
@@ -56,24 +54,8 @@ public class XMLWriter {
         element.setText(value);
     }
 
-    public void endList() {
+    public void endStruct() {
         current = current.getParent();
-    }
-
-    public void beginMap(String name) {
-        Element element = new Element(MAP, current);
-        if (name != null) {
-            element.putAttribute(NAME, name);
-        }
-        current = element;
-    }
-
-    public void beginMap() {
-        beginMap(null);
-    }
-
-    public void endMap() {
-        endList();
     }
 
     public void write(String path) throws IOException, XMLStreamException {

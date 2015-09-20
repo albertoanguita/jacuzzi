@@ -9,50 +9,50 @@ public class TestXMLRead {
 
     public static void main(String[] args) throws Exception {
 
-        XMLReader xmlReader = XMLReader.parse("Test2.xml");
+        XMLReader xmlReader = XMLReader.parse("Test3.xml");
 
-        String x = xmlReader.getField("x");
-        String s = xmlReader.getField("s");
-        String i = xmlReader.getField("i");
-        xmlReader.getList("l");
+        String x = xmlReader.getFieldValue("x");
+        String s = xmlReader.getFieldValue("s");
+        String i = xmlReader.getFieldValue("i");
+        xmlReader.getStruct("l");
         while (xmlReader.hasMoreChildren()) {
-            xmlReader.getList();
+            xmlReader.getNextStruct();
             System.out.println("new sub list");
             while (xmlReader.hasMoreChildren()) {
-                System.out.println(xmlReader.getValue());
+                System.out.println(xmlReader.getNextValue());
             }
         }
 
-        xmlReader.getMap("m");
+        xmlReader.getStruct("m");
         while (xmlReader.hasMoreChildren()) {
-            System.out.println(xmlReader.getMapEntry());
+            System.out.println(xmlReader.getNextFieldAndValue());
         }
 
-        xmlReader.getMap("m2");
-        xmlReader.getList("l");
+        xmlReader.getStruct("m2");
+        xmlReader.getStruct("l");
         System.out.println("sublist l");
         while (xmlReader.hasMoreChildren()) {
-            System.out.println(xmlReader.getValue());
+            System.out.println(xmlReader.getNextValue());
         }
-        xmlReader.getList("l2");
+        xmlReader.getStruct("l2");
         System.out.println("sublist l2");
         while (xmlReader.hasMoreChildren()) {
-            System.out.println(xmlReader.getValue());
+            System.out.println(xmlReader.getNextValue());
         }
-        xmlReader.getList("l3");
+        xmlReader.getStruct("l3");
         System.out.println("sublist l3");
         while (xmlReader.hasMoreChildren()) {
-            System.out.println(xmlReader.getValue());
+            System.out.println(xmlReader.getNextValue());
         }
 
         xmlReader.gotoParent();
 
 
-        xmlReader.getMap("m3");
+        xmlReader.getStruct("m3");
         while (xmlReader.hasMoreChildren()) {
-            System.out.println(xmlReader.getMapMap());
+            System.out.println(xmlReader.getNextStructAndName());
             while (xmlReader.hasMoreChildren()) {
-                System.out.println(xmlReader.getMapEntry());
+                System.out.println(xmlReader.getNextFieldAndValue());
             }
         }
 

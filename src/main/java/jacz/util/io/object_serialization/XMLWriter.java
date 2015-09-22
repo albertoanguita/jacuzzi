@@ -19,6 +19,8 @@ public class XMLWriter {
 
     static final String VALUE = "value";
 
+    static final String NULL = "@@@null@@@";
+
     final Element root;
 
     private Element current;
@@ -31,10 +33,18 @@ public class XMLWriter {
     public void addField(String name, Object value) {
         Element element = new Element(FIELD, current);
         element.putAttribute(NAME, name);
-        if (value == null) {
-            value = "@@@null@@@";
-        }
+        value = checkNull(value);
         element.setText(value.toString());
+    }
+
+    public void addValue(Object value) {
+        Element element = new Element(VALUE, current);
+        value = checkNull(value);
+        element.setText(value.toString());
+    }
+
+    private Object checkNull(Object value) {
+        return value == null ? NULL : value;
     }
 
     public void beginStruct(String name) {
@@ -47,11 +57,6 @@ public class XMLWriter {
 
     public void beginStruct() {
         beginStruct(null);
-    }
-
-    public void addValue(String value) {
-        Element element = new Element(VALUE, current);
-        element.setText(value);
     }
 
     public void endStruct() {

@@ -20,12 +20,8 @@ public class XMLReader {
 
     private Stack<List<Element>> stack;
 
-    public static XMLReader parse(String path) throws FileNotFoundException, XMLStreamException {
-        return new XMLReader(XMLDom.parse(path));
-    }
-
-    private XMLReader(Element current) {
-        this.current = current;
+    public XMLReader(String path) throws FileNotFoundException, XMLStreamException {
+        this.current = XMLDom.parse(path);
         stack = new Stack<>();
     }
 
@@ -33,7 +29,11 @@ public class XMLReader {
         Map<String, String> attributes = new HashMap<>();
         attributes.put(XMLWriter.NAME, name);
         Element element = current.getChild(XMLWriter.FIELD, attributes);
-        return (element != null) ? element.getText() : null;
+        return (element != null) ? checkNull(element.getText()) : null;
+    }
+
+    private String checkNull(String value) {
+        return value.equals(XMLWriter.NULL) ? null : value;
     }
 
     public void getStruct(String name) {
@@ -63,12 +63,12 @@ public class XMLReader {
     }
 
     public String getNextValue() {
-        return stack.peek().remove(0).getText();
+        return checkNull(stack.peek().remove(0).getText());
     }
 
     public Duple<String, String> getNextFieldAndValue() {
         Element element = stack.peek().remove(0);
-        return new Duple<>(element.getAttributeValue(XMLWriter.NAME), element.getText());
+        return new Duple<>(element.getAttributeValue(XMLWriter.NAME), checkNull(element.getText()));
     }
 
     public String getNextStructAndName() {

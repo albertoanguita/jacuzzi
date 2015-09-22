@@ -2,6 +2,8 @@ package jacz.util.io.object_serialization.test;
 
 import jacz.util.io.object_serialization.XMLReader;
 
+import java.io.File;
+
 /**
  * Created by Alberto on 20/09/2015.
  */
@@ -9,7 +11,7 @@ public class TestXMLRead {
 
     public static void main(String[] args) throws Exception {
 
-        XMLReader xmlReader = XMLReader.parse("Test3.xml");
+        XMLReader xmlReader = new XMLReader("Test3.xml");
 
         String x = xmlReader.getFieldValue("x");
         String s = xmlReader.getFieldValue("s");

@@ -62,7 +62,8 @@ public class XMLDom {
             if (xsr.getEventType() == XMLStreamConstants.END_ELEMENT) {
                 // element is closed. Move the cursor and return it
                 // check if there is some text to add before (empty text is not added, but added text is not trimmed)
-                if (!elementText.toString().trim().isEmpty()) {
+                // we set empty text also if the element has no children
+                if (!elementText.toString().trim().isEmpty() || !element.hasChildren()) {
                     element.setText(elementText.toString());
                 }
                 xsr.next();

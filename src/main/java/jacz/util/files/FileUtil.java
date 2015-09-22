@@ -1,5 +1,7 @@
 package jacz.util.files;
 
+import jacz.util.lists.Duple;
+
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -309,23 +311,52 @@ public class FileUtil {
         return didNotExist && isDirectory(path);
     }
 
-    public static String createNonExistingFilePathWithIndex(String dir, String baseFileName, String extension, boolean startWithoutIndex) throws IOException {
-        return createNonExistingFileNameWithIndex(dir, baseFileName, extension, "", "", startWithoutIndex);
+    public static Duple<String, String> createDirectoryWithIndex(String containerDir, String baseDirName, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
+        if (!isDirectory(containerDir)) {
+            throw new IOException(containerDir + " is not a valid directory");
+        }
+        int index = startWithoutIndex ? -1 : 0;
+//        if (startWithoutIndex) {
+//            String dirPath = generatePath(baseDirName, containerDir);
+//            if (!isDirectory(dirPath)) {
+//                createDirectory(dirPath);
+//                return new Duple<>(dirPath, getFileName(dirPath));
+//            }
+//        }
+        // we must generate a path with index (either required by user, or already exists without index)
+        while (true) {
+            String dirPath;
+            if (index == -1) {
+                dirPath = generatePath(baseDirName, containerDir);
+            } else {
+                dirPath = generatePath(baseDirName + preIndex + index + postIndex, containerDir);
+            }
+            if (!isDirectory(dirPath)) {
+                createDirectory(dirPath);
+                return new Duple<>(dirPath, getFileName(dirPath));
+            } else {
+                index++;
+            }
+        }
     }
 
-    public static String createNonExistingFilePathWithIndex(String dir, String baseFileName, String extension, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
-        List<String> baseFileNameList = new ArrayList<String>(1);
+    public static Duple<String, String> createFile(String dir, String baseFileName, String extension, boolean startWithoutIndex) throws IOException {
+        return createFile(dir, baseFileName, extension, "", "", startWithoutIndex);
+    }
+
+    public static Duple<String, String> createFile(String dir, String baseFileName, String extension, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
+        List<String> baseFileNameList = new ArrayList<>(1);
         baseFileNameList.add(baseFileName);
-        List<String> extensionList = new ArrayList<String>(1);
+        List<String> extensionList = new ArrayList<>(1);
         extensionList.add(extension);
-        return createNonExistingFileNameWithIndex(dir, baseFileNameList, extensionList, preIndex, postIndex, startWithoutIndex).get(0);
+        return createFiles(dir, baseFileNameList, extensionList, preIndex, postIndex, startWithoutIndex).get(0);
     }
 
-    public static List<String> createNonExistingFilePathWithIndex(String dir, List<String> baseFileNameList, List<String> extensionList, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
-        return createNonExistingFileNameWithIndex(dir, baseFileNameList, extensionList, "", "", startWithoutIndex);
+    public static List<Duple<String, String>> createFiles(String dir, List<String> baseFileNameList, List<String> extensionList, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
+        return createFiles(dir, baseFileNameList, extensionList, "", "", startWithoutIndex);
     }
 
-    public static List<String> createNonExistingFilePathWithIndex(String dir, List<String> baseFileNameList, List<String> extensionList, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
+    public static List<Duple<String, String>> createFiles(String dir, List<String> baseFileNameList, List<String> extensionList, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
         if (!isDirectory(dir)) {
             throw new IOException(dir + " is not a valid directory");
         }
@@ -337,45 +368,51 @@ public class FileUtil {
                 extensionList.set(i, extensionList.get(i).substring(1));
             }
         }
-        int index = 0;
-        ArrayList<String> generatedPaths = new ArrayList<String>(baseFileNameList.size());
-        if (startWithoutIndex) {
-            boolean allPathsGood = true;
-            for (int i = 0; i < baseFileNameList.size(); i++) {
-                String filePath = generatePath(baseFileNameList.get(i) + FILE_EXTENSION_SEPARATOR + extensionList.get(i), dir);
-                generatedPaths.add(filePath);
-                if (isFile(filePath)) {
-                    allPathsGood = false;
-                    break;
-                }
-            }
-            if (allPathsGood) {
-                for (String path : generatedPaths) {
-                    File file = new File(path);
-                    if (!file.createNewFile()) {
-                        throw new IOException("could not create file: " + path);
-                    }
-                }
-                return generatedPaths;
-            }
-        }
+        int index = startWithoutIndex ? -1 : 0;
+        List<Duple<String, String>> generatedPaths = new ArrayList<>(baseFileNameList.size());
+//        if (startWithoutIndex) {
+//            boolean allPathsGood = true;
+//            for (int i = 0; i < baseFileNameList.size(); i++) {
+//                String filePath = generatePath(baseFileNameList.get(i) + FILE_EXTENSION_SEPARATOR + extensionList.get(i), dir);
+//                generatedPaths.add(filePath);
+//                if (isFile(filePath)) {
+//                    allPathsGood = false;
+//                    break;
+//                }
+//            }
+//            if (allPathsGood) {
+//                for (String path : generatedPaths) {
+//                    File file = new File(path);
+//                    if (!file.createNewFile()) {
+//                        throw new IOException("could not create file: " + path);
+//                    }
+//                }
+//                return generatedPaths;
+//            }
+//        }
         while (true) {
             try {
                 generatedPaths.clear();
                 boolean allPathsGood = true;
                 for (int i = 0; i < baseFileNameList.size(); i++) {
-                    String filePath = generatePath(baseFileNameList.get(i) + preIndex + index + postIndex + FILE_EXTENSION_SEPARATOR + extensionList.get(i), dir);
-                    generatedPaths.add(filePath);
+                    String filePath;
+                    if (index == -1) {
+                        filePath = generatePath(baseFileNameList.get(i) + FILE_EXTENSION_SEPARATOR + extensionList.get(i), dir);
+                    } else {
+                        filePath = generatePath(baseFileNameList.get(i) + preIndex + index + postIndex + FILE_EXTENSION_SEPARATOR + extensionList.get(i), dir);
+                    }
+//                    generatedPaths.add(filePath);
+                    generatedPaths.add(new Duple<>(filePath, getFileName(filePath)));
                     if (isFile(filePath)) {
                         allPathsGood = false;
                         break;
                     }
                 }
                 if (allPathsGood) {
-                    for (String path : generatedPaths) {
-                        File file = new File(path);
+                    for (Duple<String, String> pathAndFile : generatedPaths) {
+                        File file = new File(pathAndFile.element1);
                         if (!file.createNewFile()) {
-                            throw new IOException("could not create file: " + path);
+                            throw new IOException("could not create file: " + pathAndFile.element1);
                         }
                     }
                     return generatedPaths;
@@ -388,55 +425,31 @@ public class FileUtil {
         }
     }
 
-    public static String createNonExistingDirPathWithIndex(String containerDir, String baseDirName, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
-        if (!isDirectory(containerDir)) {
-            throw new IOException(containerDir + " is not a valid directory");
-        }
-        if (startWithoutIndex) {
-            String dirPath = generatePath(baseDirName, containerDir);
-            if (!isDirectory(dirPath)) {
-                createDirectory(dirPath);
-                return dirPath;
-            }
-        }
-        // we must generate a path with index (either required by user, or already exists without index)
-        int index = 0;
-        while (true) {
-            String dirPath = generatePath(baseDirName + preIndex + index + postIndex, containerDir);
-            if (!isDirectory(dirPath)) {
-                createDirectory(dirPath);
-                return dirPath;
-            } else {
-                index++;
-            }
-        }
-    }
-
-    public static String createNonExistingFileNameWithIndex(String dir, String baseFileName, String extension, boolean startWithoutIndex) throws IOException {
-        String filePath = createNonExistingFilePathWithIndex(dir, baseFileName, extension, startWithoutIndex);
-        return getFileName(filePath);
-    }
-
-    public static String createNonExistingFileNameWithIndex(String dir, String baseFileName, String extension, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
-        String filePath = createNonExistingFilePathWithIndex(dir, baseFileName, extension, preIndex, postIndex, startWithoutIndex);
-        return getFileName(filePath);
-    }
-
-    public static List<String> createNonExistingFileNameWithIndex(String dir, List<String> baseFileNameList, List<String> extensionList, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
-        List<String> filePathList = createNonExistingFilePathWithIndex(dir, baseFileNameList, extensionList, startWithoutIndex);
-        for (int i = 0; i < filePathList.size(); i++) {
-            filePathList.set(i, getFileName(filePathList.get(i)));
-        }
-        return filePathList;
-    }
-
-    public static List<String> createNonExistingFileNameWithIndex(String dir, List<String> baseFileNameList, List<String> extensionList, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
-        List<String> filePathList = createNonExistingFilePathWithIndex(dir, baseFileNameList, extensionList, preIndex, postIndex, startWithoutIndex);
-        for (int i = 0; i < filePathList.size(); i++) {
-            filePathList.set(i, getFileName(filePathList.get(i)));
-        }
-        return filePathList;
-    }
+//    public static String createNonExistingFileNameWithIndex(String dir, String baseFileName, String extension, boolean startWithoutIndex) throws IOException {
+//        String filePath = createNonExistingFilePathWithIndex(dir, baseFileName, extension, startWithoutIndex);
+//        return getFileName(filePath);
+//    }
+//
+//    public static String createNonExistingFileNameWithIndex(String dir, String baseFileName, String extension, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
+//        String filePath = createNonExistingFilePathWithIndex(dir, baseFileName, extension, preIndex, postIndex, startWithoutIndex);
+//        return getFileName(filePath);
+//    }
+//
+//    public static List<String> createNonExistingFileNameWithIndex(String dir, List<String> baseFileNameList, List<String> extensionList, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
+//        List<String> filePathList = createNonExistingFilePathWithIndex(dir, baseFileNameList, extensionList, startWithoutIndex);
+//        for (int i = 0; i < filePathList.size(); i++) {
+//            filePathList.set(i, getFileName(filePathList.get(i)));
+//        }
+//        return filePathList;
+//    }
+//
+//    public static List<String> createNonExistingFileNameWithIndex(String dir, List<String> baseFileNameList, List<String> extensionList, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
+//        List<String> filePathList = createNonExistingFilePathWithIndex(dir, baseFileNameList, extensionList, preIndex, postIndex, startWithoutIndex);
+//        for (int i = 0; i < filePathList.size(); i++) {
+//            filePathList.set(i, getFileName(filePathList.get(i)));
+//        }
+//        return filePathList;
+//    }
 
 
     public static void main(String args[]) {

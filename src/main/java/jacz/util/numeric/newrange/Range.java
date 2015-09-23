@@ -1,5 +1,6 @@
 package jacz.util.numeric.newrange;
 
+import jacz.util.numeric.RangeInterface;
 import jacz.util.numeric.RangeToValueComparison;
 
 import java.util.ArrayList;
@@ -8,20 +9,30 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created by Alberto on 21/09/2015.
+ * A generic range implementation, for discrete numbers
  */
 public class Range<T extends Number & Comparable<T>> {
 
     public enum RangeComparison {
+        // any of the ranges is empty
         ANY_EMPTY,
+        // our range is to the left of range, no overlapping and no contact
         LEFT_NO_CONTACT,
+        // our range is to the left of range, no overlapping but in contact
         LEFT_CONTACT,
+        // our range overlaps with range at its left
         LEFT_OVERLAP,
+        // our range is equal to range
         EQUALS,
+        // our range lies completely inside range
         INSIDE,
+        // our range completely contains range
         CONTAINS,
+        // our range overlaps with range, at its right
         RIGHT_OVERLAP,
+        // our range is to the right of range, no overlapping but in contact
         RIGHT_CONTACT,
+        // our range is to the right of range, no overlapping and no contact
         RIGHT_NO_CONTACT
     }
 
@@ -101,7 +112,7 @@ public class Range<T extends Number & Comparable<T>> {
     }
 
 
-    public T getZero() {
+    private T getZero() {
 
         if (clazz.equals(Byte.class)) {
             return clazz.cast((byte) 0);
@@ -112,14 +123,14 @@ public class Range<T extends Number & Comparable<T>> {
     }
 
 
-    T getPrevious(T value) {
+    private T previous(T value) {
         if (clazz.equals(Byte.class)) {
             return clazz.cast(value.byteValue() - 1);
         }
         return null;
     }
 
-    T next(T value) {
+    private T next(T value) {
         if (clazz.equals(Byte.class)) {
             return clazz.cast(value.byteValue() + 1);
         }
@@ -156,19 +167,7 @@ public class Range<T extends Number & Comparable<T>> {
      * <p/>
      *
      * @param range the range to test with our range
-     * @return an integer value indicating the different overlapping possibilities:
-     * <ul>
-     * <li>ANY_EMPTY if any of the ranges is isEmpty</li>
-     * <li>LEFT_NO_CONTACT if our range is to the left of range, no overlapping and no contact</li>
-     * <li>LEFT_CONTACT if our range is to the left of range, no overlapping but in contact</li>
-     * <li>LEFT_OVERLAP if our range overlaps with range to the left</li>
-     * <li>INSIDE if our range lies completely inside range</li>
-     * <li>EQUALS if our range is equal to range</li>
-     * <li>CONTAINS if our range completely contains range</li>
-     * <li>RIGHT_OVERLAP if our range overlaps with range to the right</li>
-     * <li>RIGHT_CONTACT if our range is to the right of range, no overlapping but in contact</li>
-     * <li>RIGHT_NO_CONTACT if our range is to the right of range, no overlapping and no contact</li>
-     * </ul>
+     * @return range comparison result, given by a RangeComparison value
      */
     public RangeComparison compareTo(Range<T> range) {
         // Tested carefully, all OK. 18-08-2010 by Alberto.
@@ -176,6 +175,7 @@ public class Range<T extends Number & Comparable<T>> {
         if (isEmpty() || range.isEmpty()) {
             return RangeComparison.ANY_EMPTY;
         }
+        // comparison of my min value with range.min and range.max
         int leftLeftComp;
         if (min == null && range.min == null) {
             leftLeftComp = 0;
@@ -192,6 +192,7 @@ public class Range<T extends Number & Comparable<T>> {
         } else {
             leftRightComp = min.compareTo(range.max);
         }
+        // comparison of my max value with range.min and range.max
         int rightRightComp;
         if (max == null && range.max == null) {
             rightRightComp = 0;
@@ -243,6 +244,12 @@ public class Range<T extends Number & Comparable<T>> {
         return null;
     }
 
+    /**
+     * Computes the intersection with a given range. The result is a new range.
+     *
+     * @param range range to compute intersection with
+     * @return the resulting intersected range
+     */
     public Range<T> intersection(Range<T> range) {
         RangeComparison comparison = compareTo(range);
         switch (comparison) {
@@ -268,32 +275,46 @@ public class Range<T extends Number & Comparable<T>> {
         }
     }
 
-    public List<Range<T>> intersection(Collection<Range<T>> ranges) {
-        List<Range<T>> intersectionList = new ArrayList<>();
-        if (isEmpty()) {
-            intersectionList.add(generateEmptyRange());
-        } else {
-            for (Range<T> oneRange : ranges) {
-//                merge(intersectionList, intersection(oneRange));
-            }
-            if (intersectionList.size() == 0) {
-                intersectionList.add(generateEmptyRange());
-            }
+    /**
+     * Computes the intersection with a given collection of ranges. The result is a range.
+     *
+     * @param ranges ranges to compute intersection with
+     * @return the resulting list of intersected ranges
+     */
+    public Range<T> intersection(Collection<Range<T>> ranges) {
+        Range<T> intersectionRange = this;
+        for (Range<T> oneRange : ranges) {
+            intersectionRange = intersectionRange.intersection(oneRange);
         }
-        return intersectionList;
+        return intersectionRange;
     }
 
-    public static <T extends Number & Comparable<T>> List<Range<T>> intersectionStat(Collection<Range<T>> ranges) {
-        List<Range<T>> intersectionList = new ArrayList<>();
+    /**
+     * Static implementation of the intersection method. Computes the intersection of a collection of ranges between
+     * themselves (these do not need to be ordered). The result is a new range.
+     *
+     * @param ranges collection of ranges to intersect. Must be non-empty
+     * @param <T>    the type of the ranges
+     * @return the resulting list of intersected ranges
+     * @throws IllegalArgumentException if the given list of ranges is empty
+     */
+    public static <T extends Number & Comparable<T>> Range<T> intersectionStat(Collection<Range<T>> ranges) throws IllegalArgumentException {
         if (!ranges.isEmpty()) {
             Iterator<Range<T>> it = ranges.iterator();
             Range<T> oneRange = it.next();
             it.remove();
             return oneRange.intersection(ranges);
+        } else {
+            throw new IllegalArgumentException("Collection of ranges must have at least one element");
         }
-        return intersectionList;
     }
 
+    /**
+     * Computes the union with another range. The result is a list of new ranges (2 at most)
+     *
+     * @param range range to compute union with
+     * @return the resulting list of unioned ranges
+     */
     public List<Range<T>> union(Range<T> range) {
         List<Range<T>> unionList = new ArrayList<>();
         if (isEmpty()) {
@@ -331,9 +352,110 @@ public class Range<T extends Number & Comparable<T>> {
         return unionList;
     }
 
-//    public List<Range<T>> union(Collection<Range<T>> ranges) {
-//
-//    }
+    /**
+     * Computes the union with a collection of ranges. The result is a list of new ranges
+     *
+     * @param ranges collection of ranges to compute union with
+     * @return the resulting list of union ranges
+     */
+    public List<Range<T>> union(Collection<Range<T>> ranges) {
+
+    }
+
+
+    /**
+     * @param ranges non-overlapping, ordered list of ranges
+     * @return
+     */
+    public List<Range<T>> merge(List<Range<T>> ranges) {
+        // swallow copy of the parameter, to freely modify the list
+        List<Range<T>> mergedRanges = new ArrayList<>(ranges);
+        if (isEmpty()) {
+            return mergedRanges;
+        }
+        // todo remove empty ranges
+        int i = 0;
+        boolean finished = false;
+        boolean checkRightOverlap = false;
+        while (!finished && i < mergedRanges.size()) {
+            Range<T> oneRange = ranges.get(i);
+            switch (compareTo(oneRange)) {
+
+                case ANY_EMPTY:
+                    // this range is empty -> remove and continue
+                    mergedRanges.remove(i);
+                    continue;
+                case LEFT_NO_CONTACT:
+                    // our range must be inserted in this position
+                    mergedRanges.add(i, this);
+                    finished = true;
+                    break;
+                case LEFT_CONTACT:
+                case LEFT_OVERLAP:
+                    // merge our range with this one
+                    mergedRanges.set(i, new Range<T>(min, oneRange.max, clazz));
+                    finished = true;
+                    break;
+                case EQUALS:
+                case INSIDE:
+                    finished = true;
+                    break;
+                case CONTAINS:
+                    // replace with ours
+                    mergedRanges.set(i, this);
+                    finished = true;
+                    checkRightOverlap = true;
+                    break;
+                case RIGHT_OVERLAP:
+                case RIGHT_CONTACT:
+                    // merge our range with this one
+                    mergedRanges.set(i, new Range<T>(oneRange.min, max, clazz));
+                    finished = true;
+                    checkRightOverlap = true;
+                    break;
+                case RIGHT_NO_CONTACT:
+                    // position not found yet, keep searching
+                    break;
+            }
+            i++;
+        }
+        if (!finished) {
+            // no position was found, place it at the end
+            mergedRanges.add(this);
+        } else if (checkRightOverlap) {
+            // we inserted our range, but it might overlap with others (ours is in i-1)
+            if (max == null) {
+                // we span to infinite, remove remaining ranges
+                while (mergedRanges.size() > i + 1) {
+                    mergedRanges.remove(i + 1);
+                }
+            } else {
+                finished = false;
+                while (!finished && i < mergedRanges.size()) {
+                    Range<T> oneRange = ranges.get(i);
+                    switch (oneRange.compareTo(max)) {
+
+                        case ANY_EMPTY:
+                        case LEFT:
+                            // remove and continue
+                            mergedRanges.remove(i);
+                            break;
+                        case RIGHT:
+                            // we found a range to the right, finish
+                            finished = true;
+                            break;
+                        case CONTAINS:
+                            // merge this range with ours
+                            mergedRanges.set(i, new Range<T>(mergedRanges.get(i - 1).min, oneRange.max, clazz));
+                            mergedRanges.remove(i - 1);
+                            finished = true;
+                            break;
+                    }
+                }
+            }
+        }
+        return mergedRanges;
+    }
 
 //    public static <T extends Number & Comparable<T>> List<Range<T>> unionStat(Collection<Range<T>> ranges) {
 //        List<Range<T>> unionList = new ArrayList<>();
@@ -346,7 +468,7 @@ public class Range<T extends Number & Comparable<T>> {
 //        return unionList;
 //    }
 
-//    public List<Range<T>> subtract(Range<T> range) {
+    //    public List<Range<T>> subtract(Range<T> range) {
 //        List<Range<T>> rangeList = new ArrayList<>();
 //        int overlapping = overlapping(range);
 //        if (Math.abs(overlapping) >= 3) {
@@ -367,11 +489,11 @@ public class Range<T extends Number & Comparable<T>> {
 //        }
 //        return rangeList;
 //    }
-
-
     public static void main(String[] args) {
 
         Range<Byte> range = new Range<>((byte) -1, (byte) 3, Byte.class);
+
+        Class clazz = range.returnedClass();
 
         byte zero = range.getZero();
 

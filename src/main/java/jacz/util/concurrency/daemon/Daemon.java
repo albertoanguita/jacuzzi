@@ -1,6 +1,7 @@
 package jacz.util.concurrency.daemon;
 
 import jacz.util.bool.MutableBoolean;
+import jacz.util.concurrency.execution_control.PausableElement;
 import jacz.util.concurrency.task_executor.ParallelTask;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.task_executor.TaskFinalizationIndicator;
@@ -53,12 +54,18 @@ public class Daemon {
      */
     private final MutableBoolean daemonThreadFlag;
 
+    /**
+     * A block element for client that want to wait until the state is solved
+     */
+    private final PausableElement blockUntilStateSolve;
+
 
     public Daemon(DaemonAction daemonAction) {
         this.daemonAction = daemonAction;
         taskFinalizationIndicator = null;
         stateChangeFlag = new MutableBoolean(false);
         daemonThreadFlag = new MutableBoolean(false);
+        blockUntilStateSolve = new PausableElement();
     }
 
     /**
@@ -66,6 +73,7 @@ public class Daemon {
      */
     public synchronized void stateChange() {
         stateChangeFlag.setValue(true);
+        blockUntilStateSolve.pause();
         // check if we need to create a new daemon thread
         if (!daemonThreadFlag.isValue()) {
             daemonThreadFlag.setValue(true);
@@ -83,6 +91,14 @@ public class Daemon {
         }
     }
 
+    public synchronized boolean isStateSolved() {
+        return !stateChangeFlag.isValue() && !daemonThreadFlag.isValue();
+    }
+
+    public void blockUntilStateIsSolved() {
+        blockUntilStateSolve.access();
+    }
+
     /**
      * Requests to kill the daemon thread. It will check for unresolved state changes
      *
@@ -94,6 +110,7 @@ public class Daemon {
             // there are no registered state changes, the thread can finish ok
             daemonThreadFlag.setValue(false);
             taskFinalizationIndicator = null;
+            blockUntilStateSolve.resume();
             return true;
         } else {
             // there is an unresolved state change, thread must keep working

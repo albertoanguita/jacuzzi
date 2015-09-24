@@ -1,8 +1,5 @@
 package jacz.util.numeric.newrange;
 
-import jacz.util.numeric.RangeInterface;
-import jacz.util.numeric.RangeToValueComparison;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -12,6 +9,14 @@ import java.util.List;
  * A generic range implementation, for discrete numbers
  */
 public class Range<T extends Number & Comparable<T>> {
+
+    public enum ValueComparison {
+
+        ANY_EMPTY,
+        LEFT,
+        RIGHT,
+        CONTAINS,
+    }
 
     public enum RangeComparison {
         // any of the ranges is empty
@@ -116,6 +121,12 @@ public class Range<T extends Number & Comparable<T>> {
 
         if (clazz.equals(Byte.class)) {
             return clazz.cast((byte) 0);
+        } else if (clazz.equals(Short.class)) {
+            return clazz.cast((short) 0);
+        } else if (clazz.equals(Integer.class)) {
+            return clazz.cast(0);
+        } else if (clazz.equals(Long.class)) {
+            return clazz.cast(0L);
         }
 
         return clazz.cast(0);
@@ -126,6 +137,12 @@ public class Range<T extends Number & Comparable<T>> {
     private T previous(T value) {
         if (clazz.equals(Byte.class)) {
             return clazz.cast(value.byteValue() - 1);
+        } else if (clazz.equals(Short.class)) {
+            return clazz.cast(value.shortValue() - 1);
+        } else if (clazz.equals(Integer.class)) {
+            return clazz.cast(value.intValue() - 1);
+        } else if (clazz.equals(Long.class)) {
+            return clazz.cast(value.longValue() - 1);
         }
         return null;
     }
@@ -133,6 +150,12 @@ public class Range<T extends Number & Comparable<T>> {
     private T next(T value) {
         if (clazz.equals(Byte.class)) {
             return clazz.cast(value.byteValue() + 1);
+        } else if (clazz.equals(Short.class)) {
+            return clazz.cast(value.shortValue() + 1);
+        } else if (clazz.equals(Integer.class)) {
+            return clazz.cast(value.intValue() + 1);
+        } else if (clazz.equals(Long.class)) {
+            return clazz.cast(value.longValue() + 1);
         }
         return null;
     }
@@ -142,20 +165,20 @@ public class Range<T extends Number & Comparable<T>> {
     }
 
     public boolean contains(T value) {
-        return compareTo(value) == RangeToValueComparison.CONTAINS;
+        return compareTo(value) == ValueComparison.CONTAINS;
     }
 
-    public RangeToValueComparison compareTo(T value) {
+    public ValueComparison compareTo(T value) {
         if (value == null || isEmpty()) {
-            return RangeToValueComparison.ANY_EMPTY;
+            return ValueComparison.ANY_EMPTY;
         }
         int leftComp;
         if (min != null && min.compareTo(value) > 0) {
-            return RangeToValueComparison.RIGHT;
+            return ValueComparison.RIGHT;
         } else if (max != null && max.compareTo(value) < 0) {
-            return RangeToValueComparison.LEFT;
+            return ValueComparison.LEFT;
         } else {
-            return RangeToValueComparison.CONTAINS;
+            return ValueComparison.CONTAINS;
         }
     }
 
@@ -358,9 +381,9 @@ public class Range<T extends Number & Comparable<T>> {
      * @param ranges collection of ranges to compute union with
      * @return the resulting list of union ranges
      */
-    public List<Range<T>> union(Collection<Range<T>> ranges) {
-
-    }
+//    public List<Range<T>> union(Collection<Range<T>> ranges) {
+//
+//    }
 
 
     /**
@@ -430,27 +453,54 @@ public class Range<T extends Number & Comparable<T>> {
                     mergedRanges.remove(i + 1);
                 }
             } else {
+                Range<T> insertedRange = mergedRanges.get(i - 1);
                 finished = false;
                 while (!finished && i < mergedRanges.size()) {
-                    Range<T> oneRange = ranges.get(i);
-                    switch (oneRange.compareTo(max)) {
+                    Range<T> oneRange = mergedRanges.get(i);
+                    switch (insertedRange.compareTo(oneRange)) {
 
                         case ANY_EMPTY:
-                        case LEFT:
+                        case CONTAINS:
+                        case EQUALS:
+                        case RIGHT_OVERLAP:
+                        case RIGHT_CONTACT:
+                        case RIGHT_NO_CONTACT:
                             // remove and continue
                             mergedRanges.remove(i);
                             break;
-                        case RIGHT:
+                        case LEFT_NO_CONTACT:
                             // we found a range to the right, finish
                             finished = true;
                             break;
-                        case CONTAINS:
-                            // merge this range with ours
+                        case LEFT_CONTACT:
+                        case LEFT_OVERLAP:
                             mergedRanges.set(i, new Range<T>(mergedRanges.get(i - 1).min, oneRange.max, clazz));
                             mergedRanges.remove(i - 1);
                             finished = true;
                             break;
+                        case INSIDE:
+                            mergedRanges.remove(i - 1);
+                            finished = true;
+                            break;
                     }
+//                    switch (oneRange.compareTo(max)) {
+//
+//                        case ANY_EMPTY:
+//                        case LEFT:
+//                            // remove and continue
+//                            mergedRanges.remove(i);
+//                            break;
+//                        case RIGHT:
+//                            // we found a range to the right, finish
+//                            finished = true;
+//                            break;
+//                        case CONTAINS:
+//                            // merge this range with ours
+//                            mergedRanges.set(i, new Range<T>(mergedRanges.get(i - 1).min, oneRange.max, clazz));
+//                            mergedRanges.remove(i - 1);
+//                            finished = true;
+//                            break;
+//                    }
                 }
             }
         }
@@ -490,12 +540,17 @@ public class Range<T extends Number & Comparable<T>> {
 //        return rangeList;
 //    }
     public static void main(String[] args) {
+        List<Range<Integer>> ranges = new ArrayList<>();
+        ranges.add(new Range<>(-5, -1, Integer.class));
+        ranges.add(new Range<>(5, 6, Integer.class));
+        ranges.add(new Range<>(5, -4, Integer.class));
+        ranges.add(new Range<>(10, 16, Integer.class));
+        ranges.add(new Range<>(25, 26, Integer.class));
+        ranges.add(new Range<>(27, 36, Integer.class));
+        ranges.add(new Range<>(45, 50, Integer.class));
 
-        Range<Byte> range = new Range<>((byte) -1, (byte) 3, Byte.class);
-
-        Class clazz = range.returnedClass();
-
-        byte zero = range.getZero();
+        List<Range<Integer>> mergedRanges = new Range<>(0, 9, Integer.class).merge(ranges);
+        System.out.println(mergedRanges);
 
         System.out.println("END");
     }

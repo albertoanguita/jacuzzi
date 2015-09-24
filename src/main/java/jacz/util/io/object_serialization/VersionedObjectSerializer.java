@@ -1,6 +1,9 @@
 package jacz.util.io.object_serialization;
 
+import jacz.util.hash.MD5;
+
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +24,10 @@ public class VersionedObjectSerializer {
     private static final byte[] SERIALIZABLE_TYPE = Serializer.serialize("Serializable");
 
     public static byte[] serializeVersionedObject(VersionedObject versionedObject) {
+        return serializeVersionedObject(versionedObject, 0);
+    }
+
+    public static byte[] serializeVersionedObject(VersionedObject versionedObject, int CRCBytes) {
         byte[] data = Serializer.serialize(versionedObject.getCurrentVersion());
         Map<String, Object> attributes = versionedObject.serialize();
         data = Serializer.addArrays(data, Serializer.serialize(attributes.size()));
@@ -65,14 +72,22 @@ public class VersionedObjectSerializer {
             }
             data = Serializer.addArrays(data, attributeName, type, attributeArray);
         }
+        if (CRCBytes > 0) {
+            // add a CRC to the byte array so data integrity can be checked upon deserialization
+            MD5 md5 = new MD5(CRCBytes);
+            data = Serializer.addArrays(data, Serializer.serialize(true), Serializer.serialize(CRCBytes), md5.digest(data));
+        } else {
+            data = Serializer.addArrays(data, Serializer.serialize(false));
+        }
         return data;
     }
 
-    public static void deserializeVersionedObject(VersionedObject versionedObject, byte[] data) {
+    public static void deserializeVersionedObject(VersionedObject versionedObject, byte[] data) throws VersionedSerializationException {
         deserializeVersionedObject(versionedObject, data, new MutableOffset());
     }
 
-    public static void deserializeVersionedObject(VersionedObject versionedObject, byte[] data, MutableOffset offset) {
+    public static void deserializeVersionedObject(VersionedObject versionedObject, byte[] data, MutableOffset offset) throws VersionedSerializationException {
+        int initialOffset = offset.value();
         String version = Serializer.deserializeString(data, offset);
         int attributeCount = Serializer.deserializeInt(data, offset);
         Map<String, Object> attributes = new HashMap<>();
@@ -127,9 +142,24 @@ public class VersionedObjectSerializer {
                         // the VersionedObjectSerializer failed when deserializing the byte array
                         throw new RuntimeException("Unexpected type: " + type);
                 }
-            } catch (RuntimeException | ClassNotFoundException e) {
-                versionedObject.errorDeserializing(version, attributes);
-                break;
+            } catch (RuntimeException e) {
+                throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.NULL_VALUES_FOUND);
+            } catch (ClassNotFoundException e) {
+                throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.CLASS_NOT_FOUND);
+            }
+        }
+        int finalOffset = offset.value();
+        boolean hasCRC = Serializer.deserializeBoolean(data, offset);
+        if (hasCRC) {
+            int CRCBytes = Serializer.deserializeInt(data, offset);
+            byte[] CRC = Serializer.deserializeBytes(data, offset);
+            byte[] dataToCheck = new byte[finalOffset - initialOffset];
+            System.arraycopy(data, initialOffset, dataToCheck, 0, dataToCheck.length);
+            MD5 md5 = new MD5(CRCBytes);
+            byte[] newCRC = md5.digest(dataToCheck);
+            if (!Arrays.equals(CRC, newCRC)) {
+                // CRC does not match
+                throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.CRC_MISMATCH);
             }
         }
         versionedObject.deserialize(version, attributes);

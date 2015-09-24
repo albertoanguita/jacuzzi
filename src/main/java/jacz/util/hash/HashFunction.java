@@ -85,6 +85,8 @@ public class HashFunction {
                 }
             }
         }
+        dis.close();
+        is.close();
         if (progressNotification != null) {
             progressNotification.completeTask();
         }

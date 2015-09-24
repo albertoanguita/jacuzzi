@@ -9,11 +9,9 @@ import java.util.Map;
  */
 public interface VersionedObject {
 
-    public String getCurrentVersion();
+    String getCurrentVersion();
 
-    public Map<String, Object> serialize();
+    Map<String, Object> serialize();
 
-    public void deserialize(String version, Map<String, Object> attributes) throws RuntimeException;
-
-    public void errorDeserializing(String version, Map<String, Object> attributes);
+    void deserialize(String version, Map<String, Object> attributes) throws RuntimeException;
 }

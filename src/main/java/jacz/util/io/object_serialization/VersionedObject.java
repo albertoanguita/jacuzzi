@@ -1,5 +1,6 @@
 package jacz.util.io.object_serialization;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -11,7 +12,7 @@ public interface VersionedObject {
 
     String getCurrentVersion();
 
-    Map<String, Object> serialize();
+    Map<String, Serializable> serialize();
 
-    void deserialize(String version, Map<String, Object> attributes) throws RuntimeException;
+    void deserialize(String version, Map<String, Object> attributes) throws RuntimeException, VersionedSerializationException;
 }

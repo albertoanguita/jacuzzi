@@ -16,7 +16,7 @@ import java.util.HashMap;
  */
 public class Test {
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws Exception {
 
         Map<UniqueIdentifier, String> m = new HashMap<UniqueIdentifier, String>();
         UniqueIdentifierFactory f = new UniqueIdentifierFactory();

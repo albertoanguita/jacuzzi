@@ -8,9 +8,10 @@ import java.util.Map;
 public class VersionedSerializationException extends Exception {
 
     public enum Reason {
-        NULL_VALUES_FOUND,
+        INCORRECT_DATA,
         CLASS_NOT_FOUND,
-        CRC_MISMATCH
+        CRC_MISMATCH,
+        UNRECOGNIZED_VERSION
     }
 
     public final String version;

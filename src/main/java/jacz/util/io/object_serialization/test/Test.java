@@ -26,7 +26,7 @@ public class Test {
     }
 
 
-    public static void main(String args[]) throws IOException, ClassNotFoundException, ParseException {
+    public static void main(String args[]) throws Exception {
 
         Integer ii = 5;
         String ss = Serializer.serializeObjectToString(ii);

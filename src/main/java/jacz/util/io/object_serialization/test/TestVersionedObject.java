@@ -2,6 +2,7 @@ package jacz.util.io.object_serialization.test;
 
 import jacz.util.io.object_serialization.VersionedObject;
 import jacz.util.io.object_serialization.VersionedObjectSerializer;
+import jacz.util.io.object_serialization.VersionedSerializationException;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -24,13 +25,14 @@ public class TestVersionedObject implements VersionedObject {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws VersionedSerializationException {
+
         TestVersionedObject testVersionedObject = new TestVersionedObject();
 
-        byte[] data = VersionedObjectSerializer.serializeVersionedObject(testVersionedObject);
+        byte[] data = VersionedObjectSerializer.serialize(testVersionedObject);
 
         TestVersionedObject testVersionedObject1 = new TestVersionedObject(false);
-        VersionedObjectSerializer.deserializeVersionedObject(testVersionedObject1, data);
+        VersionedObjectSerializer.deserialize(testVersionedObject1, data);
 
         System.out.println("END");
     }
@@ -76,8 +78,8 @@ public class TestVersionedObject implements VersionedObject {
     }
 
     @Override
-    public Map<String, Object> serialize() {
-        Map<String, Object> map = new HashMap<>();
+    public Map<String, Serializable> serialize() {
+        Map<String, Serializable> map = new HashMap<>();
         map.put("i", i);
         map.put("s", s);
         map.put("t", t);
@@ -99,10 +101,5 @@ public class TestVersionedObject implements VersionedObject {
             f = (float) attributes.get("f");
             serClass = (SerClass) attributes.get("serClass");
         }
-    }
-
-    @Override
-    public void errorDeserializing(String version, Map<String, Object> attributes) {
-        System.out.println("error");
     }
 }

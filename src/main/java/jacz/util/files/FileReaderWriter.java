@@ -1,6 +1,8 @@
 package jacz.util.files;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 /**
@@ -9,6 +11,7 @@ import java.util.ArrayList;
  * User: Alberto<br>
  * Date: 28-abr-2008<br>
  * Last Modified: 28-abr-2008
+ * todo use java.nio.file.Files, as in readBytes. Maybe with the Files class, this class has no longer sense
  */
 public class FileReaderWriter {
 
@@ -81,6 +84,22 @@ public class FileReaderWriter {
         ObjectOutputStream objStream = new ObjectOutputStream(new FileOutputStream(path));
         objStream.writeObject(o);
         objStream.close();
+    }
+
+    public static byte[] readBytes(String path) throws IOException {
+        return Files.readAllBytes(Paths.get(path));
+//        ObjectInputStream objStream = new ObjectInputStream(new FileInputStream(path));
+//        ByteArrayInputStream stream = new ByteArrayInputStream(new FileInputStream(path));
+//        Object o = objStream.readObject();
+//        objStream.close();
+//        return o;
+    }
+
+    public static void writeBytes(String path, byte[] data) throws IOException {
+        Files.write(Paths.get(path), data);
+//        ObjectOutputStream objStream = new ObjectOutputStream(new FileOutputStream(path));
+//        objStream.writeObject(o);
+//        objStream.close();
     }
 
     public static <S extends Serializable> int sizeOfObject(S o) {

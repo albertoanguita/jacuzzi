@@ -1,5 +1,6 @@
 package jacz.util.identifier;
 
+import jacz.util.io.object_serialization.SerializationException;
 import jacz.util.io.object_serialization.Serializer;
 import jacz.util.io.object_serialization.MutableOffset;
 import jacz.util.files.FileReaderWriter;
@@ -24,7 +25,7 @@ public final class UniqueIdentifierFactory implements Serializable {
         nextId = (Long) FileReaderWriter.readObject(path);
     }
 
-    public UniqueIdentifierFactory(byte[] data, MutableOffset mutableOffset) {
+    public UniqueIdentifierFactory(byte[] data, MutableOffset mutableOffset) throws SerializationException {
         nextId = Serializer.deserializeLong(data, mutableOffset);
     }
 

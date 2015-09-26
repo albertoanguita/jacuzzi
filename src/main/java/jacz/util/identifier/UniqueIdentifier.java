@@ -1,6 +1,5 @@
 package jacz.util.identifier;
 
-import jacz.util.io.object_serialization.SerializationException;
 import jacz.util.io.object_serialization.Serializer;
 import jacz.util.io.object_serialization.MutableOffset;
 
@@ -52,11 +51,11 @@ public final class UniqueIdentifier implements Serializable {
         return Serializer.serialize(id);
     }
 
-    public static UniqueIdentifier deserialize(byte[] data) throws SerializationException {
+    public static UniqueIdentifier deserialize(byte[] data) {
         return new UniqueIdentifier(Serializer.deserializeLong(data, new MutableOffset()));
     }
 
-    public static UniqueIdentifier deserializeWithOffset(byte[] data, MutableOffset offset) throws SerializationException {
+    public static UniqueIdentifier deserializeWithOffset(byte[] data, MutableOffset offset) {
         return new UniqueIdentifier(Serializer.deserializeLong(data, offset));
     }
 }

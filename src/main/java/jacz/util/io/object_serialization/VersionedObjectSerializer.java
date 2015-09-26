@@ -85,15 +85,12 @@ public class VersionedObjectSerializer {
         try {
             data = CRC.extractDataWithCRC(data, offset);
             version = Serializer.deserializeString(data, offset);
-            Integer attributeCount = Serializer.deserializeInt(data, offset);
-            if (attributeCount == null) {
-                throw new SerializationException();
-            }
+            int attributeCount = Serializer.deserializeIntValue(data, offset);
             for (int i = 0; i < attributeCount; i++) {
                 String attributeName = Serializer.deserializeString(data, offset);
                 String type = Serializer.deserializeString(data, offset);
                 if (type == null) {
-                    throw new SerializationException();
+                    throw new RuntimeException();
                 }
                 switch (type) {
                     case "String":
@@ -144,7 +141,7 @@ public class VersionedObjectSerializer {
                 }
             }
             versionedObject.deserialize(version, attributes);
-        } catch (RuntimeException | SerializationException e) {
+        } catch (RuntimeException e) {
             throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.INCORRECT_DATA);
         } catch (ClassNotFoundException e) {
             throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.CLASS_NOT_FOUND);

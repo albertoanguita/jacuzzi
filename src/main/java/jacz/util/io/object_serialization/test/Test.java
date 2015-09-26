@@ -33,6 +33,7 @@ public class Test {
         Integer iii = (Integer) Serializer.deserializeObject(ss);
 
         byte[] dataF = Serializer.serialize(1234.5f);
+        byte ttt = dataF[444];
         byte[] dataD = Serializer.serialize(98765.4d);
         byte[] dataS = Serializer.serialize("qw?");
         byte[] dataI = Serializer.serialize(12345);
@@ -53,7 +54,7 @@ public class Test {
         Integer i = Serializer.deserializeInt(data, off);
         Short sh = Serializer.deserializeShort(data, off);
         Long l = Serializer.deserializeLong(data, off);
-        Byte b = Serializer.deserializeByte(data, off);
+        Byte b = Serializer.deserializeByteValue(data, off);
         Byte nullB = Serializer.deserializeByte(data, off);
         Enum<TestEnum> enum_ = Serializer.deserializeEnum(TestEnum.class, data, off);
 

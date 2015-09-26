@@ -1,7 +1,6 @@
 package jacz.util.hash;
 
 import jacz.util.io.object_serialization.MutableOffset;
-import jacz.util.io.object_serialization.SerializationException;
 import jacz.util.io.object_serialization.Serializer;
 
 import java.util.Arrays;
@@ -25,7 +24,8 @@ public class CRC {
         CRC32 crc32 = new CRC32();
         crc32.update(data);
         int bytesForCRC = Math.min(CRCBytes, 4);
-        byte[] crcData = Serializer.serializeNumber(crc32.getValue(), bytesForCRC);
+        byte[] crcData = Serializer.serialize(crc32.getValue());
+        crcData = Arrays.copyOfRange(crcData, crcData.length - bytesForCRC, crcData.length);
         CRCBytes -= bytesForCRC;
         if (CRCBytes == 0) {
             return crcData;
@@ -40,7 +40,7 @@ public class CRC {
      * @param data the data with CRC. It must have the CRC header
      * @return the original data, properly validated
      */
-    public static byte[] extractDataWithCRC(byte[] data) throws InvalidCRCException, SerializationException {
+    public static byte[] extractDataWithCRC(byte[] data) throws InvalidCRCException {
         return extractDataWithCRC(data, new MutableOffset());
     }
 
@@ -51,12 +51,9 @@ public class CRC {
      * @return the original data, if the CRC validation is ok
      * @throws InvalidCRCException if the CRC validation failed
      */
-    public static byte[] extractDataWithCRC(byte[] data, MutableOffset mutableOffset) throws InvalidCRCException, SerializationException {
-        Integer dataLength = Serializer.deserializeInt(data, mutableOffset);
-        Integer CRCLength = Serializer.deserializeInt(data, mutableOffset);
-        if (dataLength == null || CRCLength == null) {
-            throw new SerializationException();
-        }
+    public static byte[] extractDataWithCRC(byte[] data, MutableOffset mutableOffset) throws InvalidCRCException {
+        int dataLength = Serializer.deserializeIntValue(data, mutableOffset);
+        int CRCLength = Serializer.deserializeIntValue(data, mutableOffset);
         byte[] originalData = Arrays.copyOfRange(data, mutableOffset.value(), mutableOffset.value() + dataLength);
         mutableOffset.add(dataLength);
         byte[] existingCRC = Arrays.copyOfRange(data, mutableOffset.value(), mutableOffset.value() + CRCLength);

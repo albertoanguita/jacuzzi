@@ -122,110 +122,156 @@ public class Serializer {
         if (str == null) {
             // null values are serialized with a 4-byte array containing a -1
             return Serializer.serialize(-1);
+        } else {
+            byte[] strBytes = str.getBytes();
+            return addArrays(serialize(strBytes.length), strBytes);
         }
-        byte[] strBytes = str.getBytes();
-        byte[] data = new byte[4 + strBytes.length];
-        System.arraycopy(serialize(strBytes.length), 0, data, 0, 4);
-        System.arraycopy(str.getBytes(), 0, data, 4, strBytes.length);
-        return data;
     }
 
     /**
      * Serializes a Boolean object in a 1 byte array
      *
      * @param b the Boolean object to serialize
-     * @return a byte array of size 1 with the value of the given byte
+     * @return a byte array of size 1 with the value of the given Boolean
      */
     public static byte[] serialize(Boolean b) {
-        byte[] data = new byte[1];
         if (b == null) {
             // null values are serialized with 1 byte containing a -1
-            data[0] = -1;
+            return serialize((byte) -1);
         } else if (b) {
-            data[0] = 1;
+            return serialize((byte) 1);
         } else {
-            data[0] = 0;
+            return serialize((byte) 0);
         }
-        return data;
     }
 
     /**
-     * Serializes a Byte object in a 1 byte array
+     * Serializes a boolean value in a 1 byte array
+     *
+     * @param b the boolean value to serialize
+     * @return a byte array of size 1 with the value of the given boolean
+     */
+    public static byte[] serialize(boolean b) {
+        return serialize(Boolean.valueOf(b));
+    }
+
+    /**
+     * Serializes a Byte object in a 1 or 2 byte array
      *
      * @param b the Byte object to serialize
-     * @return a byte array of size 1 with the value of the given byte
+     * @return a byte array of size 1 or 2 with the value of the given byte
      */
     public static byte[] serialize(Byte b) {
         if (b != null && b != Byte.MIN_VALUE) {
-            return serializeNumber((long) b, 1);
+            return serialize(b.byteValue());
         } else if (b != null) {
             // b is MIN_VALUE -> we add a byte containing a true
-            return addArrays(serializeNumber((long) b, 1), serialize(true));
+            return addArrays(serialize(b.byteValue()), serialize(true));
         } else {
             // b is null -> we codify MIN_VALUE and add a byte containing a false
-            return addArrays(serializeNumber((long) Byte.MIN_VALUE, 1), serialize(false));
+            return addArrays(serialize(Byte.MIN_VALUE), serialize(false));
         }
     }
 
     /**
-     * Serializes a Short object in a 2 byte array
+     * Serializes a byte value in a 1 byte array
+     *
+     * @param b the byte value to serialize
+     * @return a byte array of size 1 with the value of the given byte
+     */
+    public static byte[] serialize(byte b) {
+        return serializeNumber((long) b, 1);
+    }
+
+    /**
+     * Serializes a Short object in a 2 or 3 byte array
      *
      * @param s the Byte object to serialize
-     * @return a byte array of size 2 with the value of the given short
+     * @return a byte array of size 2 or 3 with the value of the given short
      */
     public static byte[] serialize(Short s) {
         if (s != null && s != Short.MIN_VALUE) {
-            return serializeNumber((long) s, 2);
+            return serialize(s.shortValue());
         } else if (s != null) {
             // b is MIN_VALUE -> we add a byte containing a true
-            return addArrays(serializeNumber((long) s, 2), serialize(true));
+            return addArrays(serialize(s.shortValue()), serialize(true));
         } else {
             // b is null -> we codify MIN_VALUE and add a byte containing a false
-            return addArrays(serializeNumber((long) Short.MIN_VALUE, 2), serialize(false));
+            return addArrays(serialize(Short.MIN_VALUE), serialize(false));
         }
     }
 
     /**
-     * Serializes an Integer object in a 4 byte array
+     * Serializes a short value in a 2 byte array
+     *
+     * @param s the short value to serialize
+     * @return a byte array of size 2 with the value of the given short
+     */
+    public static byte[] serialize(short s) {
+        return serializeNumber((long) s, 2);
+    }
+
+    /**
+     * Serializes an Integer object in a 4 or 5 byte array
      *
      * @param i the Integer object to serialize
-     * @return a byte array of size 4 with the value of the given integer
+     * @return a byte array of size 4 or 5 with the value of the given integer
      */
     public static byte[] serialize(Integer i) {
         if (i != null && i != Integer.MIN_VALUE) {
-            return serializeNumber((long) i, 4);
+            return serialize(i.intValue());
         } else if (i != null) {
             // b is MIN_VALUE -> we add a byte containing a true
-            return addArrays(serializeNumber((long) i, 4), serialize(true));
+            return addArrays(serialize(i.intValue()), serialize(true));
         } else {
             // b is null -> we codify MIN_VALUE and add a byte containing a false
-            return addArrays(serializeNumber((long) Integer.MIN_VALUE, 4), serialize(false));
+            return addArrays(serialize(Integer.MIN_VALUE), serialize(false));
         }
     }
 
     /**
-     * Serializes an Integer object in an 8 byte array
+     * Serializes an int value in a 4 byte array
+     *
+     * @param i the int value to serialize
+     * @return a byte array of size 4 with the value of the given integer
+     */
+    public static byte[] serialize(int i) {
+        return serializeNumber((long) i, 4);
+    }
+
+    /**
+     * Serializes a Long object in an 8 or 9 byte array
      *
      * @param l the Long object to serialize
-     * @return a byte array of size 8 with the value of the given long
+     * @return a byte array of size 8 or 9 with the value of the given long
      */
     public static byte[] serialize(Long l) {
         if (l != null && l != Long.MIN_VALUE) {
-            return serializeNumber(l, 8);
+            return serialize(l.longValue());
         } else if (l != null) {
             // b is MIN_VALUE -> we add a byte containing a true
-            return addArrays(serializeNumber(l, 8), serialize(true));
+            return addArrays(serialize(l.longValue()), serialize(true));
         } else {
             // b is null -> we codify MIN_VALUE and add a byte containing a false
-            return addArrays(serializeNumber(Long.MIN_VALUE, 8), serialize(false));
+            return addArrays(serialize(Long.MIN_VALUE), serialize(false));
         }
     }
 
     /**
-     * Serializes a Float object in a 4 byte array
+     * Serializes a long value in an 8 byte array
+     *
+     * @param l the long value to serialize
+     * @return a byte array of size 8 with the value of the given long
+     */
+    public static byte[] serialize(long l) {
+        return serializeNumber(l, 8);
+    }
+
+    /**
+     * Serializes a Float object in a 4 or 5 byte array
      *
      * @param f the Float object to serialize
-     * @return a byte array of size 4 with the value of the given long
+     * @return a byte array of size 4 or 5 with the value of the given long
      */
     public static byte[] serialize(Float f) {
         if (f == null) {
@@ -236,10 +282,20 @@ public class Serializer {
     }
 
     /**
-     * Serializes a Double object in an 8 byte array
+     * Serializes a float value in a 4 byte array
+     *
+     * @param f the float object to serialize
+     * @return a byte array of size 4 with the value of the given long
+     */
+    public static byte[] serialize(float f) {
+        return serialize(Float.floatToIntBits(f));
+    }
+
+    /**
+     * Serializes a Double object in an 8 or 9 byte array
      *
      * @param d the Double object to serialize
-     * @return a byte array of size 8 with the value of the given long
+     * @return a byte array of size 8 or 9 with the value of the given long
      */
     public static byte[] serialize(Double d) {
         if (d == null) {
@@ -249,11 +305,21 @@ public class Serializer {
         }
     }
 
+    /**
+     * Serializes a double value in an 8 byte array
+     *
+     * @param d the double value to serialize
+     * @return a byte array of size 8 with the value of the given long
+     */
+    public static byte[] serialize(double d) {
+        return serialize(Double.doubleToLongBits(d));
+    }
+
     public static <T extends Enum<T>> byte[] serialize(Enum<T> e) {
         return Serializer.serialize(e.ordinal());
     }
 
-    public static byte[] serializeNumber(long number, int byteCount) {
+    private static byte[] serializeNumber(long number, int byteCount) {
         String hex = Long.toHexString(number);
         hex = keepHexDigits(hex, byteCount * 2);
         byte[] data = new byte[byteCount];
@@ -265,10 +331,7 @@ public class Serializer {
 
     public static byte[] serialize(byte[] bytes) {
         if (bytes != null) {
-            byte[] data = new byte[4 + bytes.length];
-            System.arraycopy(serialize(bytes.length), 0, data, 0, 4);
-            System.arraycopy(bytes, 0, data, 4, bytes.length);
-            return data;
+            return addArrays(serialize(bytes.length), bytes);
         } else {
             return serialize((Integer) null);
         }
@@ -281,11 +344,8 @@ public class Serializer {
         return rest;
     }
 
-    public static Object deserializeObject(byte[] data, MutableOffset offset) throws ClassNotFoundException, SerializationException {
-        Integer objectLength = deserializeInt(data, offset);
-        if (objectLength == null) {
-            throw new SerializationException();
-        }
+    public static Object deserializeObject(byte[] data, MutableOffset offset) throws ClassNotFoundException {
+        int objectLength = deserializeIntValue(data, offset);
         byte[] objectData = Arrays.copyOfRange(data, offset.value(), offset.value() + objectLength);
         Object o = deserializeObjectWithoutLengthHeader(objectData);
         offset.add(objectLength);
@@ -345,15 +405,12 @@ public class Serializer {
         }
     }
 
-    public static List<String> deserializeListFromByteArray(byte[] data, MutableOffset offset, char separator) throws ParseException, SerializationException {
+    public static List<String> deserializeListFromByteArray(byte[] data, MutableOffset offset, char separator) throws ParseException {
         return deserializeListFromReadableString(deserializeString(data, offset), Character.toString(separator), null);
     }
 
-    public static String deserializeString(byte[] data, MutableOffset offset) throws SerializationException {
-        Integer strLen = deserializeInt(data, offset);
-        if (strLen == null) {
-            throw new SerializationException();
-        }
+    public static String deserializeString(byte[] data, MutableOffset offset) {
+        int strLen = deserializeIntValue(data, offset);
         if (strLen < 0) {
             return null;
         } else {
@@ -364,11 +421,8 @@ public class Serializer {
         }
     }
 
-    public static Boolean deserializeBoolean(byte[] data, MutableOffset offset) throws SerializationException {
-        Byte b = deserializeByte(data, offset);
-        if (b == null) {
-            throw new SerializationException();
-        }
+    public static Boolean deserializeBoolean(byte[] data, MutableOffset offset) {
+        byte b = deserializeByteValue(data, offset);
         if (b == -1) {
             return null;
         } else {
@@ -376,14 +430,14 @@ public class Serializer {
         }
     }
 
+    public static boolean deserializeBooleanValue(byte[] data, MutableOffset offset) {
+        return deserializeByteValue(data, offset) != 0;
+    }
 
-    public static Byte deserializeByte(byte[] data, MutableOffset offset) throws SerializationException {
-        byte b = deserializeNumber(data, 1, offset).byteValue();
+    public static Byte deserializeByte(byte[] data, MutableOffset offset) {
+        byte b = deserializeByteValue(data, offset);
         if (b == Byte.MIN_VALUE) {
-            Boolean isMinValue = deserializeBoolean(data, offset);
-            if (isMinValue == null) {
-                throw new SerializationException();
-            }
+            Boolean isMinValue = deserializeBooleanValue(data, offset);
             if (isMinValue) {
                 return b;
             } else {
@@ -394,13 +448,14 @@ public class Serializer {
         }
     }
 
-    public static Short deserializeShort(byte[] data, MutableOffset offset) throws SerializationException {
-        short s = deserializeNumber(data, 2, offset).shortValue();
+    public static Byte deserializeByteValue(byte[] data, MutableOffset offset) {
+        return deserializeNumber(data, 1, offset).byteValue();
+    }
+
+    public static Short deserializeShort(byte[] data, MutableOffset offset) {
+        short s = deserializeShortValue(data, offset);
         if (s == Short.MIN_VALUE) {
-            Boolean isMinValue = deserializeBoolean(data, offset);
-            if (isMinValue == null) {
-                throw new SerializationException();
-            }
+            Boolean isMinValue = deserializeBooleanValue(data, offset);
             if (isMinValue) {
                 return s;
             } else {
@@ -411,13 +466,14 @@ public class Serializer {
         }
     }
 
-    public static Integer deserializeInt(byte[] data, MutableOffset offset) throws SerializationException {
-        int i = deserializeNumber(data, 4, offset).intValue();
+    public static short deserializeShortValue(byte[] data, MutableOffset offset) {
+        return deserializeNumber(data, 2, offset).shortValue();
+    }
+
+    public static Integer deserializeInt(byte[] data, MutableOffset offset) {
+        int i = deserializeIntValue(data, offset);
         if (i == Integer.MIN_VALUE) {
-            Boolean isMinValue = deserializeBoolean(data, offset);
-            if (isMinValue == null) {
-                throw new SerializationException();
-            }
+            Boolean isMinValue = deserializeBooleanValue(data, offset);
             if (isMinValue) {
                 return i;
             } else {
@@ -428,13 +484,14 @@ public class Serializer {
         }
     }
 
-    public static Long deserializeLong(byte[] data, MutableOffset offset) throws SerializationException {
-        long l = deserializeNumber(data, 8, offset);
+    public static int deserializeIntValue(byte[] data, MutableOffset offset) {
+        return deserializeNumber(data, 4, offset).intValue();
+    }
+
+    public static Long deserializeLong(byte[] data, MutableOffset offset) {
+        long l = deserializeLongValue(data, offset);
         if (l == Long.MIN_VALUE) {
-            Boolean isMinValue = deserializeBoolean(data, offset);
-            if (isMinValue == null) {
-                throw new SerializationException();
-            }
+            Boolean isMinValue = deserializeBooleanValue(data, offset);
             if (isMinValue) {
                 return l;
             } else {
@@ -445,7 +502,11 @@ public class Serializer {
         }
     }
 
-    public static Float deserializeFloat(byte[] data, MutableOffset offset) throws SerializationException {
+    public static long deserializeLongValue(byte[] data, MutableOffset offset) {
+        return deserializeNumber(data, 8, offset);
+    }
+
+    public static Float deserializeFloat(byte[] data, MutableOffset offset) {
         Integer floatBits = deserializeInt(data, offset);
         if (floatBits != null) {
             return Float.intBitsToFloat(floatBits);
@@ -454,7 +515,11 @@ public class Serializer {
         }
     }
 
-    public static Double deserializeDouble(byte[] data, MutableOffset offset) throws SerializationException {
+    public static float deserializeFloatValue(byte[] data, MutableOffset offset) {
+        return Float.intBitsToFloat(deserializeIntValue(data, offset));
+    }
+
+    public static Double deserializeDouble(byte[] data, MutableOffset offset) {
         Long doubleBits = deserializeLong(data, offset);
         if (doubleBits != null) {
             return Double.longBitsToDouble(doubleBits);
@@ -463,11 +528,12 @@ public class Serializer {
         }
     }
 
-    public static <E extends Enum<E>> E deserializeEnum(Class<E> enumType, byte[] data, MutableOffset offset) throws SerializationException {
-        Integer ordinal = Serializer.deserializeInt(data, offset);
-        if (ordinal == null) {
-            throw new SerializationException();
-        }
+    public static double deserializeDoubleValue(byte[] data, MutableOffset offset) {
+        return Double.longBitsToDouble(deserializeLongValue(data, offset));
+    }
+
+    public static <E extends Enum<E>> E deserializeEnum(Class<E> enumType, byte[] data, MutableOffset offset) {
+        int ordinal = Serializer.deserializeIntValue(data, offset);
         for (Enum<E> value : enumType.getEnumConstants()) {
             if (value.ordinal() == ordinal) {
                 //noinspection unchecked
@@ -477,7 +543,7 @@ public class Serializer {
         return null;
     }
 
-    public static Long deserializeNumber(byte[] data, int byteCount, MutableOffset offset) {
+    private static Long deserializeNumber(byte[] data, int byteCount, MutableOffset offset) {
         String hex = "";
         for (int i = 0; i < byteCount; i++) {
             hex = hex + addZerosLeft(byteToHex(data[i + offset.value()]), 2);
@@ -486,7 +552,7 @@ public class Serializer {
         return Long.parseLong(hex, 16);
     }
 
-    public static byte[] deserializeBytes(byte[] data, MutableOffset offset) throws SerializationException {
+    public static byte[] deserializeBytes(byte[] data, MutableOffset offset) {
         Integer bytesLen = deserializeInt(data, offset);
         if (bytesLen != null) {
             byte[] bytes = new byte[bytesLen];

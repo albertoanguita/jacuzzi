@@ -448,7 +448,7 @@ public class Serializer {
         }
     }
 
-    public static Byte deserializeByteValue(byte[] data, MutableOffset offset) {
+    public static byte deserializeByteValue(byte[] data, MutableOffset offset) {
         return deserializeNumber(data, 1, offset).byteValue();
     }
 

@@ -18,7 +18,7 @@ public class PausableElement {
     private boolean paused;
 
     public PausableElement() {
-        this(true);
+        this(false);
     }
 
     public PausableElement(boolean fairness) {

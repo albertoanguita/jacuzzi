@@ -11,9 +11,10 @@ import java.util.Arrays;
 public class TestCRC {
 
     public static void main(String[] args) throws Exception {
+
         byte[] data = Serializer.serialize("hello");
 
-        byte[] dataWithCRC = CRC.addCRC(data, 66, true);
+        byte[] dataWithCRC = CRC.addCRC(data, -1, true);
 
         byte[] data2 = CRC.extractDataWithCRC(dataWithCRC);
 

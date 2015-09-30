@@ -30,7 +30,7 @@ public class TestRange {
         ranges.add(new Range<>(27, 36, Integer.class));
         ranges.add(new Range<>(45, 50, Integer.class));
 
-        List<Range<Integer>> mergedRanges = new Range<>(0, 1, Integer.class).merge(ranges);
+        List<Range<Integer>> mergedRanges = new Range<>(0, 1, Integer.class).union(ranges);
         System.out.println(mergedRanges);
     }
 

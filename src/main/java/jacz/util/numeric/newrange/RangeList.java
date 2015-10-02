@@ -7,9 +7,9 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by Alberto on 01/10/2015.
+ * Ordered list of non-overlapping ranges
  */
-public class RangeSet<T extends Number & Comparable<T>> implements Serializable {
+public class RangeList<T extends Number & Comparable<T>> implements Serializable {
 
     /**
      * Ordered list of the ranges composing this set. No overlapping or in contact ranges can live here (they are
@@ -18,29 +18,29 @@ public class RangeSet<T extends Number & Comparable<T>> implements Serializable 
     private List<Range<T>> ranges;
 
 
-    public RangeSet() {
+    public RangeList() {
         ranges = new ArrayList<>();
     }
 
-    public RangeSet(Range<T> initialRange) {
+    public RangeList(Range<T> initialRange) {
         ranges = new ArrayList<>(1);
         ranges.add(initialRange);
     }
 
-    public RangeSet(Collection<Range<T>> ranges) {
+    public RangeList(Collection<Range<T>> ranges) {
         this.ranges = new ArrayList<>();
         add(ranges);
     }
 
-    public RangeSet(RangeSet<T> anotherRangeSet) {
-        ranges = new ArrayList<>(anotherRangeSet.ranges);
+    public RangeList(RangeList<T> anotherRangeList) {
+        ranges = new ArrayList<>(anotherRangeList.ranges);
     }
 
     public boolean isEmpty() {
         return ranges.isEmpty();
     }
 
-    public List<Range<T>> getRanges() {
+    public List<Range<T>> getRangesAsList() {
         return new ArrayList<>(ranges);
     }
 
@@ -124,8 +124,8 @@ public class RangeSet<T extends Number & Comparable<T>> implements Serializable 
         add(Arrays.asList(ranges));
     }
 
-    public void add(RangeSet<T> anotherRangeSet) {
-        for (Range<T> range : anotherRangeSet.getRanges()) {
+    public void add(RangeList<T> anotherRangeList) {
+        for (Range<T> range : anotherRangeList.getRangesAsList()) {
             add(range);
         }
     }
@@ -201,8 +201,8 @@ public class RangeSet<T extends Number & Comparable<T>> implements Serializable 
         remove(Arrays.asList(ranges));
     }
 
-    public void remove(RangeSet<T> anotherRangeSet) {
-        for (Range<T> range : anotherRangeSet.getRanges()) {
+    public void remove(RangeList<T> anotherRangeList) {
+        for (Range<T> range : anotherRangeList.getRangesAsList()) {
             remove(range);
         }
     }
@@ -253,10 +253,10 @@ public class RangeSet<T extends Number & Comparable<T>> implements Serializable 
         return min;
     }
 
-    public RangeSet<T> intersection(RangeSet<T> anotherRangeSet) {
-        RangeSet<T> intersection = new RangeSet<T>();
+    public RangeList<T> intersection(RangeList<T> anotherRangeList) {
+        RangeList<T> intersection = new RangeList<T>();
         for (Range<T> aRange : ranges) {
-            intersection.add(aRange.intersection(anotherRangeSet.ranges));
+            intersection.add(aRange.intersection(anotherRangeList.ranges));
         }
         return intersection;
     }

@@ -61,8 +61,13 @@ public class RangeQueue<T extends Number & Comparable<T>> implements Serializabl
     }
 
     public synchronized void add(Range<T> range) {
-        ranges.add(range);
-        ranges = range.union(ranges);
+        if (!ranges.isEmpty() && ranges.get(range.size().intValue() - 1).getMax().equals(range.previous(range.getMin()))) {
+            // append to last range
+            ranges.set(range.size().intValue() - 1, range.buildInstance(ranges.get(range.size().intValue() - 1).getMin(), range.previous(range.getMax())));
+        } else {
+            // add new range
+            ranges.add(range);
+        }
         retrieveDataLock.resume();
     }
 
@@ -74,7 +79,7 @@ public class RangeQueue<T extends Number & Comparable<T>> implements Serializabl
         return fetch(maxSize, true);
     }
 
-    public Range<T> fetch(T maxSize, boolean remove) {
+    private Range<T> fetch(T maxSize, boolean remove) {
         Range<T> result = null;
         boolean finished = false;
         while (!finished) {

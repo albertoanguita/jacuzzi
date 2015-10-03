@@ -20,8 +20,8 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
     }
 
     public RangeList(Range<T> initialRange) {
-        ranges = new ArrayList<>(1);
-        ranges.add(initialRange);
+        ranges = new ArrayList<>();
+        add(initialRange);
     }
 
     public RangeList(Collection<Range<T>> ranges) {
@@ -33,13 +33,14 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         ranges = new ArrayList<>(anotherRangeList.ranges);
     }
 
+    @SafeVarargs
     public RangeList(Class<T> clazz, T... values) {
         this();
         if (values.length % 2 != 0) {
             throw new IllegalArgumentException("Even number of values required");
         }
         for (int i = 0; i < values.length; i+=2) {
-            add(new Range<T>(values[i], values[i + 1], clazz));
+            add(new Range<>(values[i], values[i + 1], clazz));
         }
     }
 
@@ -54,10 +55,10 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
     // todo make contains methods use binary search
 
     public boolean contains(T value) {
-        return searchRange(value) >= 0;
+        return search(value) >= 0;
     }
 
-    public int searchRange(T value) {
+    public int search(T value) {
         for (int i = 0; i < ranges.size(); i++) {
             if (ranges.get(i).contains(value)) {
                 return i;
@@ -67,10 +68,10 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
     }
 
     public boolean contains(Range<T> range) {
-        return searchRange(range) >= 0;
+        return search(range) >= 0;
     }
 
-    public int searchRange(Range<T> range) {
+    public int search(Range<T> range) {
         for (int i = 0; i < ranges.size(); i++) {
             if (ranges.get(i).compareTo(range) == Range.RangeComparison.CONTAINS || ranges.get(i).compareTo(range) == Range.RangeComparison.EQUALS) {
                 return i;
@@ -78,16 +79,6 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         }
         return -1;
     }
-
-//    public void add(Range<T> range) {
-//        if (!range.isEmpty()) {
-//            int index = searchAffectedRange(range);
-//            if (index >= 0) {
-//                ranges.add(index, range);
-//                merge(index);
-//            }
-//        }
-//    }
 
     /**
      * Computes the union with a collection of ranges. The result is a list of new ranges
@@ -99,7 +90,6 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         if (range.isEmpty()) {
             return;
         }
-        // todo remove empty ranges
         int i = 0;
         boolean finished = false;
         boolean checkRightOverlap = false;
@@ -187,39 +177,6 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         }
     }
 
-    /**
-     * Merge the ranges (required after the insertion of a new range)
-     *
-     * @param index the index of the range that was just inserted
-     */
-    private void merge(int index) {
-        Range<T> rangeToMerge = ranges.get(index);
-        // check contact with a segment of the left
-        if (index > 0 && ranges.get(index - 1).compareTo(rangeToMerge) == Range.RangeComparison.LEFT_CONTACT) {
-            T min = ranges.get(index - 1).getMin();
-            T max = rangeToMerge.getMax();
-            ranges.set(index, rangeToMerge.buildInstance(min, max));
-            ranges.remove(index - 1);
-            index--;
-            rangeToMerge = ranges.get(index);
-        }
-        // check contact, overlapping and containment with segments on the right
-        int secIndex = index + 1;
-        while (secIndex < ranges.size() && rangeToMerge.compareTo(ranges.get(secIndex)) != Range.RangeComparison.LEFT_NO_CONTACT) {
-            secIndex++;
-        }
-        // if secIndex is bigger than (index + 1) then some segments need to be merged (until segment at secIndex - 1).
-        if (secIndex > index + 1) {
-            T min = rangeToMerge.getMin();
-            T max;
-            max = rangeToMerge.getMax().compareTo(ranges.get(secIndex - 1).getMax()) >= 0 ? rangeToMerge.getMax() : ranges.get(secIndex - 1).getMax();
-            ranges.set(index, rangeToMerge.buildInstance(min, max));
-            for (int i = index + 1; i < secIndex; i++) {
-                ranges.remove(index + 1);
-            }
-        }
-    }
-
     public void add(Collection<Range<T>> ranges) {
         for (Range<T> range : ranges) {
             add(range);
@@ -228,7 +185,9 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
 
     @SafeVarargs
     public final void add(Range<T>... ranges) {
-        add(Arrays.asList(ranges));
+        for (Range<T> range : ranges) {
+            add(range);
+        }
     }
 
     public void add(RangeList<T> anotherRangeList) {

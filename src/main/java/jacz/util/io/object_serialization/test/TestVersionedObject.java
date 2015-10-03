@@ -1,5 +1,6 @@
 package jacz.util.io.object_serialization.test;
 
+import jacz.util.io.object_serialization.UnrecognizedVersionException;
 import jacz.util.io.object_serialization.VersionedObject;
 import jacz.util.io.object_serialization.VersionedObjectSerializer;
 import jacz.util.io.object_serialization.VersionedSerializationException;
@@ -91,7 +92,7 @@ public class TestVersionedObject implements VersionedObject {
     }
 
     @Override
-    public void deserialize(String version, Map<String, Object> attributes) throws RuntimeException {
+    public void deserialize(String version, Map<String, Object> attributes) throws UnrecognizedVersionException {
         if (version.equals(getCurrentVersion())) {
             i = (int) attributes.get("i");
             s = (String) attributes.get("s");
@@ -100,6 +101,8 @@ public class TestVersionedObject implements VersionedObject {
             l = (long) attributes.get("l");
             f = (float) attributes.get("f");
             serClass = (SerClass) attributes.get("serClass");
+        } else {
+
         }
     }
 }

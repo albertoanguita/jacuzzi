@@ -21,6 +21,7 @@ public class VersionedObjectSerializer {
     private static final byte[] FLOAT_TYPE = Serializer.serialize("Float");
     private static final byte[] DOUBLE_TYPE = Serializer.serialize("Double");
     private static final byte[] ENUM_TYPE = Serializer.serialize("Enum");
+    private static final byte[] BYTE_ARRAY_TYPE = Serializer.serialize("ByteArray");
     private static final byte[] SERIALIZABLE_TYPE = Serializer.serialize("Serializable");
 
     public static byte[] serialize(VersionedObject versionedObject) {
@@ -65,6 +66,9 @@ public class VersionedObjectSerializer {
             } else if (attribute instanceof Enum<?>) {
                 type = ENUM_TYPE;
                 attributeArray = Serializer.addArrays(Serializer.serialize(attribute.getClass().getName()), Serializer.serialize((Enum) attribute));
+            } else if (attribute instanceof byte[]) {
+                type = BYTE_ARRAY_TYPE;
+                attributeArray = Serializer.serialize((byte[]) attribute);
             } else {
                 type = SERIALIZABLE_TYPE;
                 attributeArray = Serializer.serializeObject((Serializable) attribute);
@@ -131,6 +135,10 @@ public class VersionedObjectSerializer {
                         attributes.put(attributeName, Serializer.deserializeEnum(enumClass, data, offset));
                         break;
 
+                    case "ByteArray":
+                        attributes.put(attributeName, Serializer.deserializeBytes(data, offset));
+                        break;
+
                     case "Serializable":
                         attributes.put(attributeName, Serializer.deserializeObject(data, offset));
                         break;
@@ -143,6 +151,8 @@ public class VersionedObjectSerializer {
             versionedObject.deserialize(version, attributes);
         } catch (RuntimeException e) {
             throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.INCORRECT_DATA);
+        } catch (UnrecognizedVersionException e) {
+            throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.UNRECOGNIZED_VERSION);
         } catch (ClassNotFoundException e) {
             throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.CLASS_NOT_FOUND);
         } catch (InvalidCRCException e) {

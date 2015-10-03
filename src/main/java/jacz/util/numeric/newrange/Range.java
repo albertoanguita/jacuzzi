@@ -1,10 +1,7 @@
 package jacz.util.numeric.newrange;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * A generic range implementation, for discrete numbers
@@ -106,7 +103,13 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
     }
 
     public Long size() {
-        return max.longValue() - min.longValue() + 1;
+        if (isEmpty()) {
+            return 0L;
+        } else if (min != null && max != null) {
+            return max.longValue() - min.longValue() + 1;
+        } else {
+            return null;
+        }
     }
 
     public T getMin() {
@@ -338,7 +341,7 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
      * @param ranges ranges to compute intersection with
      * @return the resulting list of intersected ranges
      */
-    public Range<T> intersection(Collection<Range<T>> ranges) {
+    public Range<T> intersection(RangeList<T> ranges) {
         Range<T> intersectionRange = this;
         for (Range<T> oneRange : ranges) {
             intersectionRange = intersectionRange.intersection(oneRange);
@@ -355,16 +358,16 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
      * @return the resulting list of intersected ranges
      * @throws IllegalArgumentException if the given list of ranges is empty
      */
-    public static <T extends Number & Comparable<T>> Range<T> intersectionStatic(Collection<Range<T>> ranges) throws IllegalArgumentException {
-        if (!ranges.isEmpty()) {
-            Iterator<Range<T>> it = ranges.iterator();
-            Range<T> oneRange = it.next();
-            it.remove();
-            return oneRange.intersection(ranges);
-        } else {
-            throw new IllegalArgumentException("Collection of ranges must have at least one element");
-        }
-    }
+//    public static <T extends Number & Comparable<T>> Range<T> intersectionStatic(RangeList<T> ranges) throws IllegalArgumentException {
+//        if (!ranges.isEmpty()) {
+//            Iterator<Range<T>> it = ranges.iterator();
+//            Range<T> oneRange = it.next();
+//            it.remove();
+//            return oneRange.intersection(ranges);
+//        } else {
+//            throw new IllegalArgumentException("Collection of ranges must have at least one element");
+//        }
+//    }
 
     /**
      * Computes the union with another range. The result is a list of new ranges (2 at most)
@@ -372,8 +375,8 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
      * @param range range to compute union with
      * @return the resulting list of unioned ranges
      */
-    public List<Range<T>> union(Range<T> range) {
-        List<Range<T>> rangeList = new ArrayList<>();
+    public RangeList<T> union(Range<T> range) {
+        RangeList<T> rangeList = new RangeList<>();
         rangeList.add(range);
         return union(rangeList);
     }
@@ -384,118 +387,120 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
      * @param ranges collection of ranges to compute union with
      * @return the resulting list of union ranges
      */
-    public List<Range<T>> union(List<Range<T>> ranges) {
+    public RangeList<T> union(RangeList<T> ranges) {
         // swallow copy of the parameter, to freely modify the list
-        List<Range<T>> unionRanges = new ArrayList<>(ranges);
-        if (isEmpty()) {
-            return unionRanges;
-        }
-        // todo remove empty ranges
-        int i = 0;
-        boolean finished = false;
-        boolean checkRightOverlap = false;
-        while (!finished && i < unionRanges.size()) {
-            Range<T> oneRange = ranges.get(i);
-            switch (compareTo(oneRange)) {
-
-                case ANY_EMPTY:
-                    // this range is empty -> remove and continue
-                    unionRanges.remove(i);
-                    continue;
-                case LEFT_NO_CONTACT:
-                    // our range must be inserted in this position
-                    unionRanges.add(i, this);
-                    finished = true;
-                    break;
-                case LEFT_CONTACT:
-                case LEFT_OVERLAP:
-                    // merge our range with this one
-                    unionRanges.set(i, buildInstance(min, oneRange.max));
-                    finished = true;
-                    break;
-                case EQUALS:
-                case INSIDE:
-                    finished = true;
-                    break;
-                case CONTAINS:
-                    // replace with ours
-                    unionRanges.set(i, this);
-                    finished = true;
-                    checkRightOverlap = true;
-                    break;
-                case RIGHT_OVERLAP:
-                case RIGHT_CONTACT:
-                    // merge our range with this one
-                    unionRanges.set(i, buildInstance(oneRange.min, max));
-                    finished = true;
-                    checkRightOverlap = true;
-                    break;
-                case RIGHT_NO_CONTACT:
-                    // position not found yet, keep searching
-                    break;
-            }
-            i++;
-        }
-        if (!finished) {
-            // no position was found, place it at the end
-            unionRanges.add(this);
-        } else if (checkRightOverlap) {
-            // we inserted our range, but it might overlap with others (ours is in i-1)
-            if (max == null) {
-                // we span to infinite, remove remaining ranges
-                while (unionRanges.size() > i + 1) {
-                    unionRanges.remove(i + 1);
-                }
-            } else {
-                Range<T> insertedRange = unionRanges.get(i - 1);
-                finished = false;
-                while (!finished && i < unionRanges.size()) {
-                    Range<T> oneRange = unionRanges.get(i);
-                    switch (insertedRange.compareTo(oneRange)) {
-
-                        case ANY_EMPTY:
-                        case CONTAINS:
-                        case EQUALS:
-                        case RIGHT_OVERLAP:
-                        case RIGHT_CONTACT:
-                        case RIGHT_NO_CONTACT:
-                            // remove and continue
-                            unionRanges.remove(i);
-                            break;
-                        case LEFT_NO_CONTACT:
-                            // we found a range to the right, finish
-                            finished = true;
-                            break;
-                        case LEFT_CONTACT:
-                        case LEFT_OVERLAP:
-                            unionRanges.set(i, buildInstance(unionRanges.get(i - 1).min, oneRange.max));
-                            unionRanges.remove(i - 1);
-                            finished = true;
-                            break;
-                        case INSIDE:
-                            unionRanges.remove(i - 1);
-                            finished = true;
-                            break;
-                    }
-                }
-            }
-        }
+        RangeList<T> unionRanges = new RangeList<>(ranges);
+        unionRanges.add(this);
         return unionRanges;
+//        if (isEmpty()) {
+//            return unionRanges;
+//        }
+//        // todo remove empty ranges
+//        int i = 0;
+//        boolean finished = false;
+//        boolean checkRightOverlap = false;
+//        while (!finished && i < unionRanges.size()) {
+//            Range<T> oneRange = ranges.getRangesAsList().get(i);
+//            switch (compareTo(oneRange)) {
+//
+//                case ANY_EMPTY:
+//                    // this range is empty -> remove and continue
+//                    unionRanges.getRangesAsList().remove(i);
+//                    continue;
+//                case LEFT_NO_CONTACT:
+//                    // our range must be inserted in this position
+//                    unionRanges.getRangesAsList().add(i, this);
+//                    finished = true;
+//                    break;
+//                case LEFT_CONTACT:
+//                case LEFT_OVERLAP:
+//                    // merge our range with this one
+//                    unionRanges.set(i, buildInstance(min, oneRange.max));
+//                    finished = true;
+//                    break;
+//                case EQUALS:
+//                case INSIDE:
+//                    finished = true;
+//                    break;
+//                case CONTAINS:
+//                    // replace with ours
+//                    unionRanges.set(i, this);
+//                    finished = true;
+//                    checkRightOverlap = true;
+//                    break;
+//                case RIGHT_OVERLAP:
+//                case RIGHT_CONTACT:
+//                    // merge our range with this one
+//                    unionRanges.set(i, buildInstance(oneRange.min, max));
+//                    finished = true;
+//                    checkRightOverlap = true;
+//                    break;
+//                case RIGHT_NO_CONTACT:
+//                    // position not found yet, keep searching
+//                    break;
+//            }
+//            i++;
+//        }
+//        if (!finished) {
+//            // no position was found, place it at the end
+//            unionRanges.add(this);
+//        } else if (checkRightOverlap) {
+//            // we inserted our range, but it might overlap with others (ours is in i-1)
+//            if (max == null) {
+//                // we span to infinite, remove remaining ranges
+//                while (unionRanges.size() > i + 1) {
+//                    unionRanges.remove(i + 1);
+//                }
+//            } else {
+//                Range<T> insertedRange = unionRanges.get(i - 1);
+//                finished = false;
+//                while (!finished && i < unionRanges.size()) {
+//                    Range<T> oneRange = unionRanges.get(i);
+//                    switch (insertedRange.compareTo(oneRange)) {
+//
+//                        case ANY_EMPTY:
+//                        case CONTAINS:
+//                        case EQUALS:
+//                        case RIGHT_OVERLAP:
+//                        case RIGHT_CONTACT:
+//                        case RIGHT_NO_CONTACT:
+//                            // remove and continue
+//                            unionRanges.remove(i);
+//                            break;
+//                        case LEFT_NO_CONTACT:
+//                            // we found a range to the right, finish
+//                            finished = true;
+//                            break;
+//                        case LEFT_CONTACT:
+//                        case LEFT_OVERLAP:
+//                            unionRanges.set(i, buildInstance(unionRanges.get(i - 1).min, oneRange.max));
+//                            unionRanges.remove(i - 1);
+//                            finished = true;
+//                            break;
+//                        case INSIDE:
+//                            unionRanges.remove(i - 1);
+//                            finished = true;
+//                            break;
+//                    }
+//                }
+//            }
+//        }
+//        return unionRanges;
     }
 
-    public static <T extends Number & Comparable<T>> List<Range<T>> unionStatic(Collection<Range<T>> ranges) {
-        List<Range<T>> union = new ArrayList<>();
-        Iterator<Range<T>> it = ranges.iterator();
-        while (it.hasNext()) {
-            Range<T> oneRange = it.next();
-            it.remove();
-            union = oneRange.union(union);
-        }
-        return union;
-    }
+//    public static <T extends Number & Comparable<T>> RangeList<T> unionStatic(RangeList<T> ranges) {
+//        RangeList<T> union = new RangeList<>();
+//        Iterator<Range<T>> it = ranges.iterator();
+//        while (it.hasNext()) {
+//            Range<T> oneRange = it.next();
+//            it.remove();
+//            union = oneRange.union(union);
+//        }
+//        return union;
+//    }
 
-    public List<Range<T>> subtract(Range<T> range) {
-        List<Range<T>> subtractList = new ArrayList<>();
+    public RangeList<T> subtract(Range<T> range) {
+        RangeList<T> subtractList = new RangeList<>();
         switch (compareTo(range)) {
 
             case ANY_EMPTY:
@@ -523,13 +528,13 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         return subtractList;
     }
 
-    public List<Range<T>> subtract(Collection<Range<T>> ranges) {
-        List<Range<T>> subtractList = new ArrayList<>();
+    public RangeList<T> subtract(Collection<Range<T>> ranges) {
+        RangeList<T> subtractList = new RangeList<>();
         subtractList.add(this);
         for (Range<T> range : ranges) {
-            List<Range<T>> subtractListAux = new ArrayList<>();
+            RangeList<T> subtractListAux = new RangeList<>();
             for (Range<T> subtractedRange : subtractList) {
-                subtractListAux.addAll(subtractedRange.subtract(range));
+                subtractListAux.add(subtractedRange.subtract(range));
             }
             subtractList = subtractListAux;
         }
@@ -538,17 +543,9 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
 
 
     public static void main(String[] args) {
-        List<Range<Integer>> ranges = new ArrayList<>();
-        ranges.add(new Range<>(-5, -1, Integer.class));
-        ranges.add(new Range<>(5, 6, Integer.class));
-        ranges.add(new Range<>(5, -4, Integer.class));
-        ranges.add(new Range<>(10, 16, Integer.class));
-        ranges.add(new Range<>(25, 26, Integer.class));
-        ranges.add(new Range<>(27, 36, Integer.class));
-        ranges.add(new Range<>(45, 50, Integer.class));
-
-        List<Range<Integer>> mergedRanges = new Range<>(0, 9, Integer.class).union(ranges);
-        System.out.println(mergedRanges);
+        RangeList<Integer> ranges = new RangeList<>(Integer.class, -5, -1, 5, 6, 5, -4, 10, 16, 25, 26, 27, 36, 45, 50);
+        ranges.add(new Range<>(0, 8, Integer.class));
+        System.out.println(ranges);
 
         System.out.println("END");
     }

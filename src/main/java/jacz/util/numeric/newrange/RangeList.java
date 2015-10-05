@@ -319,12 +319,29 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         return min;
     }
 
-    public RangeList<T> intersection(RangeList<T> anotherRangeList) {
+    public RangeList<T> intersection(Range<T> range) {
         RangeList<T> intersection = new RangeList<T>();
         for (Range<T> aRange : ranges) {
-            intersection.add(aRange.intersection(anotherRangeList));
+            intersection.add(aRange.intersection(range));
         }
         return intersection;
+    }
+
+    public RangeList<T> intersection(Collection<Range<T>> ranges) {
+        RangeList<T> intersection = new RangeList<T>();
+        for (Range<T> aRange : ranges) {
+            intersection.add(intersection(aRange));
+        }
+        return intersection;
+    }
+
+    @SafeVarargs
+    public final RangeList<T> intersection(Range<T>... ranges) {
+        return intersection(Arrays.asList(ranges));
+    }
+
+    public RangeList<T> intersection(RangeList<T> anotherRangeList) {
+        return intersection(anotherRangeList.getRangesAsList());
     }
 
     public T getPosition(T offset) {

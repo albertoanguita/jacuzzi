@@ -57,7 +57,7 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
     }
 
     protected Range<T> buildInstance(T min, T max) {
-        return new Range<T>(min, max, clazz);
+        return new Range<>(min, max, clazz);
     }
 
     @Override
@@ -182,15 +182,15 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         }
     }
 
-    T subtract(T value1, T value2) {
+    private T addLong(T value1, long value2) {
         if (clazz.equals(Byte.class)) {
-            return clazz.cast(value1.byteValue() - value2.byteValue());
+            return clazz.cast((byte) (value1.byteValue() + value2));
         } else if (clazz.equals(Short.class)) {
-            return clazz.cast(value1.shortValue() - value2.shortValue());
+            return clazz.cast((short) (value1.shortValue() + value2));
         } else if (clazz.equals(Integer.class)) {
-            return clazz.cast(value1.intValue() - value2.intValue());
+            return clazz.cast((int) (value1.intValue() + value2));
         } else if (clazz.equals(Long.class)) {
-            return clazz.cast(value1.longValue() - value2.longValue());
+            return clazz.cast(value1.longValue() + value2);
         } else {
             throw new RuntimeException("Invalid Range class");
         }
@@ -208,7 +208,6 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         if (value == null || isEmpty()) {
             return ValueComparison.ANY_EMPTY;
         }
-        int leftComp;
         if (min != null && min.compareTo(value) > 0) {
             return ValueComparison.RIGHT;
         } else if (max != null && max.compareTo(value) < 0) {
@@ -340,7 +339,7 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
      * @return the resulting list of intersected ranges
      */
     public RangeList<T> intersection(RangeList<T> ranges) {
-        RangeList<T> intersectionRange = new RangeList<T>();
+        RangeList<T> intersectionRange = new RangeList<>();
         for (Range<T> oneRange : ranges) {
             intersectionRange.add(intersection(oneRange));
         }
@@ -414,13 +413,24 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         return subtractList;
     }
 
-
-    public static void main(String[] args) {
-        RangeList<Integer> ranges = new RangeList<>(Integer.class, -5, -1, 5, 6, 5, -4, 10, 16, 25, 26, 27, 36, 45, 50);
-        ranges.add(new Range<>(0, 8, Integer.class));
-        System.out.println(ranges);
-
-        System.out.println("END");
+    public T getPosition(long offset) {
+        if (offset < 0) {
+            throw new IllegalArgumentException("Negative offset not allowed");
+        } else if (min == null) {
+            return null;
+        } else if (size() != null && offset >= size()) {
+            throw new IndexOutOfBoundsException("Offset not inside range");
+        } else {
+            return addLong(min, offset);
+        }
     }
 
+    public static void main(String[] args) {
+
+        Long l = 5L;
+
+        Integer i = Integer.class.cast(l.intValue());
+
+        System.out.println(i);
+    }
 }

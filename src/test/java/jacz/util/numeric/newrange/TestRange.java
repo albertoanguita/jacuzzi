@@ -332,4 +332,63 @@ public class TestRange {
         Assert.assertEquals(new RangeList<>(Integer.class, 3, 5, 7, 7, 10, 10), integerRange.subtract(new RangeList<>(Integer.class, -10, -5, -2, 2, 6, 6, 8, 9, 11, 50)));
     }
 
+    @Test
+    public void testGetPosition() {
+        Range<Integer> integerRange = new Range<>(0, 10, Integer.class);
+        Assert.assertEquals((Integer) 5, integerRange.getPosition(5L));
+        try {
+            integerRange.getPosition(15L);
+        } catch (IndexOutOfBoundsException e) {
+            Assert.assertEquals(IndexOutOfBoundsException.class, e.getClass());
+        }
+        try {
+            integerRange.getPosition(-5L);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(IllegalArgumentException.class, e.getClass());
+        }
+
+        integerRange = new Range<>(0, -1, Integer.class);
+        try {
+            integerRange.getPosition(5L);
+        } catch (IndexOutOfBoundsException e) {
+            Assert.assertEquals(IndexOutOfBoundsException.class, e.getClass());
+        }
+        try {
+            integerRange.getPosition(15L);
+        } catch (IndexOutOfBoundsException e) {
+            Assert.assertEquals(IndexOutOfBoundsException.class, e.getClass());
+        }
+        try {
+            integerRange.getPosition(-5L);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(IllegalArgumentException.class, e.getClass());
+        }
+
+        integerRange = new Range<>(null, 10, Integer.class);
+        Assert.assertEquals(null, integerRange.getPosition(5L));
+        Assert.assertEquals(null, integerRange.getPosition(15L));
+        try {
+            integerRange.getPosition(-5L);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(IllegalArgumentException.class, e.getClass());
+        }
+
+        integerRange = new Range<>(0, null, Integer.class);
+        Assert.assertEquals((Integer) 5, integerRange.getPosition(5L));
+        Assert.assertEquals((Integer) 15, integerRange.getPosition(15L));
+        try {
+            integerRange.getPosition(-5L);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(IllegalArgumentException.class, e.getClass());
+        }
+
+        integerRange = new Range<>(null, null, Integer.class);
+        Assert.assertEquals(null, integerRange.getPosition(5L));
+        Assert.assertEquals(null, integerRange.getPosition(15L));
+        try {
+            integerRange.getPosition(-5L);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(IllegalArgumentException.class, e.getClass());
+        }
+    }
 }

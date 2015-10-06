@@ -138,9 +138,51 @@ public class TestRangeList {
         rangeList = new RangeList<>(Integer.class, 1, 5, 8, 9, 10, 14, -3, -1);
         intersection = rangeList.intersection(new RangeList<>(Integer.class, -2, 2, 9, 10));
         Assert.assertEquals(new RangeList<>(Integer.class, -2, -1, 1, 2, 9, 10), intersection);
+
+        rangeList = new RangeList<>(Integer.class, 1, 5, 8, 9, 10, 14, -3, -1);
+        intersection = rangeList.intersection(new Range<>(-2, 2, Integer.class), (new Range<Integer>(9, 10, Integer.class)));
+        Assert.assertEquals(new RangeList<>(Integer.class, -2, -1, 1, 2, 9, 10), intersection);
     }
 
     @Test
     public void testGetPosition() {
+        RangeList<Integer> rangeList = new RangeList<>(Integer.class, -3, -1, 1, 5, 8, 14);
+        Assert.assertEquals(new Integer(3), rangeList.getPosition(5L));
+        Assert.assertEquals(new Integer(10), rangeList.getPosition(10L));
+        try {
+            rangeList.getPosition(25L);
+        } catch (IndexOutOfBoundsException e) {
+            Assert.assertEquals(IndexOutOfBoundsException.class, e.getClass());
+        }
+        try {
+            rangeList.getPosition(-5L);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(IllegalArgumentException.class, e.getClass());
+        }
+
+        rangeList = new RangeList<>(Integer.class, null, -1, 1, 5, 8, 14);
+        Assert.assertEquals(null, rangeList.getPosition(2L));
+        try {
+            rangeList.getPosition(-5L);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(IllegalArgumentException.class, e.getClass());
+        }
+    }
+
+    @Test
+    public void testSize() {
+        RangeList<Integer> rangeList = new RangeList<>(Integer.class, -3, -1, 1, 5, 8, 14);
+        Assert.assertEquals(new Long(15L), rangeList.size());
+
+        rangeList = new RangeList<>(Integer.class, null, -1, 1, 5, 8, 14);
+        Assert.assertEquals(null, rangeList.size());
+    }
+
+    @Test
+    public void testClear() {
+        RangeList<Integer> rangeList = new RangeList<>(Integer.class, -3, -1, 1, 5, 8, 14);
+        rangeList.clear();
+
+        Assert.assertEquals(new RangeList<>(), rangeList);
     }
 }

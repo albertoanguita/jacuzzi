@@ -39,7 +39,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         if (values.length % 2 != 0) {
             throw new IllegalArgumentException("Even number of values required");
         }
-        for (int i = 0; i < values.length; i+=2) {
+        for (int i = 0; i < values.length; i += 2) {
             add(new Range<>(values[i], values[i + 1], clazz));
         }
     }
@@ -278,10 +278,10 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
      *
      * @param range the given range to compare with
      * @return the index of the first found range that is equal (overlaps) or greater than the given range. It
-     *         always happens that the range at the returned index minus one is to the left of the given range
-     *         (maybe in contact, but with no overlap)
-     *         If no range is found, resourceSegments.maxSize() + 1 is returned
-     *         If the given range is empty, -1 is returned
+     * always happens that the range at the returned index minus one is to the left of the given range
+     * (maybe in contact, but with no overlap)
+     * If no range is found, resourceSegments.maxSize() + 1 is returned
+     * If the given range is empty, -1 is returned
      */
     private int searchAffectedRange(Range<T> range) {
         // perform a binary search to reduce complexity
@@ -320,7 +320,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
     }
 
     public RangeList<T> intersection(Range<T> range) {
-        RangeList<T> intersection = new RangeList<T>();
+        RangeList<T> intersection = new RangeList<>();
         for (Range<T> aRange : ranges) {
             intersection.add(aRange.intersection(range));
         }
@@ -328,7 +328,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
     }
 
     public RangeList<T> intersection(Collection<Range<T>> ranges) {
-        RangeList<T> intersection = new RangeList<T>();
+        RangeList<T> intersection = new RangeList<>();
         for (Range<T> aRange : ranges) {
             intersection.add(intersection(aRange));
         }
@@ -344,30 +344,27 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         return intersection(anotherRangeList.getRangesAsList());
     }
 
-    public T getPosition(T offset) {
-        int index = 0;
-        while (index < ranges.size() && compareOffsetToRangeSize(offset, ranges.get(index)) > 0) {
-            Range<T> r = ranges.get(index);
-            offset = r.previous(r.add(r.subtract(offset, r.getMax()), r.getMin()));
-            index++;
+    public T getPosition(long offset) {
+        if (offset < 0) {
+            throw new IllegalArgumentException("Negative offset not allowed");
         }
-        if (index < ranges.size()) {
-            // range found at index
-            return ranges.get(index).add(ranges.get(index).getMin(), offset);
-        } else {
-            // offset to large
-            return null;
+        for (Range<T> aRange : ranges) {
+            try {
+                return aRange.getPosition(offset);
+            } catch (IndexOutOfBoundsException e) {
+                // check next range
+                offset -= aRange.size();
+            }
         }
+        throw new IndexOutOfBoundsException("Offset not inside range list");
     }
 
-    private int compareOffsetToRangeSize(T offset, Range<T> range) {
-        T minPlusOffset = range.add(range.getMin(), offset);
-        return minPlusOffset.compareTo(range.getMax());
-    }
-
-    public long size() {
+    public Long size() {
         long size = 0;
         for (Range<T> range : ranges) {
+            if (range.size() == null) {
+                return null;
+            }
             size += range.size();
         }
         return size;

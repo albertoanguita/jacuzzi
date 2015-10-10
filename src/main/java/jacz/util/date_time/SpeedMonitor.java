@@ -5,8 +5,8 @@ import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.timer.SimpleTimerAction;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.lists.Duple;
-import jacz.util.numeric.LongRange;
-import jacz.util.numeric.RangeToValueComparison;
+import jacz.util.numeric.range.Range;
+import jacz.util.numeric.range.LongRange;
 import jacz.util.queues.TimedQueue;
 
 import java.util.List;
@@ -304,7 +304,7 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
         }
         if (above) {
             // speed has raised: we must check if either just entered above limit, or we escaped from below limit
-            if (speedMonitorRange.compareTo(speed.longValue()) == RangeToValueComparison.LEFT) {
+            if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.LEFT) {
                 // above limit
                 if (!justReportedAboveSpeed) {
                     if (millisAllowedOutOfSpeedRange >= 0) {
@@ -321,14 +321,14 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
             } else {
                 justReportedAboveSpeed = false;
             }
-            if (speedMonitorRange.compareTo(speed.longValue()) == RangeToValueComparison.CONTAINS || speedMonitorRange.compareTo(speed.longValue()) == RangeToValueComparison.LEFT) {
+            if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.CONTAINS || speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.LEFT) {
                 // we are in the OK range or upper, check if we just left the below range
                 if (reportSpeedBelowTimer != null && reportSpeedBelowTimer.isRunning()) {
                     reportSpeedBelowTimer.stop();
                 }
             }
         } else {
-            if (speedMonitorRange.compareTo(speed.longValue()) == RangeToValueComparison.RIGHT) {
+            if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.RIGHT) {
                 if (!justReportedBelowSpeed) {
                     if (millisAllowedOutOfSpeedRange >= 0) {
                         if (!reportSpeedBelowTimer.isRunning()) {
@@ -344,7 +344,7 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
             } else {
                 justReportedBelowSpeed = false;
             }
-            if (speedMonitorRange.compareTo(speed.longValue()) == RangeToValueComparison.CONTAINS || speedMonitorRange.compareTo(speed.longValue()) == RangeToValueComparison.RIGHT) {
+            if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.CONTAINS || speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.RIGHT) {
                 // we are in the OK range or lower, check if we just left the above range
                 //if (reportSpeedAboveTimer != null && reportSpeedAboveTimer.isRunning()) {
                 if (reportSpeedAboveTimer != null && reportSpeedAboveTimer.isRunning()) {

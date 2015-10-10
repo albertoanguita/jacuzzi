@@ -92,17 +92,18 @@ public class TestVersionedObject implements VersionedObject {
     }
 
     @Override
-    public void deserialize(String version, Map<String, Object> attributes) throws UnrecognizedVersionException {
-        if (version.equals(getCurrentVersion())) {
-            i = (int) attributes.get("i");
-            s = (String) attributes.get("s");
-            t = (Test.TestEnum) attributes.get("t");
-            b = (boolean) attributes.get("b");
-            l = (long) attributes.get("l");
-            f = (float) attributes.get("f");
-            serClass = (SerClass) attributes.get("serClass");
-        } else {
+    public void deserialize(Map<String, Object> attributes) {
+        i = (int) attributes.get("i");
+        s = (String) attributes.get("s");
+        t = (Test.TestEnum) attributes.get("t");
+        b = (boolean) attributes.get("b");
+        l = (long) attributes.get("l");
+        f = (float) attributes.get("f");
+        serClass = (SerClass) attributes.get("serClass");
+    }
 
-        }
+    @Override
+    public void deserializeOldVersion(String version, Map<String, Object> attributes) throws UnrecognizedVersionException {
+        throw new UnrecognizedVersionException();
     }
 }

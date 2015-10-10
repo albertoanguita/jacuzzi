@@ -1,4 +1,4 @@
-package jacz.util.numeric;
+package jacz.util.numeric.oldrange;
 
 /**
  * Class description

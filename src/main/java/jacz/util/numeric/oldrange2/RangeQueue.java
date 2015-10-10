@@ -1,4 +1,4 @@
-package jacz.util.numeric.newrange;
+package jacz.util.numeric.oldrange2;
 
 import jacz.util.concurrency.execution_control.PausableElement;
 
@@ -95,7 +95,7 @@ public class RangeQueue<T extends Number & Comparable<T>> implements Serializabl
                         result = firstRange.buildInstance(firstRange.getMin(), firstRange.previous(firstRange.add(firstRange.getMin(), maxSize)));
                         if (remove) {
                             // add rest of removed range back to queue
-                            ranges.add(0, firstRange.buildInstance(firstRange.add(firstRange.getMin(), maxSize), firstRange.getMax()));
+                            ranges.add(0, (Range<T>) firstRange.buildInstance(firstRange.add(firstRange.getMin(), maxSize), firstRange.getMax()));
                         }
                     }
                     if (isEmpty()) {
@@ -110,22 +110,28 @@ public class RangeQueue<T extends Number & Comparable<T>> implements Serializabl
         return result;
     }
 
-    public synchronized boolean removeNonBlocking(Range<T> receivedRange) {
-        if (isEmpty()) {
+    public synchronized boolean removeRange(Range<T> rangeToRemove) {
+        if (rangeToRemove.isEmpty()) {
+            return true;
+        } else if (isEmpty()) {
             return false;
+        } else {
+            // range to remove must be in first range of queue (otherwise, return false)
+            Range<T> firstRange = ranges.remove(0);
+            if (firstRange.size() < rangeToRemove.size() || !firstRange.getMin().equals(rangeToRemove.getMin())) {
+                // put the range back into the queue
+                ranges.add(0, firstRange);
+                return false;
+            } else if (firstRange.size() > rangeToRemove.size()) {
+                // put back the part of the first range not needed
+                ranges.add(0, (Range<T>) firstRange.buildInstance(firstRange.next(rangeToRemove.getMax()), firstRange.getMax()));
+            }
+            if (isEmpty()) {
+                // the queue is now empty --> block future retrievals
+                retrieveDataLock.pause();
+            }
+            return true;
         }
-        Range<T> firstRange = ranges.remove(0);
-        if (firstRange.size() < receivedRange.size() || !firstRange.getMin().equals(receivedRange.getMin())) {
-            ranges.add(0, firstRange);
-            return false;
-        }
-        if (firstRange.size() > receivedRange.size()) {
-            ranges.add(0, firstRange.buildInstance(firstRange.next(receivedRange.getMax()), firstRange.getMax()));
-        }
-        if (isEmpty()) {
-            retrieveDataLock.pause();
-        }
-        return true;
     }
 
     public synchronized long remainingBytes() {

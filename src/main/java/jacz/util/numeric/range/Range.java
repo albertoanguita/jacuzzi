@@ -1,9 +1,9 @@
-package jacz.util.numeric.newrange;
+package jacz.util.numeric.range;
 
 import java.io.Serializable;
 
 /**
- * A generic range implementation, for discrete numbers
+ * Generic range implementation
  */
 public class Range<T extends Number & Comparable<T>> implements Serializable {
 
@@ -56,7 +56,7 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         this.clazz = range.clazz;
     }
 
-    protected Range<T> buildInstance(T min, T max) {
+    public Range<T> buildInstance(T min, T max) {
         return new Range<>(min, max, clazz);
     }
 
@@ -140,7 +140,7 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
     }
 
 
-    T previous(T value) {
+    public T previous(T value) {
         if (clazz.equals(Byte.class)) {
             return clazz.cast(value.byteValue() - 1);
         } else if (clazz.equals(Short.class)) {
@@ -154,7 +154,7 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         }
     }
 
-    T next(T value) {
+    public T next(T value) {
         if (clazz.equals(Byte.class)) {
             return clazz.cast(value.byteValue() + 1);
         } else if (clazz.equals(Short.class)) {
@@ -235,37 +235,37 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         }
         // comparison of my min value with range.min and range.max
         int leftLeftComp;
-        if (min == null && range.min == null) {
+        if (min == null && range.getMin() == null) {
             leftLeftComp = 0;
         } else if (min == null) {
             leftLeftComp = -1;
-        } else if (range.min == null) {
+        } else if (range.getMin() == null) {
             leftLeftComp = 1;
         } else {
-            leftLeftComp = min.compareTo(range.min);
+            leftLeftComp = min.compareTo(range.getMin());
         }
         int leftRightComp;
-        if (min == null || range.max == null) {
+        if (min == null || range.getMax() == null) {
             leftRightComp = -1;
         } else {
-            leftRightComp = min.compareTo(range.max);
+            leftRightComp = min.compareTo(range.getMax());
         }
         // comparison of my max value with range.min and range.max
         int rightRightComp;
-        if (max == null && range.max == null) {
+        if (max == null && range.getMax() == null) {
             rightRightComp = 0;
         } else if (max == null) {
             rightRightComp = 1;
-        } else if (range.max == null) {
+        } else if (range.getMax() == null) {
             rightRightComp = -1;
         } else {
-            rightRightComp = max.compareTo(range.max);
+            rightRightComp = max.compareTo(range.getMax());
         }
         int rightLeftComp;
-        if (max == null || range.min == null) {
+        if (max == null || range.getMin() == null) {
             rightLeftComp = 1;
         } else {
-            rightLeftComp = max.compareTo(range.min);
+            rightLeftComp = max.compareTo(range.getMin());
         }
 
         if (leftLeftComp == 0 && rightRightComp == 0) {
@@ -273,7 +273,7 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         }
         if (rightLeftComp < 0) {
             // left
-            if (next(max).equals(range.min)) {
+            if (next(max).equals(range.getMin())) {
                 return RangeComparison.LEFT_CONTACT;
             } else {
                 return RangeComparison.LEFT_NO_CONTACT;
@@ -293,7 +293,7 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         }
         if (leftRightComp > 0) {
             // right
-            if (next(range.max).equals(min)) {
+            if (next(range.getMax()).equals(min)) {
                 return RangeComparison.RIGHT_CONTACT;
             } else {
                 return RangeComparison.RIGHT_NO_CONTACT;
@@ -332,86 +332,86 @@ public class Range<T extends Number & Comparable<T>> implements Serializable {
         }
     }
 
-    /**
-     * Computes the intersection with a given collection of ranges. The result is a range.
-     *
-     * @param ranges ranges to compute intersection with
-     * @return the resulting list of intersected ranges
-     */
-    public RangeList<T> intersection(RangeList<T> ranges) {
-        RangeList<T> intersectionRange = new RangeList<>();
-        for (Range<T> oneRange : ranges) {
-            intersectionRange.add(intersection(oneRange));
-        }
-        return intersectionRange;
-    }
+//    /**
+//     * Computes the intersection with a given collection of ranges. The result is a range.
+//     *
+//     * @param ranges ranges to compute intersection with
+//     * @return the resulting list of intersected ranges
+//     */
+//    public RangeList<Range<T>, T> intersection(RangeList<Range<T>, T> ranges) {
+//        RangeList<Range<T>, T> intersectionRange = new RangeList<>();
+//        for (Range<T> oneRange : ranges) {
+//            intersectionRange.add(intersection(oneRange));
+//        }
+//        return intersectionRange;
+//    }
+//
+//    /**
+//     * Computes the union with another range. The result is a list of new ranges (2 at most)
+//     *
+//     * @param range range to compute union with
+//     * @return the resulting list of unioned ranges
+//     */
+//    public RangeList<Range<T>, T> union(Range<T> range) {
+//        RangeList<Range<T>, T> rangeList = new RangeList<>();
+//        rangeList.add(range);
+//        return union(rangeList);
+//    }
+//
+//    /**
+//     * Computes the union with a collection of ranges. The result is a list of new ranges
+//     *
+//     * @param ranges collection of ranges to compute union with
+//     * @return the resulting list of union ranges
+//     */
+//    public RangeList<Range<T>, T> union(RangeList<Range<T>, T> ranges) {
+//        // swallow copy of the parameter, to freely modify the list
+//        RangeList<Range<T>, T> unionRanges = new RangeList<>(ranges);
+//        unionRanges.add(this);
+//        return unionRanges;
+//    }
 
-    /**
-     * Computes the union with another range. The result is a list of new ranges (2 at most)
-     *
-     * @param range range to compute union with
-     * @return the resulting list of unioned ranges
-     */
-    public RangeList<T> union(Range<T> range) {
-        RangeList<T> rangeList = new RangeList<>();
-        rangeList.add(range);
-        return union(rangeList);
-    }
-
-    /**
-     * Computes the union with a collection of ranges. The result is a list of new ranges
-     *
-     * @param ranges collection of ranges to compute union with
-     * @return the resulting list of union ranges
-     */
-    public RangeList<T> union(RangeList<T> ranges) {
-        // swallow copy of the parameter, to freely modify the list
-        RangeList<T> unionRanges = new RangeList<>(ranges);
-        unionRanges.add(this);
-        return unionRanges;
-    }
-
-    public RangeList<T> subtract(Range<T> range) {
-        RangeList<T> subtractList = new RangeList<>();
-        switch (compareTo(range)) {
-
-            case ANY_EMPTY:
-            case LEFT_NO_CONTACT:
-            case LEFT_CONTACT:
-            case RIGHT_CONTACT:
-            case RIGHT_NO_CONTACT:
-                subtractList.add(this);
-                break;
-            case LEFT_OVERLAP:
-                subtractList.add(buildInstance(min, previous(range.min)));
-                break;
-            case EQUALS:
-            case INSIDE:
-                subtractList.add(generateEmptyRange());
-                break;
-            case CONTAINS:
-                subtractList.add(buildInstance(min, previous(range.min)));
-                subtractList.add(buildInstance(next(range.max), max));
-                break;
-            case RIGHT_OVERLAP:
-                subtractList.add(buildInstance(next(range.max), max));
-                break;
-        }
-        return subtractList;
-    }
-
-    public RangeList<T> subtract(RangeList<T> ranges) {
-        RangeList<T> subtractList = new RangeList<>();
-        subtractList.add(this);
-        for (Range<T> range : ranges) {
-            RangeList<T> subtractListAux = new RangeList<>();
-            for (Range<T> subtractedRange : subtractList) {
-                subtractListAux.add(subtractedRange.subtract(range));
-            }
-            subtractList = subtractListAux;
-        }
-        return subtractList;
-    }
+//    public RangeList<Range<T>, T> subtract(Range<T> range) {
+//        RangeList<Range<T>, T> subtractList = new RangeList<>();
+//        switch (compareTo(range)) {
+//
+//            case ANY_EMPTY:
+//            case LEFT_NO_CONTACT:
+//            case LEFT_CONTACT:
+//            case RIGHT_CONTACT:
+//            case RIGHT_NO_CONTACT:
+//                subtractList.add(this);
+//                break;
+//            case LEFT_OVERLAP:
+//                subtractList.add(buildInstance(min, previous(range.min)));
+//                break;
+//            case EQUALS:
+//            case INSIDE:
+//                subtractList.add(generateEmptyRange());
+//                break;
+//            case CONTAINS:
+//                subtractList.add(buildInstance(min, previous(range.min)));
+//                subtractList.add(buildInstance(next(range.max), max));
+//                break;
+//            case RIGHT_OVERLAP:
+//                subtractList.add(buildInstance(next(range.max), max));
+//                break;
+//        }
+//        return subtractList;
+//    }
+//
+//    public RangeList<Range<T>, T> subtract(RangeList<Range<T>, T> ranges) {
+//        RangeList<Range<T>, T> subtractList = new RangeList<>();
+//        subtractList.add(this);
+//        for (Range<T> range : ranges) {
+//            RangeList<Range<T>, T> subtractListAux = new RangeList<>();
+//            for (Range<T> subtractedRange : subtractList) {
+//                subtractListAux.add(subtractedRange.subtract(range));
+//            }
+//            subtractList = subtractListAux;
+//        }
+//        return subtractList;
+//    }
 
     public T getPosition(long offset) {
         if (offset < 0) {

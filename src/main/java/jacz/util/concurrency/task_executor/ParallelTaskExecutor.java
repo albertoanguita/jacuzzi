@@ -6,6 +6,7 @@ import jacz.util.concurrency.concurrency_controller.ConcurrencyController;
 /**
  * This class allows to launch tasks in parallel. It receives implementations of the ParallelTask interface, and
  * creates threads for executing those tasks in parallel
+ * todo use Executor
  */
 public class ParallelTaskExecutor {
 

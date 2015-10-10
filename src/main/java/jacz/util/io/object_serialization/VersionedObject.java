@@ -14,5 +14,7 @@ public interface VersionedObject {
 
     Map<String, Serializable> serialize();
 
-    void deserialize(String version, Map<String, Object> attributes) throws UnrecognizedVersionException;
+    void deserialize(Map<String, Object> attributes);
+
+    void deserializeOldVersion(String version, Map<String, Object> attributes) throws UnrecognizedVersionException;
 }

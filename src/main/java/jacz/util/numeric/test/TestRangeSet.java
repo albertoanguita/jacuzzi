@@ -1,11 +1,7 @@
 package jacz.util.numeric.test;
 
-import jacz.util.numeric.LongRange;
-import jacz.util.numeric.RangeToRangeComparison;
-import jacz.util.numeric.RangeSet;
-
-import java.util.ArrayList;
-import java.util.Map;
+import jacz.util.numeric.oldrange.LongRange;
+import jacz.util.numeric.oldrange.RangeSet;
 
 /**
  *

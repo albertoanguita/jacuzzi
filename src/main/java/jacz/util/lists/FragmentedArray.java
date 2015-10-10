@@ -1,6 +1,6 @@
 package jacz.util.lists;
 
-import jacz.util.numeric.IntegerRange;
+import jacz.util.numeric.oldrange.IntegerRange;
 
 import java.util.ArrayList;
 import java.util.Arrays;

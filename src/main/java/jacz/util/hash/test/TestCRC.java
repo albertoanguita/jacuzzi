@@ -1,6 +1,7 @@
 package jacz.util.hash.test;
 
 import jacz.util.hash.CRC;
+import jacz.util.io.object_serialization.MutableOffset;
 import jacz.util.io.object_serialization.Serializer;
 
 import java.util.Arrays;
@@ -14,10 +15,13 @@ public class TestCRC {
 
         byte[] data = Serializer.serialize("hello");
 
-        byte[] dataWithCRC = CRC.addCRC(data, -1, true);
+        byte[] dataWithCRC = CRC.addCRC(data, 4, true);
 
-        byte[] data2 = CRC.extractDataWithCRC(dataWithCRC);
-
+        MutableOffset offset = new MutableOffset();
+        byte[] data2 = CRC.extractDataWithCRC(dataWithCRC, offset);
         System.out.println(Arrays.equals(data, data2));
+
+        String hello = Serializer.deserializeString(data2, new MutableOffset());
+        System.out.println(hello);
     }
 }

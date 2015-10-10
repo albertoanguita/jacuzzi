@@ -4,7 +4,7 @@ import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.task_executor.ParallelTask;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.timer.Timer;
-import jacz.util.numeric.LongRange;
+import jacz.util.numeric.range.LongRange;
 
 import java.util.List;
 

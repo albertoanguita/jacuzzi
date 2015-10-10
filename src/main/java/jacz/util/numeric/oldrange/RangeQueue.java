@@ -1,4 +1,4 @@
-package jacz.util.numeric;
+package jacz.util.numeric.oldrange;
 
 import jacz.util.concurrency.execution_control.PausableElement;
 

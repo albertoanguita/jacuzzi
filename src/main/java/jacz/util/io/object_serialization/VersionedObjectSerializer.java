@@ -88,59 +88,60 @@ public class VersionedObjectSerializer {
         Map<String, Object> attributes = new HashMap<>();
         try {
             data = CRC.extractDataWithCRC(data, offset);
-            version = Serializer.deserializeString(data, offset);
-            int attributeCount = Serializer.deserializeIntValue(data, offset);
+            MutableOffset dataOffset = new MutableOffset();
+            version = Serializer.deserializeString(data, dataOffset);
+            int attributeCount = Serializer.deserializeIntValue(data, dataOffset);
             for (int i = 0; i < attributeCount; i++) {
-                String attributeName = Serializer.deserializeString(data, offset);
-                String type = Serializer.deserializeString(data, offset);
+                String attributeName = Serializer.deserializeString(data, dataOffset);
+                String type = Serializer.deserializeString(data, dataOffset);
                 if (type == null) {
                     throw new RuntimeException();
                 }
                 switch (type) {
                     case "String":
-                        attributes.put(attributeName, Serializer.deserializeString(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeString(data, dataOffset));
                         break;
 
                     case "Boolean":
-                        attributes.put(attributeName, Serializer.deserializeBoolean(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeBoolean(data, dataOffset));
                         break;
 
                     case "Byte":
-                        attributes.put(attributeName, Serializer.deserializeByte(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeByte(data, dataOffset));
                         break;
 
                     case "Short":
-                        attributes.put(attributeName, Serializer.deserializeShort(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeShort(data, dataOffset));
                         break;
 
                     case "Integer":
-                        attributes.put(attributeName, Serializer.deserializeInt(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeInt(data, dataOffset));
                         break;
 
                     case "Long":
-                        attributes.put(attributeName, Serializer.deserializeLong(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeLong(data, dataOffset));
                         break;
 
                     case "Float":
-                        attributes.put(attributeName, Serializer.deserializeFloat(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeFloat(data, dataOffset));
                         break;
 
                     case "Double":
-                        attributes.put(attributeName, Serializer.deserializeDouble(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeDouble(data, dataOffset));
                         break;
 
                     case "Enum":
-                        String enumType = Serializer.deserializeString(data, offset);
+                        String enumType = Serializer.deserializeString(data, dataOffset);
                         Class enumClass = Class.forName(enumType);
-                        attributes.put(attributeName, Serializer.deserializeEnum(enumClass, data, offset));
+                        attributes.put(attributeName, Serializer.deserializeEnum(enumClass, data, dataOffset));
                         break;
 
                     case "ByteArray":
-                        attributes.put(attributeName, Serializer.deserializeBytes(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeBytes(data, dataOffset));
                         break;
 
                     case "Serializable":
-                        attributes.put(attributeName, Serializer.deserializeObject(data, offset));
+                        attributes.put(attributeName, Serializer.deserializeObject(data, dataOffset));
                         break;
 
                     default:
@@ -148,7 +149,11 @@ public class VersionedObjectSerializer {
                         throw new RuntimeException("Unexpected type: " + type);
                 }
             }
-            versionedObject.deserialize(version, attributes);
+            if (version == null || version.equals(versionedObject.getCurrentVersion())) {
+                versionedObject.deserialize(attributes);
+            } else {
+                versionedObject.deserializeOldVersion(version, attributes);
+            }
         } catch (RuntimeException e) {
             throw new VersionedSerializationException(version, attributes, VersionedSerializationException.Reason.INCORRECT_DATA);
         } catch (UnrecognizedVersionException e) {
@@ -159,6 +164,4 @@ public class VersionedObjectSerializer {
             throw new VersionedSerializationException(null, attributes, VersionedSerializationException.Reason.CRC_MISMATCH);
         }
     }
-
-
 }

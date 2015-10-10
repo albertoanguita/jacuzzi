@@ -1,20 +1,19 @@
-package jacz.util.numeric;
+package jacz.util.numeric.oldrange;
 
 /**
  * Class description
  * <p/>
  * User: Alberto<br>
- * Date: 16-may-2010<br>
- * Last Modified: 16-may-2010
+ * Date: 15-may-2010<br>
+ * Last Modified: 15-may-2010
  */
-public class LongRange extends Range<LongRange, Long> implements RangeInterface<LongRange, Long> {
+public class ShortRange extends Range<ShortRange, Short> implements RangeInterface<ShortRange, Short> {
 
-
-    public LongRange(Long min, Long max) {
-        super(new LongRange(min, max, false));
+    public ShortRange(Short min, Short max) {
+        super(new ShortRange(min, max, false));
     }
 
-    LongRange(Long min, Long max, boolean b) {
+    ShortRange(Short min, Short max, boolean b) {
         super();
         this.min = min;
         this.max = max;
@@ -25,70 +24,70 @@ public class LongRange extends Range<LongRange, Long> implements RangeInterface<
         if (isEmpty()) {
             return (long) 0;
         } else {
-            return max - min + 1;
+            return (long) max - min + 1;
         }
     }
 
     @Override
-    public LongRange buildInstance(Long min, Long max) {
-        return new LongRange(min, max);
+    public ShortRange buildInstance(Short min, Short max) {
+        return new ShortRange(min, max);
     }
 
     @Override
-    public Long getMin() {
+    public Short getMin() {
         return min;
     }
 
     @Override
-    public Long getMax() {
+    public Short getMax() {
         return max;
     }
 
     @Override
-    public Long getZero() {
-        return (long) 0;
+    public Short getZero() {
+        return (short) 0;
     }
 
     @Override
-    public Long previous(Long value) {
+    public Short previous(Short value) {
         if (value == null) {
             return null;
         } else {
-            return value - 1;
+            return (short) (value - 1);
         }
     }
 
     @Override
-    public Long next(Long value) {
+    public Short next(Short value) {
         if (value == null) {
             return null;
         } else {
-            return value + 1;
+            return (short) (value + 1);
         }
     }
 
     @Override
-    public Long add(Long value1, Long value2) {
+    public Short add(Short value1, Short value2) {
         if (value1 == null || value2 == null) {
             return null;
         } else {
-            return value1 + value2;
+            return (short) (value1 + value2);
         }
     }
 
     @Override
-    public Long substract(Long value1, Long value2) {
+    public Short substract(Short value1, Short value2) {
         if (value1 == null || value2 == null) {
             return null;
         } else {
-            return value1 - value2;
+            return (short) (value1 - value2);
         }
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof LongRange) {
-            LongRange range = (LongRange) obj;
+        if (obj instanceof ShortRange) {
+            ShortRange range = (ShortRange) obj;
             if (isEmpty() && range.isEmpty()) {
                 return true;
             } else if ((isEmpty() && !range.isEmpty()) || (!isEmpty() && range.isEmpty())) {

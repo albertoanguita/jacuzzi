@@ -1,46 +1,43 @@
-package jacz.util.numeric.newrange;
+package jacz.util.numeric.range;
 
 import java.io.Serializable;
 import java.util.*;
 
 /**
- * Ordered list of non-overlapping ranges
+ * Generic range list implementation
  */
-public class RangeList<T extends Number & Comparable<T>> implements Serializable, Iterable<Range<T>> {
+public class RangeList<T extends Range<Y>, Y extends Number & Comparable<Y>> implements Serializable, Iterable<T> {
 
     /**
      * Ordered list of the ranges composing this set. No overlapping or in contact ranges can live here (they are
      * merged if needed)
      */
-    private List<Range<T>> ranges;
+    protected List<T> ranges;
 
 
     public RangeList() {
         ranges = new ArrayList<>();
     }
 
-    public RangeList(Range<T> initialRange) {
+    public RangeList(T initialRange) {
         ranges = new ArrayList<>();
         add(initialRange);
     }
 
-    public RangeList(Collection<Range<T>> ranges) {
+    public RangeList(Collection<T> ranges) {
         this.ranges = new ArrayList<>();
         add(ranges);
     }
 
-    public RangeList(RangeList<T> anotherRangeList) {
-        ranges = new ArrayList<>(anotherRangeList.ranges);
+    public RangeList(RangeList<T, Y> anotherRangeList) {
+        this(anotherRangeList, false);
     }
 
-    @SafeVarargs
-    public RangeList(Class<T> clazz, T... values) {
-        this();
-        if (values.length % 2 != 0) {
-            throw new IllegalArgumentException("Even number of values required");
-        }
-        for (int i = 0; i < values.length; i += 2) {
-            add(new Range<>(values[i], values[i + 1], clazz));
+    protected RangeList(RangeList<T, Y> anotherRangeList, boolean swallow) {
+        if (swallow) {
+            ranges = anotherRangeList.ranges;
+        } else {
+            ranges = new ArrayList<>(anotherRangeList.ranges);
         }
     }
 
@@ -48,17 +45,17 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         return ranges.isEmpty();
     }
 
-    public List<Range<T>> getRangesAsList() {
+    public List<T> getRangesAsList() {
         return new ArrayList<>(ranges);
     }
 
     // todo make contains methods use binary search
 
-    public boolean contains(T value) {
+    public boolean contains(Y value) {
         return search(value) >= 0;
     }
 
-    public int search(T value) {
+    public int search(Y value) {
         for (int i = 0; i < ranges.size(); i++) {
             if (ranges.get(i).contains(value)) {
                 return i;
@@ -67,11 +64,11 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         return -1;
     }
 
-    public boolean contains(Range<T> range) {
+    public boolean contains(T range) {
         return search(range) >= 0;
     }
 
-    public int search(Range<T> range) {
+    public int search(T range) {
         for (int i = 0; i < ranges.size(); i++) {
             if (ranges.get(i).compareTo(range) == Range.RangeComparison.CONTAINS || ranges.get(i).compareTo(range) == Range.RangeComparison.EQUALS) {
                 return i;
@@ -85,7 +82,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
      *
      * @param range range to add
      */
-    public void add(Range<T> range) {
+    public void add(T range) {
         // swallow copy of the parameter, to freely modify the list
         if (range.isEmpty()) {
             return;
@@ -94,7 +91,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         boolean finished = false;
         boolean checkRightOverlap = false;
         while (!finished && i < ranges.size()) {
-            Range<T> oneRange = ranges.get(i);
+            T oneRange = ranges.get(i);
             switch (range.compareTo(oneRange)) {
 
                 case LEFT_NO_CONTACT:
@@ -105,7 +102,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
                 case LEFT_CONTACT:
                 case LEFT_OVERLAP:
                     // merge our range with this one
-                    ranges.set(i, range.buildInstance(range.getMin(), oneRange.getMax()));
+                    ranges.set(i, (T) range.buildInstance(range.getMin(), oneRange.getMax()));
                     finished = true;
                     break;
                 case EQUALS:
@@ -121,7 +118,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
                 case RIGHT_OVERLAP:
                 case RIGHT_CONTACT:
                     // merge our range with this one
-                    ranges.set(i, range.buildInstance(oneRange.getMin(), range.getMax()));
+                    ranges.set(i, (T) range.buildInstance(oneRange.getMin(), range.getMax()));
                     finished = true;
                     checkRightOverlap = true;
                     break;
@@ -142,10 +139,10 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
                     ranges.remove(i);
                 }
             } else {
-                Range<T> insertedRange = ranges.get(i - 1);
+                T insertedRange = ranges.get(i - 1);
                 finished = false;
                 while (!finished && i < ranges.size()) {
-                    Range<T> oneRange = ranges.get(i);
+                    T oneRange = ranges.get(i);
                     switch (insertedRange.compareTo(oneRange)) {
 
                         case ANY_EMPTY:
@@ -163,7 +160,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
                             break;
                         case LEFT_CONTACT:
                         case LEFT_OVERLAP:
-                            ranges.set(i, insertedRange.buildInstance(ranges.get(i - 1).getMin(), oneRange.getMax()));
+                            ranges.set(i, (T) insertedRange.buildInstance(ranges.get(i - 1).getMin(), oneRange.getMax()));
                             ranges.remove(i - 1);
                             finished = true;
                             break;
@@ -177,26 +174,26 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         }
     }
 
-    public void add(Collection<Range<T>> ranges) {
-        for (Range<T> range : ranges) {
+    public void add(Collection<T> ranges) {
+        for (T range : ranges) {
             add(range);
         }
     }
 
-    @SafeVarargs
-    public final void add(Range<T>... ranges) {
-        for (Range<T> range : ranges) {
+    @SuppressWarnings("unchecked")
+    public void add(T... ranges) {
+        for (T range : ranges) {
             add(range);
         }
     }
 
-    public void add(RangeList<T> anotherRangeList) {
-        for (Range<T> range : anotherRangeList.getRangesAsList()) {
+    public void add(RangeList<T, Y> anotherRangeList) {
+        for (T range : anotherRangeList.getRangesAsList()) {
             add(range);
         }
     }
 
-    public void remove(Range<T> range) {
+    public void remove(T range) {
         int index = searchAffectedRange(range);
         if (index >= 0) {
             if (index == ranges.size()) {
@@ -212,39 +209,39 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
                 ranges.remove(secIndex);
             }
             if (secIndex < ranges.size() &&
-                    (range.compareTo(ranges.get(secIndex)) == Range.RangeComparison.LEFT_OVERLAP)) {
-                T min = range.next(range.getMax());
-                T max = ranges.get(secIndex).getMax();
-                ranges.set(secIndex, range.buildInstance(min, max));
+                    (range.compareTo((T) ranges.get(secIndex)) == Range.RangeComparison.LEFT_OVERLAP)) {
+                Y min = range.next(range.getMax());
+                Y max = ranges.get(secIndex).getMax();
+                ranges.set(secIndex, (T) range.buildInstance(min, max));
             }
 
             // now deal with the range at index. It might have to be deleted, partially deleted, or even split in two
-            switch (range.compareTo(ranges.get(index))) {
+            switch (range.compareTo((T) ranges.get(index))) {
 
                 case LEFT_OVERLAP:
-                    T min = range.next(range.getMax());
-                    T max = ranges.get(index).getMax();
-                    ranges.set(index, range.buildInstance(min, max));
+                    Y min = range.next(range.getMax());
+                    Y max = ranges.get(index).getMax();
+                    ranges.set(index, (T) range.buildInstance(min, max));
                     break;
 
                 case RIGHT_OVERLAP:
                     min = ranges.get(index).getMin();
                     max = range.previous(range.getMin());
-                    ranges.set(index, range.buildInstance(min, max));
+                    ranges.set(index, (T) range.buildInstance(min, max));
                     break;
 
                 case INSIDE:
-                    T min1 = ranges.get(index).getMin();
-                    T max1 = range.previous(range.getMin());
-                    T min2 = range.next(range.getMax());
-                    T max2 = ranges.get(index).getMax();
+                    Y min1 = ranges.get(index).getMin();
+                    Y max1 = range.previous(range.getMin());
+                    Y min2 = range.next(range.getMax());
+                    Y max2 = ranges.get(index).getMax();
                     ranges.remove(index);
                     if (min1.compareTo(max1) <= 0) {
-                        ranges.add(index, range.buildInstance(min1, max1));
+                        ranges.add(index, (T) range.buildInstance(min1, max1));
                         index++;
                     }
                     if (min2.compareTo(max2) <= 0) {
-                        ranges.add(index, range.buildInstance(min2, max2));
+                        ranges.add(index, (T) range.buildInstance(min2, max2));
                     }
                     break;
 
@@ -256,19 +253,19 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         }
     }
 
-    public void remove(List<Range<T>> ranges) {
-        for (Range<T> range : ranges) {
+    public void remove(List<T> ranges) {
+        for (T range : ranges) {
             remove(range);
         }
     }
 
-    @SafeVarargs
-    public final void remove(Range<T>... ranges) {
+    @SuppressWarnings("unchecked")
+    public void remove(T... ranges) {
         remove(Arrays.asList(ranges));
     }
 
-    public void remove(RangeList<T> anotherRangeList) {
-        for (Range<T> range : anotherRangeList.getRangesAsList()) {
+    public void remove(RangeList<T, Y> anotherRangeList) {
+        for (T range : anotherRangeList.getRangesAsList()) {
             remove(range);
         }
     }
@@ -283,7 +280,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
      * If no range is found, resourceSegments.maxSize() + 1 is returned
      * If the given range is empty, -1 is returned
      */
-    private int searchAffectedRange(Range<T> range) {
+    private int searchAffectedRange(T range) {
         // perform a binary search to reduce complexity
         int min = 0;
         int max = ranges.size() - 1;
@@ -319,36 +316,36 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         return min;
     }
 
-    public RangeList<T> intersection(Range<T> range) {
-        RangeList<T> intersection = new RangeList<>();
-        for (Range<T> aRange : ranges) {
-            intersection.add(aRange.intersection(range));
+    public RangeList<T, Y> intersection(T range) {
+        RangeList<T, Y> intersection = new RangeList<>();
+        for (T aRange : ranges) {
+            intersection.add((T) aRange.intersection(range));
         }
         return intersection;
     }
 
-    public RangeList<T> intersection(Collection<Range<T>> ranges) {
-        RangeList<T> intersection = new RangeList<>();
-        for (Range<T> aRange : ranges) {
+    public RangeList<T, Y> intersection(Collection<T> ranges) {
+        RangeList<T, Y> intersection = new RangeList<>();
+        for (T aRange : ranges) {
             intersection.add(intersection(aRange));
         }
         return intersection;
     }
 
-    @SafeVarargs
-    public final RangeList<T> intersection(Range<T>... ranges) {
+    @SuppressWarnings("unchecked")
+    public RangeList<T, Y> intersection(T... ranges) {
         return intersection(Arrays.asList(ranges));
     }
 
-    public RangeList<T> intersection(RangeList<T> anotherRangeList) {
+    public RangeList<T, Y> intersection(RangeList<T, Y> anotherRangeList) {
         return intersection(anotherRangeList.getRangesAsList());
     }
 
-    public T getPosition(long offset) {
+    public Y getPosition(long offset) {
         if (offset < 0) {
             throw new IllegalArgumentException("Negative offset not allowed");
         }
-        for (Range<T> aRange : ranges) {
+        for (T aRange : ranges) {
             try {
                 return aRange.getPosition(offset);
             } catch (IndexOutOfBoundsException e) {
@@ -361,7 +358,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
 
     public Long size() {
         long size = 0;
-        for (Range<T> range : ranges) {
+        for (T range : ranges) {
             if (range.size() == null) {
                 return null;
             }
@@ -384,7 +381,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        RangeList<?> rangeList = (RangeList<?>) o;
+        RangeList<?, ?> rangeList = (RangeList<?, ?>) o;
 
         return ranges.equals(rangeList.ranges);
     }
@@ -395,7 +392,7 @@ public class RangeList<T extends Number & Comparable<T>> implements Serializable
     }
 
     @Override
-    public Iterator<Range<T>> iterator() {
+    public Iterator<T> iterator() {
         return ranges.iterator();
     }
 }

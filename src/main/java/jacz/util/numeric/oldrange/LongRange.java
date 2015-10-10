@@ -1,19 +1,20 @@
-package jacz.util.numeric;
+package jacz.util.numeric.oldrange;
 
 /**
  * Class description
  * <p/>
  * User: Alberto<br>
- * Date: 25-mar-2007<br>
- * Last Modified: 25-mar-2007
+ * Date: 16-may-2010<br>
+ * Last Modified: 16-may-2010
  */
-public class IntegerRange extends Range<IntegerRange, Integer> implements RangeInterface<IntegerRange, Integer> {
+public class LongRange extends Range<LongRange, Long> implements RangeInterface<LongRange, Long> {
 
-    public IntegerRange(Integer min, Integer max) {
-        super(new IntegerRange(min, max, false));
+
+    public LongRange(Long min, Long max) {
+        super(new LongRange(min, max, false));
     }
 
-    IntegerRange(Integer min, Integer max, boolean b) {
+    LongRange(Long min, Long max, boolean b) {
         super();
         this.min = min;
         this.max = max;
@@ -24,50 +25,50 @@ public class IntegerRange extends Range<IntegerRange, Integer> implements RangeI
         if (isEmpty()) {
             return (long) 0;
         } else {
-            return (long) max - min + 1;
+            return max - min + 1;
         }
     }
 
     @Override
-    public IntegerRange buildInstance(Integer min, Integer max) {
-        return new IntegerRange(min, max);
+    public LongRange buildInstance(Long min, Long max) {
+        return new LongRange(min, max);
     }
 
     @Override
-    public Integer getMin() {
+    public Long getMin() {
         return min;
     }
 
     @Override
-    public Integer getMax() {
+    public Long getMax() {
         return max;
     }
 
     @Override
-    public Integer getZero() {
-        return 0;
+    public Long getZero() {
+        return (long) 0;
     }
 
     @Override
-    public Integer previous(Integer value) {
+    public Long previous(Long value) {
         if (value == null) {
             return null;
         } else {
-            return (value - 1);
+            return value - 1;
         }
     }
 
     @Override
-    public Integer next(Integer value) {
+    public Long next(Long value) {
         if (value == null) {
             return null;
         } else {
-            return (value + 1);
+            return value + 1;
         }
     }
 
     @Override
-    public Integer add(Integer value1, Integer value2) {
+    public Long add(Long value1, Long value2) {
         if (value1 == null || value2 == null) {
             return null;
         } else {
@@ -76,7 +77,7 @@ public class IntegerRange extends Range<IntegerRange, Integer> implements RangeI
     }
 
     @Override
-    public Integer substract(Integer value1, Integer value2) {
+    public Long substract(Long value1, Long value2) {
         if (value1 == null || value2 == null) {
             return null;
         } else {
@@ -86,8 +87,8 @@ public class IntegerRange extends Range<IntegerRange, Integer> implements RangeI
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof IntegerRange) {
-            IntegerRange range = (IntegerRange) obj;
+        if (obj instanceof LongRange) {
+            LongRange range = (LongRange) obj;
             if (isEmpty() && range.isEmpty()) {
                 return true;
             } else if ((isEmpty() && !range.isEmpty()) || (!isEmpty() && range.isEmpty())) {
@@ -104,12 +105,5 @@ public class IntegerRange extends Range<IntegerRange, Integer> implements RangeI
         } else {
             return false;
         }
-    }
-
-    public static void main(String[] args) {
-        IntegerRange r1 = new IntegerRange(7, 2);
-        IntegerRange r2 = new IntegerRange(6, 5);
-
-        System.out.println(r1.equals(r2));
     }
 }

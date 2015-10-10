@@ -1,11 +1,7 @@
 package jacz.util.queues.event_processing;
 
 /**
- * Class description
- * <p/>
- * User: Alberto<br>
- * Date: 09-abr-2010<br>
- * Last Modified: 09-abr-2010
+ * todo change to Executor
  */
 class MessageReaderHandlerThread extends Thread {
 
@@ -35,6 +31,7 @@ class MessageReaderHandlerThread extends Thread {
                 messageProcessor.accessReaderPausableElement();
             } catch (Exception e) {
                 // user should not let any exceptions to reach this level -> error exposed in console
+                // todo, handle better?
                 e.printStackTrace();
                 finished = true;
             }

@@ -1,7 +1,7 @@
 package jacz.util.numeric.test;
 
-import jacz.util.numeric.IntegerRange;
-import jacz.util.numeric.LongRange;
+import jacz.util.numeric.oldrange.IntegerRange;
+import jacz.util.numeric.oldrange.LongRange;
 
 import java.util.ArrayList;
 import java.util.List;

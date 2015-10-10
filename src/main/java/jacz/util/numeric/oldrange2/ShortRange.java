@@ -1,4 +1,4 @@
-package jacz.util.numeric.newrange;
+package jacz.util.numeric.oldrange2;
 
 /**
  * Created by Alberto on 01/10/2015.

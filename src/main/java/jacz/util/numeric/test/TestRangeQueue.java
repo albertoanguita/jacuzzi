@@ -4,8 +4,8 @@ import jacz.util.concurrency.task_executor.ParallelTask;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.identifier.UniqueIdentifier;
 import jacz.util.identifier.UniqueIdentifierFactory;
-import jacz.util.numeric.LongRange;
-import jacz.util.numeric.RangeQueue;
+import jacz.util.numeric.oldrange.LongRange;
+import jacz.util.numeric.oldrange.RangeQueue;
 
 /**
  * Class description

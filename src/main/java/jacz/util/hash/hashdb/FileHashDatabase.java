@@ -3,6 +3,8 @@ package jacz.util.hash.hashdb;
 import jacz.util.files.FileUtil;
 import jacz.util.hash.HashFunction;
 import jacz.util.hash.SHA_256;
+import jacz.util.io.object_serialization.UnrecognizedVersionException;
+import jacz.util.io.object_serialization.VersionedObject;
 import jacz.util.lists.Duple;
 import jacz.util.maps.AutoKeyMap;
 
@@ -11,7 +13,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A map store for files, where each file is indexed by its hash code. This store allows managing a set of files (either in the same directory
@@ -23,9 +27,8 @@ import java.util.List;
  * The class can also be configured with a maximum size. This way, oldest accessed files are erased if the total size of the managed files
  * exceeds a certain value.
  * <p/>
- * todo implement VersionedObject
  */
-public class FileHashDatabase implements Serializable {
+public class FileHashDatabase implements VersionedObject {
 
     protected static class AnnotatedFile implements Serializable {
 
@@ -80,10 +83,13 @@ public class FileHashDatabase implements Serializable {
         }
     }
 
+    private static final String VERSION_0_1 = "VERSION_0.1";
 
-    protected final AutoKeyMap<String, AnnotatedFile, IOException> filesMap;
+    private static final String CURRENT_VERSION = VERSION_0_1;
 
-    protected final AutoKeyMap<String, AnnotatedFolder, IOException> foldersMap;
+    protected AutoKeyMap<String, AnnotatedFile, IOException> filesMap;
+
+    protected AutoKeyMap<String, AnnotatedFolder, IOException> foldersMap;
 
     public FileHashDatabase() {
         this(new FileKeyGenerator(), new FolderKeyGenerator());
@@ -110,36 +116,28 @@ public class FileHashDatabase implements Serializable {
         return foldersMap.containsValue(new AnnotatedFolder(folderPath, fileNames));
     }
 
-//    public Map<String, String> swallowAnalysis() {
-//        return performFileAnalysis(false);
-//    }
-//
-//    public Map<String, String> deepAnalysis() {
-//        return performFileAnalysis(true);
-//    }
-//
-//    private Map<String, String> performFileAnalysis(boolean deep) {
-//        Map<String, String> wrongEntries = new HashMap<>();
-//        for (AnnotatedFile annotatedFile : files.values()) {
-//            // check that the file exists in the specified path (in all cases)
-//            if (!FileUtil.isFile(annotatedFile.path)) {
-//                wrongEntries.put(annotatedFile.key, annotatedFile.path);
-//                continue;
-//            }
-//            if (deep) {
-//                // also check that the file exists, and that the hash is correct
-//                File file = new File(annotatedFile.path);
-//                try {
-//                    if (!annotatedFile.key.equals(getHash(file))) {
-//                        wrongEntries.put(annotatedFile.key, annotatedFile.path);
-//                    }
-//                } catch (IOException e) {
-//                    wrongEntries.put(annotatedFile.key, annotatedFile.path);
-//                }
-//            }
-//        }
-//        return wrongEntries;
-//    }
+    public Map<String, String> performFileAnalysis(boolean deep) {
+        Map<String, String> wrongEntries = new HashMap<>();
+        for (Map.Entry<String, AnnotatedFile> entry : filesMap.entrySet()) {
+            // check that the file exists in the specified path (in all cases)
+            if (!FileUtil.isFile(entry.getValue().path)) {
+                wrongEntries.put(entry.getKey(), entry.getValue().path);
+                continue;
+            }
+            if (deep) {
+                // also check that the file exists, and that the hash is correct
+                File file = new File(entry.getValue().path);
+                try {
+                    if (!entry.getKey().equals(getHash(file))) {
+                        wrongEntries.put(entry.getKey(), entry.getValue().path);
+                    }
+                } catch (IOException e) {
+                    wrongEntries.put(entry.getKey(), entry.getValue().path);
+                }
+            }
+        }
+        return wrongEntries;
+    }
 
     public String getFilePath(String key) {
         if (filesMap.containsKey(key)) {
@@ -207,5 +205,29 @@ public class FileHashDatabase implements Serializable {
 
     public String removeValue(String folderPath, List<String> fileNames) throws IOException {
         return foldersMap.removeValue(new AnnotatedFolder(folderPath, fileNames));
+    }
+
+    @Override
+    public String getCurrentVersion() {
+        return CURRENT_VERSION;
+    }
+
+    @Override
+    public Map<String, Serializable> serialize() {
+        Map<String, Serializable> map = new HashMap<>();
+        map.put("filesMap", filesMap);
+        map.put("foldersMap", foldersMap);
+        return map;
+    }
+
+    @Override
+    public void deserialize(Map<String, Object> attributes) {
+        filesMap = (AutoKeyMap<String, AnnotatedFile, IOException>) attributes.get("filesMap");
+        foldersMap = (AutoKeyMap<String, AnnotatedFolder, IOException>) attributes.get("foldersMap");
+    }
+
+    @Override
+    public void deserializeOldVersion(String version, Map<String, Object> attributes) throws UnrecognizedVersionException {
+        throw new UnrecognizedVersionException();
     }
 }

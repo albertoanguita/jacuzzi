@@ -14,7 +14,10 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * todo
+ * A FileHashDatabase that stores timestamps on added files (does not work with folders). We can retrieve the keys
+ * of the newest files.
+ * <p/>
+ * Does not seem to be finished. DO NOT USE.
  */
 public class FileHashDatabaseWithTimestamp extends FileHashDatabase {
 

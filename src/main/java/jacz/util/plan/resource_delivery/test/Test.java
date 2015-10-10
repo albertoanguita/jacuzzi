@@ -18,7 +18,7 @@ public class Test {
     public static void main(String args[]) {
 
         TimeElapsed timeElapsed = new TimeElapsed();
-        ResourceDeliverer<MyTarget, ResourceImpl> resourceDeliverer = new ResourceDeliverer<MyTarget, ResourceImpl>(new MessageHandlerImpl(timeElapsed), 20, 1.0d, 1000);
+        ResourceDeliverer<MyTarget, ResourceImpl> resourceDeliverer = new ResourceDeliverer<>(new MessageHandlerImpl(timeElapsed), 20, 1.0d, 1000);
 
         MyTarget t1 = new MyTarget(1);
         MyTarget t2 = new MyTarget(2);
@@ -45,7 +45,7 @@ public class Test {
     }
 
     private static List<ResourceImpl> genList(String... strList) {
-        List<ResourceImpl> result = new ArrayList<ResourceImpl>(strList.length);
+        List<ResourceImpl> result = new ArrayList<>(strList.length);
         for (String str : strList) {
             result.add(new ResourceImpl(str));
         }

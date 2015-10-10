@@ -7,13 +7,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A generic map that allows defining the actions that take place in the get and put methods
+ * A generic map that allows adding values without key. A KeyGenerator is provided with the code to calculate
+ * the key for values
  */
 public class AutoKeyMap<K, V, E extends Throwable> implements Serializable {
 
-    public static interface KeyGenerator<K, V, E extends Throwable> {
+    public interface KeyGenerator<K, V, E extends Throwable> {
 
-        public K generateKey(V value) throws E;
+        K generateKey(V value) throws E;
     }
 
     private final Map<K, V> map;
@@ -23,6 +24,14 @@ public class AutoKeyMap<K, V, E extends Throwable> implements Serializable {
     public AutoKeyMap(KeyGenerator<K, V, E> keyGenerator) {
         map = new HashMap<>();
         this.keyGenerator = keyGenerator;
+    }
+
+    public boolean isEmpty() {
+        return map.isEmpty();
+    }
+
+    public int size() {
+        return map.size();
     }
 
     public void clear() {
@@ -67,5 +76,9 @@ public class AutoKeyMap<K, V, E extends Throwable> implements Serializable {
 
     public Collection<V> values() {
         return map.values();
+    }
+
+    public Set<Map.Entry<K, V>> entrySet() {
+        return map.entrySet();
     }
 }

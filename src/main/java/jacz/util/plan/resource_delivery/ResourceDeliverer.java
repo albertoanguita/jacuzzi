@@ -13,7 +13,10 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * todo what is this???
+ * This class provides priority-based data processing through priority queues. It is not finalized nor well-tested.
+ * It should not be used.
+ * <p/>
+ * todo remove if not used in a long time
  */
 public class ResourceDeliverer<T, Y extends Resource> implements SimpleTimerAction {
 
@@ -55,8 +58,8 @@ public class ResourceDeliverer<T, Y extends Resource> implements SimpleTimerActi
     }
 
     public ResourceDeliverer(MessageHandler messageHandler, String threadsName, int capacity, Double maxSpeed, long millisToStore) {
-        resources = new HashMap<T, TargetResource<T, Y>>();
-        targetQueue = new PriorityBlockingQueue<TargetResource<T, Y>>(INITIAL_QUEUE_CAPACITY);
+        resources = new HashMap<>();
+        targetQueue = new PriorityBlockingQueue<>(INITIAL_QUEUE_CAPACITY);
         availableSpace = new Semaphore(capacity, true);
         accessLock = new ReentrantLock(true);
         resourceDelivererMessageReader = new ResourceDelivererMessageReader<T, Y>(targetQueue, this, maxSpeed, millisToStore);

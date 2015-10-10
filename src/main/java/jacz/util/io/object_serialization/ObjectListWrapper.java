@@ -14,7 +14,7 @@ public class ObjectListWrapper implements Serializable {
     /**
      * The list of objects stored by this ObjectListWrapper
      */
-    private List<Object> objects;
+    private final List<Object> objects;
 
     /**
      * Class constructor. Builds an isEmpty list of objects

@@ -49,19 +49,40 @@ public class RangeList<T extends Range<Y>, Y extends Number & Comparable<Y>> imp
         return new ArrayList<>(ranges);
     }
 
-    // todo make contains methods use binary search
-
     public boolean contains(Y value) {
-        return search(value) >= 0;
+        Integer index = search(value);
+        return index != null && index >= 0;
     }
 
-    public int search(Y value) {
-        for (int i = 0; i < ranges.size(); i++) {
-            if (ranges.get(i).contains(value)) {
-                return i;
+    public Integer search(Y value) {
+        return searchBinary(value, 0, ranges.size() - 1);
+    }
+
+    private Integer searchBinary(Y value, int min, int max) {
+        if (max < min) {
+            return -min - 1;
+        } else {
+            int search = (min + max) / 2;
+            Range.ValueComparison comparison = ranges.get(search).compareTo(value);
+            switch (comparison) {
+
+                case ANY_EMPTY:
+                    // value is null
+                    return null;
+                case LEFT:
+                    // look to the right
+                    return searchBinary(value, search + 1, max);
+                case RIGHT:
+                    // look to the left
+                    return searchBinary(value, min, search - 1);
+                case CONTAINS:
+                    // found!
+                    return search;
+                default:
+                    // cannot happen
+                    return null;
             }
         }
-        return -1;
     }
 
     public boolean contains(T range) {

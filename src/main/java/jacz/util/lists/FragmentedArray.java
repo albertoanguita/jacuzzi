@@ -1,6 +1,6 @@
 package jacz.util.lists;
 
-import jacz.util.numeric.oldrange.IntegerRange;
+import jacz.util.numeric.range.IntegerRange;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,15 +23,10 @@ public class FragmentedArray<T> {
      */
     private ArrayList<IntegerRange> indexes;
 
-    /**
-     * Array used only to be able to create arrays of type T
-     * todo not needed
-     */
-    T[] baseArray;
-
-    public FragmentedArray() {
+    public FragmentedArray(T[] initialArray) {
         arrays = new ArrayList<>(0);
         indexes = new ArrayList<>(0);
+        add(initialArray);
     }
 
     public void add(T[] array) {
@@ -43,7 +38,6 @@ public class FragmentedArray<T> {
             oldMax = -1;
         }
         indexes.add(new IntegerRange(oldMax + 1, oldMax + array.length));
-        generateBaseArray();
     }
 
     @SafeVarargs
@@ -60,22 +54,11 @@ public class FragmentedArray<T> {
             oldMin = 0;
         }
         indexes.add(0, new IntegerRange(oldMin - array.length, oldMin - 1));
-        generateBaseArray();
     }
 
     @SafeVarargs
     public final void addArrayLeft(T... array) {
         addLeft(array);
-    }
-
-    private void generateBaseArray() {
-        if (size() != 0) {
-            int i = 0;
-            while (arrays.get(i).length == 0) {
-                i++;
-            }
-            baseArray = Arrays.copyOfRange(arrays.get(0), 0, 1);
-        }
     }
 
     public int size() {
@@ -94,29 +77,35 @@ public class FragmentedArray<T> {
         if (offset < 0) {
             throw new ArrayIndexOutOfBoundsException("offset cannot be lesser than 0, found " + offset);
         }
+        if (length < 0) {
+            throw new ArrayIndexOutOfBoundsException("length cannot be lesser than 0, found " + offset);
+        }
         if (offset + length > size()) {
-            throw new ArrayIndexOutOfBoundsException("array limit exceeded, offset " + offset + ", length " + length);
+            throw new ArrayIndexOutOfBoundsException("array limit exceeded, offset " + offset + ", length " + length + ", array length: " + size());
         }
         if (length == 0) {
-            // todo send a zero length array, not null
-            return null;
+            return Arrays.copyOf(arrays.get(0), 0);
         }
+//        Arrays.copyOf(baseArray, 0);
         T[] result;
         // we have at least one array (maxSize != 0) and length is not 0
         // move the offset to match out internal indexes
+        // from, inclusive
         int from = indexes.get(0).getMin() + offset;
+        // to, exclusive
         int to = from + length;
         // find the first array to copy
         int i = 0;
+        // search first array to use
         while (indexes.get(i).getMax() < from) {
             i++;
         }
-        // if we only need to copy the first array, use copyOfRange method
+        // if we only need to copy the one array, use copyOfRange method
         if (to <= indexes.get(i).getMax() + 1) {
             return Arrays.copyOfRange(arrays.get(i), from - indexes.get(i).getMin(), to - indexes.get(i).getMin());
         } else {
             // otherwise, we create an array of the needed length, using baseArray
-            result = Arrays.copyOf(baseArray, length);
+            result = Arrays.copyOf(arrays.get(0), length);
             // copy the first array
             System.arraycopy(arrays.get(i), from - indexes.get(i).getMin(), result, 0, arrays.get(i).length - (from - indexes.get(i).getMin()));
             //result = Arrays.copyOfRange(arrays.get(i), from - indexes.get(i).getMin(), arrays.get(i).length - 1);

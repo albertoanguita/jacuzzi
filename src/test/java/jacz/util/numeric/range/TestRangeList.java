@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Alberto on 07/10/2015.
+ * Range list tests
  */
 public class TestRangeList {
 
@@ -47,6 +47,7 @@ public class TestRangeList {
     @Test
     public void testContainsSearch() {
         IntegerRangeList rangeList = new IntegerRangeList(1, 5, 8, 9, 10, 14, -3, -1);
+        Assert.assertTrue(rangeList.contains(-1));
         Assert.assertTrue(rangeList.contains(1));
         Assert.assertTrue(rangeList.contains(3));
         Assert.assertTrue(rangeList.contains(8));
@@ -55,10 +56,15 @@ public class TestRangeList {
         Assert.assertFalse(rangeList.contains(6));
         Assert.assertFalse(rangeList.contains(15));
 
-        Assert.assertEquals(0, rangeList.search(-1));
-        Assert.assertEquals(1, rangeList.search(3));
-        Assert.assertEquals(2, rangeList.search(10));
-        Assert.assertEquals(-1, rangeList.search(20));
+        Integer nullInt = null;
+        Assert.assertEquals(null, rangeList.search(nullInt));
+        Assert.assertEquals(new Integer(-1), rangeList.search(-5));
+        Assert.assertEquals(new Integer(0), rangeList.search(-3));
+        Assert.assertEquals(new Integer(-2), rangeList.search(0));
+        Assert.assertEquals(new Integer(1), rangeList.search(3));
+        Assert.assertEquals(new Integer(-3), rangeList.search(6));
+        Assert.assertEquals(new Integer(2), rangeList.search(14));
+        Assert.assertEquals(new Integer(-4), rangeList.search(20));
 
         Assert.assertEquals(0, rangeList.search(new IntegerRange(-3, -1)));
         Assert.assertEquals(-1, rangeList.search(new IntegerRange(-3, 1)));

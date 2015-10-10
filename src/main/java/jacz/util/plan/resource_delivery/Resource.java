@@ -9,5 +9,5 @@ package jacz.util.plan.resource_delivery;
  */
 public interface Resource {
 
-    public int size();
+    int size();
 }

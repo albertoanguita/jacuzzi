@@ -1,6 +1,8 @@
 package jacz.util.log;
 
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +57,8 @@ public class ErrorLog {
     private void reportError(String message, Object... data) {
         printStream.println("ERROR THROWN");
         printStream.println("------------");
+        printStream.println(new SimpleDateFormat("YYY/MM/dd-HH:mm:ss:SSS").format(new Date()));
+        printStream.println();
         printError(printStream, message, data);
         printStream.println("-------------------------------------------------------");
         printStream.println("Stack trace:");

@@ -1,7 +1,9 @@
 package jacz.util.date_time.test;
 
-import jacz.util.date_time.DateTime;
 import jacz.util.date_time.TimeElapsed;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Class description
@@ -16,13 +18,9 @@ public class Test {
 
         TimeElapsed timeElapsed = new TimeElapsed();
 
-        System.out.println(DateTime.getFormattedCurrentDateTime(
-                DateTime.DateTimeElement.YYYY, "/",
-                DateTime.DateTimeElement.MM, "/",
-                DateTime.DateTimeElement.DD, "-",
-                DateTime.DateTimeElement.hh, ":",
-                DateTime.DateTimeElement.mm, ":",
-                DateTime.DateTimeElement.ss));
+        Date date = new Date();
+        System.out.println(date);
+        System.out.println(new SimpleDateFormat("Y/M/d-HH:mm:ss:SSS").format(date));
 
         System.out.println(timeElapsed.measureTime());
 

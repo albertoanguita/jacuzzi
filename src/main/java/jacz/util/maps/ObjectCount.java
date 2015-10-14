@@ -60,6 +60,8 @@ public class ObjectCount<E> {
     public void addObject(E object) {
         if (!allowNewObjects && !objectCount.containsKey(object)) {
             throw new RuntimeException("Non existing object: " + object.toString());
+        } else if (!objectCount.containsKey(object)) {
+            objectCount.put(object, 0);
         }
         objectCount.put(object, objectCount.get(object) + 1);
         totalCount++;

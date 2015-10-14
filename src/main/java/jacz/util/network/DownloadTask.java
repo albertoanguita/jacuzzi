@@ -161,10 +161,7 @@ class DownloadTask implements ParallelTask, SimpleTimerAction {
             } else if (percentage > 1000) {
                 percentage = 1000;
             }
-            Double speed = speedMonitor.getAverageSpeed();
-            if (speed == null) {
-                speed = 0d;
-            }
+            double speed = speedMonitor.getAverageSpeed();
             progressNotification.addNotification(new DownloadProgressItem(percentage, speed));
         }
     }

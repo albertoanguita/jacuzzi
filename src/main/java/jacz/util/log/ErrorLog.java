@@ -14,14 +14,7 @@ import java.util.Map;
  */
 public class ErrorLog {
 
-    public interface Parent {
-
-        void error();
-    }
-
     public static Map<String, ErrorLog> registeredLogs;
-
-    private final Parent parent;
 
     private final PrintStream printStream;
 
@@ -30,27 +23,20 @@ public class ErrorLog {
         registeredLogs = new HashMap<>();
     }
 
-    public static synchronized void registerErrorLog(String name, Parent parent, PrintStream printStream) {
-        registeredLogs.put(name, new ErrorLog(parent, printStream));
+    public static synchronized void registerErrorLog(String name, PrintStream printStream) {
+        registeredLogs.put(name, new ErrorLog(printStream));
     }
 
-    public ErrorLog(Parent parent, PrintStream printStream) {
-        this.parent = parent;
+    public ErrorLog(PrintStream printStream) {
         this.printStream = printStream;
     }
 
     public static void reportError(String errorLogName, String message, Object... data) {
         synchronized (ErrorLog.class) {
-            if (registeredLogs.containsKey(errorLogName)) {
-                ErrorLog errorLog = registeredLogs.get(errorLogName);
-                if (errorLog != null) {
-                    errorLog.reportError(message, data);
-                }
-            } else {
-                System.err.println("Trying to access an unregistered error log: " + errorLogName);
-                printError(System.err, message, data);
-                new RuntimeException().printStackTrace();
+            if (!registeredLogs.containsKey(errorLogName)) {
+                registerErrorLog(errorLogName, System.err);
             }
+            registeredLogs.get(errorLogName).reportError(message, data);
         }
     }
 
@@ -64,7 +50,6 @@ public class ErrorLog {
         printStream.println("Stack trace:");
         new RuntimeException().printStackTrace(printStream);
         printStream.close();
-        parent.error();
     }
 
     private static void printError(PrintStream printStream, String message, Object... data) {

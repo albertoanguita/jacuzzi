@@ -36,6 +36,10 @@ public class GenericFSM<T, Y> {
         started = false;
     }
 
+    public UniqueIdentifier getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }

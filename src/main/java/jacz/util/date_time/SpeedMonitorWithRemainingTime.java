@@ -64,19 +64,11 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
     }
 
     public SpeedMonitorWithRemainingTime(long millisToStore, long capacity, RemainingTimeAction remainingTimeAction, long remainingTimeToReport, String threadName) {
-        this(millisToStore, null, capacity, remainingTimeAction, remainingTimeToReport, threadName);
+        this(millisToStore, capacity, remainingTimeAction, remainingTimeToReport, null, -1, threadName);
     }
 
-    public SpeedMonitorWithRemainingTime(long millisToStore, Long millisSpeedMeasureIsNotValid, long capacity, RemainingTimeAction remainingTimeAction, long remainingTimeToReport) {
-        this(millisToStore, millisSpeedMeasureIsNotValid, capacity, remainingTimeAction, remainingTimeToReport, ThreadUtil.invokerName(1));
-    }
-
-    public SpeedMonitorWithRemainingTime(long millisToStore, Long millisSpeedMeasureIsNotValid, long capacity, RemainingTimeAction remainingTimeAction, long remainingTimeToReport, String threadName) {
-        this(millisToStore, millisSpeedMeasureIsNotValid, capacity, remainingTimeAction, remainingTimeToReport, null, -1, threadName);
-    }
-
-    public SpeedMonitorWithRemainingTime(long millisToStore, Long millisSpeedMeasureIsNotValid, long capacity, RemainingTimeAction remainingTimeAction, long remainingTimeToReport, LongRange speedMonitorRange, int millisAllowedOutOfSpeedRange, String threadName) {
-        super(millisToStore, millisSpeedMeasureIsNotValid, remainingTimeAction, speedMonitorRange, millisAllowedOutOfSpeedRange, threadName);
+    public SpeedMonitorWithRemainingTime(long millisToStore, long capacity, RemainingTimeAction remainingTimeAction, long remainingTimeToReport, LongRange speedMonitorRange, int millisAllowedOutOfSpeedRange, String threadName) {
+        super(millisToStore, remainingTimeAction, speedMonitorRange, millisAllowedOutOfSpeedRange, threadName);
         this.capacity = capacity;
         this.remainingTimeAction = remainingTimeAction;
         this.remainingTimeToReport = remainingTimeToReport;

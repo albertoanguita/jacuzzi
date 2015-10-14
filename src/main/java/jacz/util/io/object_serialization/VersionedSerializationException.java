@@ -25,4 +25,13 @@ public class VersionedSerializationException extends Exception {
         this.attributes = attributes;
         this.reason = reason;
     }
+
+    @Override
+    public String toString() {
+        return "VersionedSerializationException{" +
+                "version='" + version + '\'' +
+                ", attributes=" + attributes +
+                ", reason=" + reason +
+                '}';
+    }
 }

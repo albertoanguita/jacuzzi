@@ -5,8 +5,8 @@ import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.timer.SimpleTimerAction;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.lists.Duple;
-import jacz.util.numeric.range.Range;
 import jacz.util.numeric.range.LongRange;
+import jacz.util.numeric.range.Range;
 import jacz.util.queues.TimedQueue;
 
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
  * measured by the quantity achieved (a long). The measure process can be set up to consider a specific amount of
  * past time (for example, average speed in the last 10 minutes).
  */
-public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTimerEvent>*/ SimpleTimerAction, TimedQueue.TimedQueueInterface<Long> {
+public class SpeedMonitor implements SimpleTimerAction, TimedQueue.TimedQueueInterface<Long> {
 
     /**
      * This class describes states in which a SpeedMonitor object can be. There are three possible states: no elements
@@ -24,25 +24,19 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
      * The initial state is no elements inserted, followed by one element inserted and finally by rest (from which
      * the object never leaves). This state matters in different calculations, like the average speed.
      */
-    public enum State {
-        NO_ELEMENTS_INSERTED,
-        ONE_ELEMENT_INSERTED,
-        REST;
-
-        State next() {
-            if (this == NO_ELEMENTS_INSERTED) {
-                return ONE_ELEMENT_INSERTED;
-            } else {
-                return REST;
-            }
-        }
-    }
-
-    /**
-     * Time in millis during which speed measures are not considered (get speed methods will return null, as if no progress had been added yet)
-     * Optional, null if not used
-     */
-    private Long millisSpeedMeasureIsNotValid;
+//    public enum State {
+//        NO_ELEMENTS_INSERTED,
+//        ONE_ELEMENT_INSERTED,
+//        REST;
+//
+//        State next() {
+//            if (this == NO_ELEMENTS_INSERTED) {
+//                return ONE_ELEMENT_INSERTED;
+//            } else {
+//                return REST;
+//            }
+//        }
+//    }
 
     /**
      * Time mark when measure process was initiated
@@ -112,27 +106,19 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
     /**
      * State of this object (indicates how many elements were inserted so far: none, one, or more than one)
      */
-    private State state;
-
-    //private Timer<ComplexTimerEvent> startMonitoringSpeedTimer;
-
+//    private State state;
     public SpeedMonitor(long millisToStore) {
-        this(millisToStore, null);
+        this(millisToStore, null, null, -1);
     }
 
-    public SpeedMonitor(long millisToStore, Long millisSpeedMeasureIsNotValid) {
-        this(millisToStore, millisSpeedMeasureIsNotValid, null, null, -1);
+    public SpeedMonitor(long millisToStore, SpeedMonitorAction speedMonitorAction, LongRange speedMonitorRange, int millisAllowedOutOfSpeedRange) {
+        this(millisToStore, speedMonitorAction, speedMonitorRange, millisAllowedOutOfSpeedRange, ThreadUtil.invokerName(1));
     }
 
-    public SpeedMonitor(long millisToStore, Long millisSpeedMeasureIsNotValid, SpeedMonitorAction speedMonitorAction, LongRange speedMonitorRange, int millisAllowedOutOfSpeedRange) {
-        this(millisToStore, millisSpeedMeasureIsNotValid, speedMonitorAction, speedMonitorRange, millisAllowedOutOfSpeedRange, ThreadUtil.invokerName(1));
-    }
-
-    public SpeedMonitor(long millisToStore, Long millisSpeedMeasureIsNotValid, SpeedMonitorAction speedMonitorAction, LongRange speedMonitorRange, int millisAllowedOutOfSpeedRange, String threadName) {
-        this.millisSpeedMeasureIsNotValid = millisSpeedMeasureIsNotValid;
+    public SpeedMonitor(long millisToStore, SpeedMonitorAction speedMonitorAction, LongRange speedMonitorRange, int millisAllowedOutOfSpeedRange, String threadName) {
         initialTimeMark = System.currentTimeMillis();
         outOfInitialRange = false;
-        progress = new TimedQueue<Long>(millisToStore, this, threadName);
+        progress = new TimedQueue<>(millisToStore, this, threadName);
         storedSize = 0;
         this.speedMonitorAction = speedMonitorAction;
         this.speedMonitorRange = speedMonitorRange;
@@ -146,7 +132,7 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
         }
         justReportedAboveSpeed = false;
         justReportedBelowSpeed = false;
-        state = State.NO_ELEMENTS_INSERTED;
+//        state = State.NO_ELEMENTS_INSERTED;
     }
 
     public synchronized void setSpeedMonitorRange(LongRange newSpeedMonitorRange) {
@@ -156,9 +142,9 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
     }
 
     public synchronized void addProgress(long quantity) {
-        if (state != State.REST) {
-            state = state.next();
-        }
+//        if (state != State.REST) {
+//            state = state.next();
+//        }
         progress.addElement(quantity);
         storedSize += quantity;
         // check (if necessary) that we have not surpassed the max speed
@@ -168,76 +154,58 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
         }
     }
 
-    public synchronized Double getAverageSpeed() {
+    public synchronized double getAverageSpeed() {
         Duple<Double, Long> speedAndTimeLapse = getAverageSpeedAndTimeLapse();
-        if (speedAndTimeLapse != null) {
-            return speedAndTimeLapse.element1;
-        } else {
-            return null;
-        }
+        return speedAndTimeLapse.element1;
     }
 
-    protected synchronized Duple<Double, Long> getAverageSpeedAndTimeLapse() {
-        if (state == State.REST) {
-            long currentTime = System.currentTimeMillis();
-            if (millisSpeedMeasureIsNotValid != null && initialTimeMark + millisSpeedMeasureIsNotValid > currentTime) {
-                // too early to make speed measures
-                return null;
-            }
-            if (outOfInitialRange) {
-//                long size = eraseBias(currentTime, millisToStore, storedSize, progress, 0);
-                return new Duple<Double, Long>(1000.0d * storedSize / (double) progress.getMillisToStore(), progress.getMillisToStore());
-            } else {
-                if (currentTime > initialTimeMark + progress.getMillisToStore()) {
-                    outOfInitialRange = true;
-                    return getAverageSpeedAndTimeLapse();
-                } else {
-                    // extrapolate
-//                    long size = eraseBias(currentTime, currentTime - initialTimeMark, storedSize, progress, 0);
-                    if (currentTime == initialTimeMark) {
-                        // make sure we don't get a divide by zero error
-                        currentTime++;
-                    }
-                    return new Duple<Double, Long>((double) 1000 * (double) storedSize / ((double) currentTime - (double) initialTimeMark), currentTime - initialTimeMark);
-                }
-            }
+    public synchronized Duple<Double, Long> getAverageSpeedAndTimeLapse() {
+        long currentTime = System.currentTimeMillis();
+        if (outOfInitialRange) {
+                return new Duple<>(1000d * storedSize / (double) progress.getMillisToStore(), progress.getMillisToStore());
         } else {
-            return null;
-        }
-    }
-
-    public synchronized Double getAverageSpeed(long lastMillis) {
-        Duple<Double, Long> speedAndTimeLapse = getAverageSpeedAndTimeLapse(lastMillis);
-        if (speedAndTimeLapse != null) {
-            return speedAndTimeLapse.element1;
-        } else {
-            return null;
-        }
-    }
-
-    public synchronized Duple<Double, Long> getAverageSpeedAndTimeLapse(long lastMillis) {
-        if (state == State.REST) {
-            if (lastMillis < progress.getMillisToStore()) {
-                long currentTime = System.currentTimeMillis();
-                if (millisSpeedMeasureIsNotValid != null && initialTimeMark + millisSpeedMeasureIsNotValid > currentTime) {
-                    // too early to make speed measures
-                    return null;
-                }
-                long oldestTimeMarkAllowed = currentTime - lastMillis;
-                int index = progress.getIndexFrom(oldestTimeMarkAllowed);
-                long achievedProgress = 0;
-                for (; index < progress.size(); index++) {
-                    achievedProgress += progress.get(index);
-                }
-                return new Duple<Double, Long>((double) 1000 * (double) achievedProgress / (double) lastMillis, lastMillis);
-            } else {
-                // extrapolate by getting the average speed on the standard time
+            if (currentTime > initialTimeMark + progress.getMillisToStore()) {
+                outOfInitialRange = true;
                 return getAverageSpeedAndTimeLapse();
+            } else {
+                // extrapolate
+                if (currentTime == initialTimeMark) {
+                    // make sure we don't get a divide by zero error
+                    currentTime++;
+                }
+                    return new Duple<>(1000d * (double) storedSize / ((double) currentTime - (double) initialTimeMark), currentTime - initialTimeMark);
             }
-        } else {
-            return null;
         }
     }
+
+//    public synchronized double getAverageSpeed(long lastMillis) {
+//        Duple<Double, Long> speedAndTimeLapse = getAverageSpeedAndTimeLapse(lastMillis);
+//        if (speedAndTimeLapse != null) {
+//            return speedAndTimeLapse.element1;
+//        } else {
+//            return 0d;
+//        }
+//    }
+
+//    public synchronized Duple<Double, Long> getAverageSpeedAndTimeLapse(long lastMillis) {
+//        if (state == State.REST) {
+//            if (lastMillis < progress.getMillisToStore()) {
+//                long currentTime = System.currentTimeMillis();
+//                long oldestTimeMarkAllowed = currentTime - lastMillis;
+//                int index = progress.getIndexFrom(oldestTimeMarkAllowed);
+//                long achievedProgress = 0;
+//                for (; index < progress.size(); index++) {
+//                    achievedProgress += progress.get(index);
+//                }
+//                return new Duple<>(1000d * (double) achievedProgress / (double) lastMillis, lastMillis);
+//            } else {
+//                // extrapolate by getting the average speed on the standard time
+//                return getAverageSpeedAndTimeLapse();
+//            }
+//        } else {
+//            return null;
+//        }
+//    }
 
 //    private long eraseBias(final long currentTime, long millisForMeasure, final long storedSize, final List<ProgressElement> progress, int indexOfOldestElementUsed) {
 //        // push half of the oldest element to avoid bias and give a more realistic speed value
@@ -355,7 +323,7 @@ public class SpeedMonitor implements /*ComplexTimerAction<SpeedMonitor.ComplexTi
     }
 
     @Override
-    public void elementsRemoved(List<Long> elements) {
+    public synchronized void elementsRemoved(List<Long> elements) {
         for (long element : elements) {
             storedSize -= element;
         }

@@ -59,6 +59,7 @@ public class SpeedRegistry implements SimpleTimerAction {
     }
 
     public synchronized void stop() {
+        speedMonitor.stop();
         timer.stop();
     }
 

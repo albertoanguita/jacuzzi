@@ -43,5 +43,6 @@ class MessageReaderHandlerThread extends Thread {
         // report both the MessageReader implementation that this process has been stopped
         messageProcessor.readerHandlerStopped();
         messageReader.stopped();
+        messageHandler.finalizeHandler();
     }
 }

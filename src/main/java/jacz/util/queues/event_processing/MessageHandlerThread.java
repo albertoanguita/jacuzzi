@@ -39,6 +39,7 @@ class MessageHandlerThread extends Thread {
         while (!finished) {
             finished = handleMessage(messageProcessor, messageHandler);
         }
+        messageHandler.finalizeHandler();
     }
 
     static boolean handleMessage(MessageProcessor messageProcessor, MessageHandler messageHandler) {

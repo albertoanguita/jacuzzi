@@ -53,6 +53,8 @@ public class TestVersionedObject implements VersionedObject {
 
     private SerClass serClass;
 
+    private byte[] data;
+
     public TestVersionedObject() {
         i = 5;
         s = "fuck";
@@ -61,6 +63,10 @@ public class TestVersionedObject implements VersionedObject {
         l = 27;
         f = 0.5f;
         serClass = new SerClass(3, "hello");
+        data = new byte[3];
+        data[0] = 5;
+        data[1] = 27;
+        data[2] = -12;
     }
 
     public TestVersionedObject(boolean b) {
@@ -71,6 +77,7 @@ public class TestVersionedObject implements VersionedObject {
         l = 0;
         f = 0;
         serClass = null;
+        data = new byte[7];
     }
 
     @Override
@@ -88,6 +95,7 @@ public class TestVersionedObject implements VersionedObject {
         map.put("l", l);
         map.put("f", f);
         map.put("serClass", serClass);
+        map.put("data", data);
         return map;
     }
 
@@ -100,6 +108,7 @@ public class TestVersionedObject implements VersionedObject {
         l = (long) attributes.get("l");
         f = (float) attributes.get("f");
         serClass = (SerClass) attributes.get("serClass");
+        data = (byte[]) attributes.get("data");
     }
 
     @Override

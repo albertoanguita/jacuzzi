@@ -59,6 +59,13 @@ public class SpeedRegistry implements SimpleTimerAction {
     }
 
     public synchronized void stop() {
-        timer.kill();
+        timer.stop();
+    }
+
+    @Override
+    public String toString() {
+        return "SpeedRegistry{" +
+                "speedRegistry=" + speedRegistry +
+                '}';
     }
 }

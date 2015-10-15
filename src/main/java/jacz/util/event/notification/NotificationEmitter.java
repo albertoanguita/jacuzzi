@@ -19,9 +19,9 @@ import jacz.util.identifier.UniqueIdentifier;
  */
 public interface NotificationEmitter {
 
-    public UniqueIdentifier subscribe(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, boolean groupEvents) throws IllegalArgumentException;
+    UniqueIdentifier subscribe(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver) throws IllegalArgumentException;
 
-    public UniqueIdentifier subscribe(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, boolean groupEvents, long millis, double timeFactorAtEachEvent, int limit) throws IllegalArgumentException;
+    UniqueIdentifier subscribe(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit) throws IllegalArgumentException;
 
-    public void unsubscribe(UniqueIdentifier receiverID);
+    void unsubscribe(UniqueIdentifier receiverID);
 }

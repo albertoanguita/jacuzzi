@@ -20,15 +20,15 @@ public class Receiver implements NotificationReceiver {
 
     public Receiver() {
         emitter = new Emitter();
-        emitter.subscribe(UniqueIdentifierFactory.getOneStaticIdentifier(), this, true, 2000, 0.5d, 10);
+        emitter.subscribe(UniqueIdentifierFactory.getOneStaticIdentifier(), this, 2000, 0.5d, 10);
     }
 
     @Override
-    public void newEvent(UniqueIdentifier emitterID, int eventCount, List<List<Object>> messages) {
+    public void newEvent(UniqueIdentifier emitterID, int eventCount, List<List<Object>> nonGroupedMessages, List<Object> groupedMessages) {
         System.out.println("Receiver: ints added" + " after " + eventCount);
         System.out.println("messages");
         System.out.println("--------");
-        for (List<Object> oneList : messages) {
+        for (List<Object> oneList : nonGroupedMessages) {
             System.out.println(oneList);
         }
         System.out.println("------------------------");

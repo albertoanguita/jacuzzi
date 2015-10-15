@@ -39,12 +39,12 @@ public class NotificationProcessor {
      * @param notificationReceiver object that will receive event notifications
      * @return the ID of this emitter
      */
-    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, boolean groupEvents) {
-        return subscribeReceiver(receiverID, notificationReceiver, groupEvents, ThreadUtil.invokerName(1));
+    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver) {
+        return subscribeReceiver(receiverID, notificationReceiver, ThreadUtil.invokerName(1));
     }
 
-    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, boolean groupEvents, String threadName) {
-        subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, groupEvents, null, 0, 1, threadName));
+    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, String threadName) {
+        subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, null, 0, 1, threadName));
         return emitterID;
     }
 
@@ -54,19 +54,26 @@ public class NotificationProcessor {
      * @param notificationReceiver object that will receive event notifications
      * @return the ID of this emitter
      */
-    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, boolean groupEvents, long millis, double timeFactorAtEachEvent, int limit) {
-        return subscribeReceiver(receiverID, notificationReceiver, groupEvents, millis, timeFactorAtEachEvent, limit, ThreadUtil.invokerName(1));
+    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit) {
+        return subscribeReceiver(receiverID, notificationReceiver, millis, timeFactorAtEachEvent, limit, ThreadUtil.invokerName(1));
     }
 
-    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, boolean groupEvents, long millis, double timeFactorAtEachEvent, int limit, String threadName) {
+    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit, String threadName) {
         Long checkedMillis = checkTime(millis);
         limit = checkLimit(limit);
-        subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, groupEvents, checkedMillis, timeFactorAtEachEvent, limit, threadName));
+        subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, checkedMillis, timeFactorAtEachEvent, limit, threadName));
         return emitterID;
     }
 
     public synchronized void unsubscribeReceiver(UniqueIdentifier receiverID) {
         subscribedReceivers.remove(receiverID).stop();
+    }
+
+    public synchronized void stop() {
+        // unsubscribe all remaining receivers
+        for (UniqueIdentifier receiverID : subscribedReceivers.keySet()) {
+            unsubscribeReceiver(receiverID);
+        }
     }
 
     private Long checkTime(long millis) {

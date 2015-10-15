@@ -15,8 +15,6 @@ class NotificationReceiverHandler implements SimpleTimerAction {
 
     private final UniqueIdentifier emitterID;
 
-    private final boolean groupMessages;
-
     /**
      * Delay for emitting notifications (null for no delay)
      */
@@ -39,7 +37,7 @@ class NotificationReceiverHandler implements SimpleTimerAction {
     /**
      * Set of nonGroupedMessages (for grouped).
      */
-    private Set<Object> groupedMessages;
+    private List<Object> groupedMessages;
 
     /**
      * Timer for emitting notifications (if we want to have a delay)
@@ -47,10 +45,9 @@ class NotificationReceiverHandler implements SimpleTimerAction {
     private final Timer timer;
 
 
-    NotificationReceiverHandler(NotificationReceiver notificationReceiver, UniqueIdentifier emitterID, boolean groupMessages, Long millis, double timeFactorAtEachEvent, int limit, String threadName) {
+    NotificationReceiverHandler(NotificationReceiver notificationReceiver, UniqueIdentifier emitterID, Long millis, double timeFactorAtEachEvent, int limit, String threadName) {
         this.notificationReceiver = notificationReceiver;
         this.emitterID = emitterID;
-        this.groupMessages = groupMessages;
         this.millis = (millis != null && millis < 1L) ? null : millis;
         if (this.millis != null) {
             timer = new Timer(millis, this, false, threadName + "/" + NotificationProcessor.class.getName());
@@ -60,17 +57,14 @@ class NotificationReceiverHandler implements SimpleTimerAction {
         this.timeFactorAtEachEvent = (timeFactorAtEachEvent > 1d) ? 1.0d : (timeFactorAtEachEvent < 0d ? 0d : timeFactorAtEachEvent);
         this.limit = (limit < 1) ? 1 : limit;
         eventCount = 0;
-        groupedMessages = new HashSet<Object>();
-        resetMessages();
+        nonGroupedMessages = new ArrayList<>();
+        groupedMessages = new ArrayList<>();
     }
 
     synchronized void newEvent(Object... messages) {
         eventCount++;
-        if (groupMessages) {
-            groupedMessages.addAll(Arrays.asList(messages));
-        } else {
-            nonGroupedMessages.add(Arrays.asList(messages));
-        }
+        nonGroupedMessages.add(Arrays.asList(messages));
+        groupedMessages.addAll(Arrays.asList(messages));
         if (eventCount == limit) {
             notifyReceiver();
             stopTimer();
@@ -95,25 +89,15 @@ class NotificationReceiverHandler implements SimpleTimerAction {
 
     private synchronized void notifyReceiver() {
         if (eventCount > 0) {
-            List<List<Object>> messagesToNotify;
-            if (groupMessages) {
-                messagesToNotify = new ArrayList<List<Object>>(1);
-                messagesToNotify.add(new ArrayList<Object>(groupedMessages));
-            } else {
-                messagesToNotify = nonGroupedMessages;
-            }
+            notificationReceiver.newEvent(emitterID, eventCount, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
             resetMessages();
-            notificationReceiver.newEvent(emitterID, eventCount, messagesToNotify);
             eventCount = 0;
         }
     }
 
     private void resetMessages() {
-        if (groupMessages) {
-            groupedMessages.clear();
-        } else {
-            nonGroupedMessages = new ArrayList<List<Object>>();
-        }
+        groupedMessages.clear();
+        nonGroupedMessages.clear();
     }
 
     @Override

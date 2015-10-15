@@ -9,5 +9,5 @@ import java.util.List;
  */
 public interface NotificationReceiver {
 
-    public void newEvent(UniqueIdentifier emitterID, int eventCount, List<List<Object>> messages);
+    void newEvent(UniqueIdentifier emitterID, int eventCount, List<List<Object>> nonGroupedMessages, List<Object> groupedMessages);
 }

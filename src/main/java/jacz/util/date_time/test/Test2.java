@@ -1,8 +1,5 @@
 package jacz.util.date_time.test;
 
-import jacz.util.date_time.SpeedMonitorWithRemainingTime;
-import jacz.util.numeric.oldrange.LongRange;
-
 /**
  * Class description
  * <p/>

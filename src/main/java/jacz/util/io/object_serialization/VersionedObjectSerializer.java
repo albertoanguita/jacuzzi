@@ -46,11 +46,11 @@ public class VersionedObjectSerializer {
         }
     }
 
-    public static byte[] serialize(VersionedObject versionedObject) {
+    public static byte[] serialize(VersionedObject versionedObject) throws IOException {
         return serialize(versionedObject, 0);
     }
 
-    public static byte[] serialize(VersionedObject versionedObject, int CRCBytes) {
+    public static byte[] serialize(VersionedObject versionedObject, int CRCBytes) throws IOException {
         byte[] data = Serializer.serialize(versionedObject.getCurrentVersion());
         Map<String, Serializable> attributes = versionedObject.serialize();
         data = Serializer.addArrays(data, Serializer.serialize(attributes.size()));

@@ -42,7 +42,7 @@ public class TestMouseToRandom {
         mouseToRandom2.mouseCoords(1, 1);
 
 
-        MouseToRandom mouseToRandom = new MouseToRandom(12);
+        MouseToRandom mouseToRandom = new MouseToRandom(12, false);
         System.out.println(mouseToRandom.mouseCoords(1, 2));
         System.out.println(mouseToRandom.mouseCoords(1, 2));
         System.out.println(mouseToRandom.mouseCoords(3, -2));
@@ -63,6 +63,12 @@ public class TestMouseToRandom {
         System.out.println(mouseToRandom.mouseCoords(1, 0));
         System.out.println(mouseToRandom.mouseCoords(-1, -2));
         System.out.println(mouseToRandom.mouseCoords(-2, 2));
+        System.out.println(mouseToRandom.mouseCoords(-5, 4));
+        System.out.println(mouseToRandom.mouseCoords(-25, 14));
+        System.out.println(mouseToRandom.mouseCoords(-15, 34));
+        System.out.println(mouseToRandom.mouseCoords(0, 1));
+        System.out.println(mouseToRandom.mouseCoords(10, 11));
+        System.out.println(mouseToRandom.mouseCoords(105, 151));
         System.out.println(Arrays.toString(mouseToRandom.getRandomBytes()));
 
 

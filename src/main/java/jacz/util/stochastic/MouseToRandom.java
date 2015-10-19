@@ -5,7 +5,7 @@ import jacz.util.numeric.NumericUtil;
 import java.util.ArrayList;
 
 /**
- * A random buffer that is fed from the mouse coordinates. Time values are also used for randomisation
+ * A random buffer that is fed from the mouse coordinates. Time values can also be used for randomisation
  */
 public class MouseToRandom {
 
@@ -23,38 +23,61 @@ public class MouseToRandom {
 
     private static final int COORDINATE_STACK_LENGTH = 10;
 
-    private RandomBuffer randomBytes;
+    private final byte[] randomBytes;
 
-    private int totalLength;
+    private final boolean useTime;
+
+    private int pos;
+
+    private final int totalLength;
 
     private ArrayList<Coordinate> lastCoordinateStack;
-
-    private boolean hasStarted;
 
     private String gainedBits;
 
     public MouseToRandom(int length) {
-        randomBytes = new RandomBuffer(length);
+        this(length, false);
+    }
+
+    public MouseToRandom(int length, boolean useTime) {
+        randomBytes = new byte[length];
+        this.useTime = useTime;
+        pos = 0;
         totalLength = length;
-        lastCoordinateStack = new ArrayList<>(COORDINATE_STACK_LENGTH + 1);
-        hasStarted = false;
+        lastCoordinateStack = new ArrayList<>();
         gainedBits = "";
     }
 
-    public double mouseCoords(int x, int y) {
-        if (hasStarted) {
+    /**
+     * Adds a new mouse coordinate for randomly generating bytes
+     *
+     * @param x random x coordinate
+     * @param y random y coordinate
+     * @return the percentage of completion
+     */
+    public int mouseCoords(int x, int y) {
+        if (!lastCoordinateStack.isEmpty()) {
             newRandomCoords(x, y);
             // store the new coordinate in the coordinate stack
             lastCoordinateStack.add(0, new Coordinate(x, y));
-            if (lastCoordinateStack.size() > COORDINATE_STACK_LENGTH) {
+            while (lastCoordinateStack.size() > COORDINATE_STACK_LENGTH) {
                 lastCoordinateStack.remove(COORDINATE_STACK_LENGTH);
             }
-            return (double) randomBytes.getCurrentLength() / (double) totalLength;
+            return progress();
         } else {
             lastCoordinateStack.add(new Coordinate(x, y));
-            hasStarted = true;
-            return 0d;
+            return 0;
         }
+    }
+
+    private int progress() {
+        int progress = new Double((double) (100 * pos) / (double) totalLength).intValue();
+        if (progress == 100 && pos < totalLength) {
+            progress = 99;
+        } else if (pos == totalLength) {
+            progress = 100;
+        }
+        return progress;
     }
 
     private void newRandomCoords(int x, int y) {
@@ -62,19 +85,27 @@ public class MouseToRandom {
         int moveY = y - lastCoordinateStack.get(0).y;
         String bitString = calculateBitString(moveX, moveY);
         gainedBits += bitString;
-        int randomTime = getRandomTime();
-        if (lastCoordinateStack.size() > randomTime) {
-            // redo the bit gain with an older stored coordinate, obtained randomly with the nanoTime function
-            moveX = x - lastCoordinateStack.get(randomTime).x;
-            moveY = y - lastCoordinateStack.get(randomTime).y;
-            bitString = calculateBitString(moveX, moveY);
-            gainedBits += bitString;
+        if (useTime) {
+            int randomTime = getRandomTime();
+            if (lastCoordinateStack.size() > randomTime) {
+                // redo the bit gain with an older stored coordinate, obtained randomly with the nanoTime function
+                moveX = x - lastCoordinateStack.get(randomTime).x;
+                moveY = y - lastCoordinateStack.get(randomTime).y;
+                bitString = calculateBitString(moveX, moveY);
+                gainedBits += bitString;
+            }
         }
         while (gainedBits.length() >= 8) {
             // move 8 bits to the byte array
             String eightBitString = gainedBits.substring(0, 8);
-            randomBytes.put((byte) Integer.parseInt(eightBitString, 2));
+            addByteToBuffer((byte) Integer.parseInt(eightBitString, 2));
             gainedBits = gainedBits.substring(8);
+        }
+    }
+
+    private void addByteToBuffer(byte b) {
+        if (pos < totalLength) {
+            randomBytes[pos++] = b;
         }
     }
 
@@ -94,15 +125,15 @@ public class MouseToRandom {
     }
 
     private int getRandomTime() {
-        long nanoTime = System.nanoTime();
-        return (int) ((nanoTime / 10L) % 10L);
+        long millis = System.currentTimeMillis();
+        return (int) (millis % COORDINATE_STACK_LENGTH);
     }
 
     public boolean hasFinished() {
-        return randomBytes.isFilled();
+        return pos == totalLength;
     }
 
     public byte[] getRandomBytes() {
-        return randomBytes.getRandomBuffer();
+        return randomBytes;
     }
 }

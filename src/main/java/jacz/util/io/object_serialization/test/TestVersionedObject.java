@@ -5,6 +5,7 @@ import jacz.util.io.object_serialization.VersionedObject;
 import jacz.util.io.object_serialization.VersionedObjectSerializer;
 import jacz.util.io.object_serialization.VersionedSerializationException;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class TestVersionedObject implements VersionedObject {
         }
     }
 
-    public static void main(String[] args) throws VersionedSerializationException {
+    public static void main(String[] args) throws VersionedSerializationException, IOException {
 
         TestVersionedObject testVersionedObject = new TestVersionedObject();
 

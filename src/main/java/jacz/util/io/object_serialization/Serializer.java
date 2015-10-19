@@ -40,26 +40,20 @@ public class Serializer {
      * @param o Object to serialize
      * @return byte array containing the object
      */
-    public static byte[] serializeObject(Serializable o) {
+    public static byte[] serializeObject(Serializable o) throws IOException {
         byte[] objectData = serializeObjectWithoutLengthHeader(o);
         return addArrays(Serializer.serialize(objectData.length), objectData);
     }
 
 
-    private static byte[] serializeObjectWithoutLengthHeader(Serializable o) {
-        try {
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            ObjectOutputStream so = new ObjectOutputStream(bo);
-            so.writeObject(o);
-            so.flush();
-            so.close();
-            bo.close();
-            return bo.toByteArray();
-        } catch (IOException e) {
-            // this exception cannot happen, since the output stream is in memory, not in the file system
-            e.printStackTrace();
-            return new byte[0];
-        }
+    public static byte[] serializeObjectWithoutLengthHeader(Serializable o) throws IOException {
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        ObjectOutputStream so = new ObjectOutputStream(bo);
+        so.writeObject(o);
+        so.flush();
+        so.close();
+        bo.close();
+        return bo.toByteArray();
     }
 
 
@@ -352,7 +346,7 @@ public class Serializer {
         return o;
     }
 
-    private static Object deserializeObjectWithoutLengthHeader(byte[] data) throws ClassNotFoundException {
+    public static Object deserializeObjectWithoutLengthHeader(byte[] data) throws ClassNotFoundException {
         try {
             ByteArrayInputStream bi = new ByteArrayInputStream(data);
             ObjectInputStream si = new ObjectInputStream(bi);

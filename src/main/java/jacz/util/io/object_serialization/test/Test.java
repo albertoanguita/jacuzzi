@@ -38,7 +38,7 @@ public class Test {
         Integer iii = (Integer) Serializer.deserializeObject(ss);
 
 
-        byte[] shortValueData = Serializer.serialize((short) 25);
+        byte[] shortValueData = Serializer.serialize((short) -1);
         Short nullShort = null;
         byte[] shortNullData = Serializer.serialize(nullShort);
         byte[] shortNotNullData = Serializer.serialize(new Short((short) 56));
@@ -52,7 +52,7 @@ public class Test {
 
         byte[] dataF = Serializer.serialize(1234.5f);
         byte[] dataD = Serializer.serialize(new Double(98765.4d));
-        byte[] dataS = Serializer.serialize("qw?");
+        byte[] dataS = Serializer.serialize("qw?", "UTF-8");
         byte[] dataI = Serializer.serialize(12345);
         byte[] dataSh = Serializer.serialize((short) 25);
         byte[] dataL = Serializer.serialize(new Long(7654321L));
@@ -67,7 +67,7 @@ public class Test {
         
         Float f = Serializer.deserializeFloatValue(data, off);
         Double d = Serializer.deserializeDouble(data, off);
-        String s = Serializer.deserializeString(data, off);
+        String s = Serializer.deserializeString(data, "UTF-8", off);
         Integer i = Serializer.deserializeIntValue(data, off);
         Short sh = Serializer.deserializeShortValue(data, off);
         Long l = Serializer.deserializeLong(data, off);

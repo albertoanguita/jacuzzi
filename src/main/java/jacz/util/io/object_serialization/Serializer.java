@@ -11,6 +11,8 @@ import java.util.List;
  */
 public class Serializer {
 
+    private static final String UTF8 = "UTF-8";
+
     /**
      * Adds several byte arrays into a single byte array (admits null values)
      *
@@ -106,18 +108,34 @@ public class Serializer {
     }
 
     /**
-     * Serializes a string object into a byte array. The byte array contains 4 bytes for indicating the length of the string, and the necessary
+     * Serializes a string object into a byte array with UTF-8. The byte array contains 4 bytes for indicating the length of the string, and the necessary
      * bytes for storing the characters of the string
      *
      * @param str String to serialize
      * @return byte array containing the string object
      */
     public static byte[] serialize(String str) {
+        try {
+            return serialize(str, UTF8);
+        } catch (UnsupportedEncodingException e) {
+            // ignore, cannot happen
+            return new byte[0];
+        }
+    }
+
+    /**
+     * Serializes a string object into a byte array. The byte array contains 4 bytes for indicating the length of the string, and the necessary
+     * bytes for storing the characters of the string
+     *
+     * @param str String to serialize
+     * @return byte array containing the string object
+     */
+    public static byte[] serialize(String str, String encoding) throws UnsupportedEncodingException {
         if (str == null) {
             // null values are serialized with a 4-byte array containing a -1
             return Serializer.serialize(-1);
         } else {
-            byte[] strBytes = str.getBytes();
+            byte[] strBytes = str.getBytes(encoding);
             return addArrays(serialize(strBytes.length), strBytes);
         }
     }
@@ -392,6 +410,15 @@ public class Serializer {
     }
 
     public static String deserializeString(byte[] data, MutableOffset offset) {
+        try {
+            return deserializeString(data, UTF8, offset);
+        } catch (UnsupportedEncodingException e) {
+            // ignore, cannot happen
+            return "";
+        }
+    }
+
+    public static String deserializeString(byte[] data, String encoding, MutableOffset offset) throws UnsupportedEncodingException {
         int strLen = deserializeIntValue(data, offset);
         if (strLen < 0) {
             return null;
@@ -399,7 +426,7 @@ public class Serializer {
             byte[] strBytes = new byte[strLen];
             System.arraycopy(data, offset.value(), strBytes, 0, strLen);
             offset.add(strLen);
-            return new String(strBytes);
+            return new String(strBytes, encoding);
         }
     }
 

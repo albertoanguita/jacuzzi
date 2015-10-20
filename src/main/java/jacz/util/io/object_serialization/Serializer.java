@@ -259,7 +259,7 @@ public class Serializer {
         if (f == null) {
             return serialize((Integer) null);
         } else {
-            return serialize(Float.floatToIntBits(f));
+            return serialize(new Integer(Float.floatToIntBits(f)));
         }
     }
 
@@ -283,7 +283,7 @@ public class Serializer {
         if (d == null) {
             return serialize((Long) null);
         } else {
-            return serialize(Double.doubleToLongBits(d));
+            return serialize(new Long(Double.doubleToLongBits(d)));
         }
     }
 

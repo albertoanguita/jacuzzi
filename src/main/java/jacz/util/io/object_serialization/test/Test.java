@@ -51,11 +51,11 @@ public class Test {
 
 
         byte[] dataF = Serializer.serialize(1234.5f);
-        byte[] dataD = Serializer.serialize(98765.4d);
+        byte[] dataD = Serializer.serialize(new Double(98765.4d));
         byte[] dataS = Serializer.serialize("qw?");
         byte[] dataI = Serializer.serialize(12345);
         byte[] dataSh = Serializer.serialize((short) 25);
-        byte[] dataL = Serializer.serialize(7654321L);
+        byte[] dataL = Serializer.serialize(new Long(7654321L));
         byte[] dataMinB = Serializer.serialize(Byte.MIN_VALUE);
         Byte nullByte = null;
         byte[] dataNullB = Serializer.serialize(nullByte);
@@ -65,11 +65,11 @@ public class Test {
 
         MutableOffset off = new MutableOffset();
         
-        Float f = Serializer.deserializeFloat(data, off);
+        Float f = Serializer.deserializeFloatValue(data, off);
         Double d = Serializer.deserializeDouble(data, off);
         String s = Serializer.deserializeString(data, off);
-        Integer i = Serializer.deserializeInt(data, off);
-        Short sh = Serializer.deserializeShort(data, off);
+        Integer i = Serializer.deserializeIntValue(data, off);
+        Short sh = Serializer.deserializeShortValue(data, off);
         Long l = Serializer.deserializeLong(data, off);
         Byte b = Serializer.deserializeByteValue(data, off);
         Byte nullB = Serializer.deserializeByte(data, off);

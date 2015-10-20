@@ -156,14 +156,11 @@ public class Serializer {
      * @return a byte array of size 1 or 2 with the value of the given byte
      */
     public static byte[] serialize(Byte b) {
-        if (b != null && b != Byte.MIN_VALUE) {
-            return serialize(b.byteValue());
-        } else if (b != null) {
-            // b is MIN_VALUE -> we add a byte containing a true
-            return addArrays(serialize(b.byteValue()), serialize(true));
+        if (b != null) {
+            return addArrays(serialize(true), serialize(b.byteValue()));
         } else {
-            // b is null -> we codify MIN_VALUE and add a byte containing a false
-            return addArrays(serialize(Byte.MIN_VALUE), serialize(false));
+            // b is null -> just serialize a false
+            return addArrays(serialize(false));
         }
     }
 
@@ -184,14 +181,11 @@ public class Serializer {
      * @return a byte array of size 2 or 3 with the value of the given short
      */
     public static byte[] serialize(Short s) {
-        if (s != null && s != Short.MIN_VALUE) {
-            return serialize(s.shortValue());
-        } else if (s != null) {
-            // b is MIN_VALUE -> we add a byte containing a true
-            return addArrays(serialize(s.shortValue()), serialize(true));
+        if (s != null) {
+            return addArrays(serialize(true), serialize(s.shortValue()));
         } else {
-            // b is null -> we codify MIN_VALUE and add a byte containing a false
-            return addArrays(serialize(Short.MIN_VALUE), serialize(false));
+            // s is null -> just serialize a false
+            return addArrays(serialize(false));
         }
     }
 
@@ -212,14 +206,11 @@ public class Serializer {
      * @return a byte array of size 4 or 5 with the value of the given integer
      */
     public static byte[] serialize(Integer i) {
-        if (i != null && i != Integer.MIN_VALUE) {
-            return serialize(i.intValue());
-        } else if (i != null) {
-            // b is MIN_VALUE -> we add a byte containing a true
-            return addArrays(serialize(i.intValue()), serialize(true));
+        if (i != null) {
+            return addArrays(serialize(true), serialize(i.intValue()));
         } else {
-            // b is null -> we codify MIN_VALUE and add a byte containing a false
-            return addArrays(serialize(Integer.MIN_VALUE), serialize(false));
+            // i is null -> just serialize a false
+            return addArrays(serialize(false));
         }
     }
 
@@ -240,14 +231,11 @@ public class Serializer {
      * @return a byte array of size 8 or 9 with the value of the given long
      */
     public static byte[] serialize(Long l) {
-        if (l != null && l != Long.MIN_VALUE) {
-            return serialize(l.longValue());
-        } else if (l != null) {
-            // b is MIN_VALUE -> we add a byte containing a true
-            return addArrays(serialize(l.longValue()), serialize(true));
+        if (l != null) {
+            return addArrays(serialize(true), serialize(l.longValue()));
         } else {
-            // b is null -> we codify MIN_VALUE and add a byte containing a false
-            return addArrays(serialize(Long.MIN_VALUE), serialize(false));
+            // l is null -> just serialize a false
+            return addArrays(serialize(false));
         }
     }
 
@@ -429,16 +417,11 @@ public class Serializer {
     }
 
     public static Byte deserializeByte(byte[] data, MutableOffset offset) {
-        byte b = deserializeByteValue(data, offset);
-        if (b == Byte.MIN_VALUE) {
-            Boolean isMinValue = deserializeBooleanValue(data, offset);
-            if (isMinValue) {
-                return b;
-            } else {
-                return null;
-            }
+        boolean notNull = deserializeBooleanValue(data, offset);
+        if (notNull) {
+            return deserializeByteValue(data, offset);
         } else {
-            return b;
+            return null;
         }
     }
 
@@ -447,16 +430,11 @@ public class Serializer {
     }
 
     public static Short deserializeShort(byte[] data, MutableOffset offset) {
-        short s = deserializeShortValue(data, offset);
-        if (s == Short.MIN_VALUE) {
-            Boolean isMinValue = deserializeBooleanValue(data, offset);
-            if (isMinValue) {
-                return s;
-            } else {
-                return null;
-            }
+        boolean notNull = deserializeBooleanValue(data, offset);
+        if (notNull) {
+            return deserializeShortValue(data, offset);
         } else {
-            return s;
+            return null;
         }
     }
 
@@ -465,16 +443,11 @@ public class Serializer {
     }
 
     public static Integer deserializeInt(byte[] data, MutableOffset offset) {
-        int i = deserializeIntValue(data, offset);
-        if (i == Integer.MIN_VALUE) {
-            Boolean isMinValue = deserializeBooleanValue(data, offset);
-            if (isMinValue) {
-                return i;
-            } else {
-                return null;
-            }
+        boolean notNull = deserializeBooleanValue(data, offset);
+        if (notNull) {
+            return deserializeIntValue(data, offset);
         } else {
-            return i;
+            return null;
         }
     }
 
@@ -483,16 +456,11 @@ public class Serializer {
     }
 
     public static Long deserializeLong(byte[] data, MutableOffset offset) {
-        long l = deserializeLongValue(data, offset);
-        if (l == Long.MIN_VALUE) {
-            Boolean isMinValue = deserializeBooleanValue(data, offset);
-            if (isMinValue) {
-                return l;
-            } else {
-                return null;
-            }
+        boolean notNull = deserializeBooleanValue(data, offset);
+        if (notNull) {
+            return deserializeLongValue(data, offset);
         } else {
-            return l;
+            return null;
         }
     }
 

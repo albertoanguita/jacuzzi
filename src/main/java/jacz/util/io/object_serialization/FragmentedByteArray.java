@@ -17,13 +17,18 @@ public class FragmentedByteArray {
         length = 0;
     }
 
+    public FragmentedByteArray(byte[]... arrays) {
+        this();
+        addArrays(arrays);
+    }
+
     public void addArrays(byte[]... arrays) {
         for (byte[] array : arrays) {
             addArray(array);
         }
     }
 
-    private void addArray(byte[] array) {
+    public void addArray(byte[] array) {
         arrayList.add(array);
         length += array.length;
     }

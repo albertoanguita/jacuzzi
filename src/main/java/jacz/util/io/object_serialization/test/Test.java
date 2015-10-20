@@ -1,10 +1,10 @@
 package jacz.util.io.object_serialization.test;
 
+import jacz.util.io.object_serialization.FragmentedByteArray;
 import jacz.util.io.object_serialization.MutableOffset;
 import jacz.util.io.object_serialization.Serializer;
 
-import java.io.IOException;
-import java.text.ParseException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,12 +28,29 @@ public class Test {
 
     public static void main(String args[]) throws Exception {
 
+
+        String str = "ññ";
+        byte[] strBytes = str.getBytes(Charset.forName("UTF-8"));
+//        byte[] strBytes = str.getBytes();
+
         Integer ii = 5;
         String ss = Serializer.serializeObjectToString(ii);
         Integer iii = (Integer) Serializer.deserializeObject(ss);
 
+
+        byte[] shortValueData = Serializer.serialize((short) 25);
+        Short nullShort = null;
+        byte[] shortNullData = Serializer.serialize(nullShort);
+        byte[] shortNotNullData = Serializer.serialize(new Short((short) 56));
+        byte[] shortData = new FragmentedByteArray(shortValueData, shortNullData, shortNotNullData).generateArray();
+
+        MutableOffset shortMutableOffset = new MutableOffset();
+        short shortValue = Serializer.deserializeShortValue(shortData, shortMutableOffset);
+        Short shortNull = Serializer.deserializeShort(shortData, shortMutableOffset);
+        Short shortNotNull = Serializer.deserializeShort(shortData, shortMutableOffset);
+
+
         byte[] dataF = Serializer.serialize(1234.5f);
-        byte ttt = dataF[444];
         byte[] dataD = Serializer.serialize(98765.4d);
         byte[] dataS = Serializer.serialize("qw?");
         byte[] dataI = Serializer.serialize(12345);
@@ -67,7 +84,7 @@ public class Test {
         System.out.println(serString);
         List<String> list2 = Serializer.deserializeListFromReadableString(serString, "<<<", "}}}}");
 
-        System.out.println(list2.get(1));
+        System.out.println(list2.get(2));
 
         System.out.println("FIN");
     }

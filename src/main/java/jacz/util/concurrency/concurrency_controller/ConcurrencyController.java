@@ -4,8 +4,8 @@ import jacz.util.concurrency.daemon.Daemon;
 import jacz.util.concurrency.daemon.DaemonAction;
 import jacz.util.concurrency.execution_control.PausableElement;
 import jacz.util.maps.ObjectCount;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
@@ -16,7 +16,7 @@ import java.util.concurrent.PriorityBlockingQueue;
  * Only ONE object of such classes must exist (or at least just one per schema of concurrency), in order to
  * ensure correct functioning
  */
-public abstract class ConcurrencyController implements DaemonAction {
+public class ConcurrencyController implements DaemonAction {
 
     public static class QueueElement implements Comparable<QueueElement> {
 
@@ -43,7 +43,7 @@ public abstract class ConcurrencyController implements DaemonAction {
          * @param o other QueueElement object to compare with
          * @return result of comparison
          */
-        public int compareTo(QueueElement o) {
+        public int compareTo(@NotNull QueueElement o) {
             return o.priority - priority;
         }
 
@@ -58,11 +58,15 @@ public abstract class ConcurrencyController implements DaemonAction {
 
     private static final String STOP_ACTIVITY = "@@@STOP@@@";
 
+    /**
+     * Actions implemented by the client
+     */
+    private final ConcurrencyControllerAction concurrencyControllerAction;
 
     /**
      * List of available activities for executions (each identified by means of a String), and their respective priorities
      */
-    private ActivityListAndPriorities activityListAndPriorities;
+//    private ActivityListAndPriorities activityListAndPriorities;
 
     /**
      * Queue where requests for executing specific activities are stored. This queue allows elements with higher
@@ -94,8 +98,8 @@ public abstract class ConcurrencyController implements DaemonAction {
     /**
      * Default class constructor. Initializes the concurrency controller with no limit of simultaneous executions
      */
-    protected ConcurrencyController() {
-        this(0);
+    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
+        this(concurrencyControllerAction, concurrencyControllerAction.maxNumberOfExecutionsAllowed());
     }
 
     /**
@@ -103,43 +107,45 @@ public abstract class ConcurrencyController implements DaemonAction {
      *
      * @param maxNumberOfExecutionsAllowed maximum amount of allowed simultaneous executions
      */
-    protected ConcurrencyController(int maxNumberOfExecutionsAllowed) {
-        activityListAndPriorities = new ActivityListAndPriorities();
-        initializeActivityList(activityListAndPriorities);
-        addStopActivity();
+    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction, int maxNumberOfExecutionsAllowed) {
+        this.concurrencyControllerAction = concurrencyControllerAction;
+//        activityListAndPriorities = new ActivityListAndPriorities();
+//        initializeActivityList(activityListAndPriorities);
+//        addStopActivity();
         activityRequestsQueue = new PriorityBlockingQueue<>();
-        Set<String> supportedActivitiesSet = activityListAndPriorities.supportedActivitiesSet();
-        numberOfExecutionsOfActivities = new ObjectCount<>(supportedActivitiesSet, false, false);
+//        Set<String> supportedActivitiesSet = activityListAndPriorities.supportedActivitiesSet();
+//        numberOfExecutionsOfActivities = new ObjectCount<>(supportedActivitiesSet, false, false);
+        numberOfExecutionsOfActivities = new ObjectCount<>();
         this.maxNumberOfExecutionsAllowed = maxNumberOfExecutionsAllowed;
         daemon = new Daemon(this);
         alive = true;
     }
 
-    /**
-     * Initializes the activity list with the corresponding priorities. The object activityListAndPriorities
-     * has already been constructed, but it is isEmpty and must be filled here with the activities that are to
-     * be supported and their corresponding priorities. For each activity, an entry in the Map must be created.
-     * The activity itself will act as key, being its priority the associated value
-     *
-     * @param activityListAndPriorities ActivityListAndPriorities object for defining the list of supported
-     *                                  activities and their respective priorities
-     */
-    protected abstract void initializeActivityList(ActivityListAndPriorities activityListAndPriorities);
+//    /**
+//     * Initializes the activity list with the corresponding priorities. The object activityListAndPriorities
+//     * has already been constructed, but it is isEmpty and must be filled here with the activities that are to
+//     * be supported and their corresponding priorities. For each activity, an entry in the Map must be created.
+//     * The activity itself will act as key, being its priority the associated value
+//     *
+//     * @param activityListAndPriorities ActivityListAndPriorities object for defining the list of supported
+//     *                                  activities and their respective priorities
+//     */
+//    protected abstract void initializeActivityList(ActivityListAndPriorities activityListAndPriorities);
 
-    private void addStopActivity() {
-        // find the lowest priority
-        int lowestPriority = Integer.MAX_VALUE;
-        for (String activity : activityListAndPriorities.supportedActivitiesSet()) {
-            if (activity.equals(STOP_ACTIVITY)) {
-                throw new IllegalArgumentException("Activities cannot have the name " + STOP_ACTIVITY);
-            }
-            int priority = activityListAndPriorities.getPriority(activity);
-            if (priority < lowestPriority) {
-                lowestPriority = priority;
-            }
-        }
-        activityListAndPriorities.addActivity(STOP_ACTIVITY, lowestPriority - 1);
-    }
+//    private void addStopActivity() {
+//        // find the lowest priority
+//        int lowestPriority = Integer.MAX_VALUE;
+//        for (String activity : activityListAndPriorities.supportedActivitiesSet()) {
+//            if (activity.equals(STOP_ACTIVITY)) {
+//                throw new IllegalArgumentException("Activities cannot have the name " + STOP_ACTIVITY);
+//            }
+//            int priority = activityListAndPriorities.getPriority(activity);
+//            if (priority < lowestPriority) {
+//                lowestPriority = priority;
+//            }
+//        }
+//        activityListAndPriorities.addActivity(STOP_ACTIVITY, lowestPriority - 1);
+//    }
 
     /**
      * This functions provides the activityCanExecute function with the required synchronism (abstract methods
@@ -157,21 +163,26 @@ public abstract class ConcurrencyController implements DaemonAction {
         if (maxNumberOfExecutionsAllowed > 0 && numberOfExecutionsOfActivities.getTotalCount() >= maxNumberOfExecutionsAllowed) {
             return false;
         }
-        // all previous conditions were satisfied, just check with the implementation of the
-        // activityCanExecute method
-        return activityCanExecute(activity, numberOfExecutionsOfActivities);
+        // next, check if it is the STOP activity. STOP can only execute if there are no running activities
+        else if (activity.equals(STOP_ACTIVITY)) {
+            return numberOfExecutionsOfActivities.getTotalCount() == 0;
+        }
+        // just check with the client
+        else {
+            return concurrencyControllerAction.activityCanExecute(activity, numberOfExecutionsOfActivities);
+        }
     }
 
-    /**
-     * This functions informs whether a specific activity can be executed, depending on other active activities
-     * and in what number each of them is being executed. This functions takes care of ensuring that no
-     * incompatible activities execute at the same time.
-     *
-     * @param activity                       activity pretended to be executed
-     * @param numberOfExecutionsOfActivities number of active executions of each active activity
-     * @return true if this activity can be executed at this moment
-     */
-    protected abstract boolean activityCanExecute(String activity, ObjectCount<String> numberOfExecutionsOfActivities);
+//    /**
+//     * This functions informs whether a specific activity can be executed, depending on other active activities
+//     * and in what number each of them is being executed. This functions takes care of ensuring that no
+//     * incompatible activities execute at the same time.
+//     *
+//     * @param activity                       activity pretended to be executed
+//     * @param numberOfExecutionsOfActivities number of active executions of each active activity
+//     * @return true if this activity can be executed at this moment
+//     */
+//    protected abstract boolean activityCanExecute(String activity, ObjectCount<String> numberOfExecutionsOfActivities);
 
     /**
      * Request permission for performing a registered activity. This call will block until the conditions for
@@ -217,7 +228,7 @@ public abstract class ConcurrencyController implements DaemonAction {
      * @param activity type of activity that the client pretends to execute
      */
     public final QueueElement registerActivity(String activity) {
-        QueueElement queueElement = new QueueElement(activity, activityListAndPriorities.getPriority(activity));
+        QueueElement queueElement = new QueueElement(activity, concurrencyControllerAction.getActivityPriority(activity));
         synchronized (this) {
             if (!alive && !activity.equals(STOP_ACTIVITY)) {
                 throw new IllegalStateException("Concurrency controller has been stopped. No more activities allowed");
@@ -242,6 +253,7 @@ public abstract class ConcurrencyController implements DaemonAction {
         synchronized (this) {
             numberOfExecutionsOfActivities.subtractObject(activity);
         }
+        concurrencyControllerAction.activityHasEnded(activity, numberOfExecutionsOfActivities);
         // alert the daemon that a new opportunity for execution has raised
         daemon.stateChange();
     }
@@ -256,6 +268,7 @@ public abstract class ConcurrencyController implements DaemonAction {
         String activity = queueElement.getActivity();
         if (callActivityCanExecute(activity)) {
             // the activity can execute now -> allow continue and remove it from the activity queue
+            concurrencyControllerAction.activityIsGoingToBegin(activity, numberOfExecutionsOfActivities);
             synchronized (this) {
                 numberOfExecutionsOfActivities.addObject(activity);
             }

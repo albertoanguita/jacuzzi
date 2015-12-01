@@ -1,9 +1,9 @@
 package jacz.util.concurrency.concurrency_controller.test;
 
+import jacz.util.concurrency.concurrency_controller.ConcurrencyController;
 import jacz.util.concurrency.concurrency_controller.ConcurrencyControllerReadWrite;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.task_executor.TaskFinalizationIndicator;
-import jacz.util.lists.Duple;
 
 /**
  * Class description
@@ -17,7 +17,7 @@ public class Test {
 
     public static void main(String args[]) {
         int x = 1000;
-        CC cc = new CC();
+        ConcurrencyController cc = new ConcurrencyController(new ConcurrencyControllerReadWrite());
 
         //IOUtil.pauseEnter("pausa");
         TaskFinalizationIndicator[] tfi = new TaskFinalizationIndicator[8];
@@ -35,6 +35,7 @@ public class Test {
             tfi[i].waitForFinalization();
             //System.out.println("task " + i + " finished!!!");
         }
-        //cc.endConcurrencyController();
+
+        cc.stopAndWaitForFinalization();
     }
 }

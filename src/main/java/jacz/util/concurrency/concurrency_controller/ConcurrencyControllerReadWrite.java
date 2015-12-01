@@ -41,7 +41,7 @@ public abstract class ConcurrencyControllerReadWrite extends ConcurrencyControll
 
     public abstract Duple<Integer, Integer> readWritePriorities();
 
-    private int numberOfWritersExecuting(ObjectCount <String> numberOfExecutionsOfActivities) {
+    private int numberOfWritersExecuting(ObjectCount<String> numberOfExecutionsOfActivities) {
         int count = 0;
         for (String activity : numberOfExecutionsOfActivities.objectSet()) {
             if (activity.equals(WRITE_ACTIVITY)) {

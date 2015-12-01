@@ -65,6 +65,7 @@ public class ObjectCount<E> {
         }
         objectCount.put(object, objectCount.get(object) + 1);
         totalCount++;
+        checkEmptyObject(object);
     }
 
     public void subtractObject(E object) {
@@ -80,6 +81,13 @@ public class ObjectCount<E> {
         }
         objectCount.put(object, objectCount.get(object) - 1);
         totalCount--;
+        checkEmptyObject(object);
+    }
+
+    private void checkEmptyObject(E object) {
+        if (objectCount.get(object) == 0) {
+            objectCount.remove(object);
+        }
     }
 
     public int getTotalCount() {

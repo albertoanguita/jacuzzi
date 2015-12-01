@@ -13,9 +13,9 @@ public class Test {
 
     public static void main(String[] args) {
 
-        double min = 2;
-        double max = 4;
-        double stretch = 2;
+        double min = -1;
+        double max = 1;
+        double stretch = 1;
         System.out.println(Functions.sigmoid(-3, min, max, stretch));
         System.out.println(Functions.sigmoid(-2, min, max, stretch));
         System.out.println(Functions.sigmoid(-1, min, max, stretch));

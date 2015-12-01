@@ -22,12 +22,24 @@ public class SimpleObjectCount {
         objectCount = new ObjectCount<>(elements, allowNegative, allowNewObjects);
     }
 
-    public void addObject() {
+    public void add() {
         objectCount.addObject(STORED_OBJECT);
     }
 
-    public void subtractObject() {
+    public void add(int count) {
+        for (int i = 0; i < count; i++) {
+            add();
+        }
+    }
+
+    public void subtract() {
         objectCount.subtractObject(STORED_OBJECT);
+    }
+
+    public void subtract(int count) {
+        for (int i = 0; i < count; i++) {
+            subtract();
+        }
     }
 
     public int getCount() {

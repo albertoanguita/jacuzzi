@@ -16,8 +16,7 @@ public class Functions {
      */
     public static float sigmoid(float x, float min, float max, float stretch) {
         float factor = max - min;
-        float shift = max - factor;
-        return shift + factor / (1f + (float) Math.pow(Math.E, -x / stretch));
+        return min + factor / (1f + (float) Math.pow(Math.E, -x / stretch));
     }
 
     /**
@@ -31,7 +30,6 @@ public class Functions {
      */
     public static double sigmoid(double x, double min, double max, double stretch) {
         double factor = max - min;
-        double shift = max - factor;
-        return shift + factor / (1d + Math.pow(Math.E, -x / stretch));
+        return min + factor / (1d + Math.pow(Math.E, -x / stretch));
     }
 }

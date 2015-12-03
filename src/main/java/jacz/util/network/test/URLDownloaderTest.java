@@ -38,6 +38,11 @@ public class URLDownloaderTest implements ProgressNotification<Integer> {
     }
 
     @Override
+    public void beginTask() {
+        System.out.println("Download started...");
+    }
+
+    @Override
     public void addNotification(Integer message) {
         System.out.println(message + "%...");
     }

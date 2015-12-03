@@ -15,7 +15,7 @@ public class TestCRC {
 
         byte[] data = Serializer.serialize("hello");
 
-        byte[] dataWithCRC = CRC.addCRC(data, 4, true);
+        byte[] dataWithCRC = CRC.addCRC(data, 5, true);
 
         MutableOffset offset = new MutableOffset();
         byte[] data2 = CRC.extractDataWithCRC(dataWithCRC, offset);

@@ -12,25 +12,23 @@ public class FragmentedByteArray {
 
     private int length;
 
-    public FragmentedByteArray() {
+    public FragmentedByteArray(byte[]... arrays) {
         arrayList = new ArrayList<>();
         length = 0;
-    }
-
-    public FragmentedByteArray(byte[]... arrays) {
-        this();
         addArrays(arrays);
     }
 
-    public void addArrays(byte[]... arrays) {
+    public FragmentedByteArray addArrays(byte[]... arrays) {
         for (byte[] array : arrays) {
             addArray(array);
         }
+        return this;
     }
 
-    public void addArray(byte[] array) {
+    public FragmentedByteArray addArray(byte[] array) {
         arrayList.add(array);
         length += array.length;
+        return this;
     }
 
     public byte[] generateArray() {

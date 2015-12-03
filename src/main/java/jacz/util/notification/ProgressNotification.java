@@ -6,14 +6,19 @@ package jacz.util.notification;
 public interface ProgressNotification<E> {
 
     /**
+     * Reports that the task being monitored has began
+     */
+    void beginTask();
+
+    /**
      * Adds a new progress notification
      *
      * @param message content of the notification
      */
-    public void addNotification(E message);
+    void addNotification(E message);
 
     /**
      * This method can be invoked to indicate that the task has been finalized
      */
-    public void completeTask();
+    void completeTask();
 }

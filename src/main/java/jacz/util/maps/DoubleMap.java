@@ -1,5 +1,6 @@
 package jacz.util.maps;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.Set;
  * This class implements a two-direction map. It thus implements a functional and inverse functional relation of
  * elements (bijective function)
  */
-public class DoubleMap<T, S> {
+public class DoubleMap<T, S> implements Serializable {
 
     private Map<T, S> directMap;
 
@@ -92,5 +93,9 @@ public class DoubleMap<T, S> {
 
     public Collection<S> values() {
         return directMap.values();
+    }
+
+    public Set<Map.Entry<T, S>> entrySet() {
+        return directMap.entrySet();
     }
 }

@@ -56,6 +56,11 @@ public class ConcurrentDownloadTest implements ProgressNotification<DownloadProg
     }
 
     @Override
+    public void beginTask() {
+        System.out.println("Download started...");
+    }
+
+    @Override
     public void addNotification(DownloadProgressItem message) {
         System.out.println(" - " + message.getPercentage() + "/1000 completed, speed: " + message.getSpeed());
     }

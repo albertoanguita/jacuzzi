@@ -1,5 +1,6 @@
 package jacz.util.hash;
 
+import jacz.util.io.object_serialization.FragmentedByteArray;
 import jacz.util.io.object_serialization.MutableOffset;
 import jacz.util.io.object_serialization.Serializer;
 
@@ -12,24 +13,26 @@ import java.util.zip.CRC32;
 public class CRC {
 
     public static byte[] addCRC(byte[] data, int CRCBytes, boolean addHeader) {
+        FragmentedByteArray byteArray = new FragmentedByteArray();
         byte[] header = null;
         if (addHeader) {
             // add length of data and length of CRC
             header = Serializer.addArrays(Serializer.serialize(data.length), Serializer.serialize(CRCBytes));
+            byteArray.addArrays(Serializer.serialize(data.length), Serializer.serialize(CRCBytes));
         }
-        return Serializer.addArrays(header, data, calculateCRC(data, CRCBytes));
+        return byteArray.addArrays(data, calculateCRC(data, CRCBytes)).generateArray();
     }
 
     public static byte[] calculateCRC(byte[] data, int CRCBytes) {
-        CRC32 crc32 = new CRC32();
-        crc32.update(data);
-        int bytesForCRC = Math.min(CRCBytes, 4);
-        byte[] crcData = Serializer.serialize(crc32.getValue());
-        crcData = Arrays.copyOfRange(crcData, crcData.length - bytesForCRC, crcData.length);
-        CRCBytes -= bytesForCRC;
         if (CRCBytes == 0) {
-            return crcData;
+            return new byte[0];
         } else {
+            CRC32 crc32 = new CRC32();
+            crc32.update(data);
+            int bytesForCRC = Math.min(CRCBytes, 4);
+            byte[] crcData = Serializer.serialize(crc32.getValue());
+            crcData = Arrays.copyOfRange(crcData, crcData.length - bytesForCRC, crcData.length);
+            CRCBytes -= bytesForCRC;
             return Serializer.addArrays(crcData, calculateCRC(Serializer.addArrays(data, crcData), CRCBytes));
         }
     }

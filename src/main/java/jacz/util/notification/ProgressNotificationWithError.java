@@ -13,7 +13,7 @@ package jacz.util.notification;
  */
 public interface ProgressNotificationWithError<E, Y> extends ProgressNotification<E> {
 
-    public void error(Y error);
+    void error(Y error);
 
-    public void timeout();
+    void timeout();
 }

@@ -12,7 +12,7 @@ public class SHA_1 extends HashFunction {
     }
 
     public SHA_1(Integer hashLength) {
-        super(hashLength);
+        super(hashLength, 20);
         try {
             initialize("SHA-1");
         } catch (NoSuchAlgorithmException e) {

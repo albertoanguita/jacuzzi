@@ -37,25 +37,30 @@ public class Serializer {
     }
 
     /**
-     * Serializes a string object into a byte array
+     * Serializes an object into a byte array
      *
      * @param o Object to serialize
      * @return byte array containing the object
      */
-    public static byte[] serializeObject(Serializable o) throws IOException {
+    public static byte[] serializeObject(Serializable o) {
         byte[] objectData = serializeObjectWithoutLengthHeader(o);
         return addArrays(Serializer.serialize(objectData.length), objectData);
     }
 
 
-    public static byte[] serializeObjectWithoutLengthHeader(Serializable o) throws IOException {
-        ByteArrayOutputStream bo = new ByteArrayOutputStream();
-        ObjectOutputStream so = new ObjectOutputStream(bo);
-        so.writeObject(o);
-        so.flush();
-        so.close();
-        bo.close();
-        return bo.toByteArray();
+    public static byte[] serializeObjectWithoutLengthHeader(Serializable o) {
+        try {
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            ObjectOutputStream so = new ObjectOutputStream(bo);
+            so.writeObject(o);
+            so.flush();
+            so.close();
+            bo.close();
+            return bo.toByteArray();
+        } catch (IOException e) {
+            // ignore, cannot happen
+            return new byte[0];
+        }
     }
 
 
@@ -331,7 +336,7 @@ public class Serializer {
 
     public static byte[] serialize(byte[] bytes) {
         if (bytes != null) {
-            return addArrays(serialize(bytes.length), bytes);
+            return addArrays(serialize(new Integer(bytes.length)), bytes);
         } else {
             return serialize((Integer) null);
         }

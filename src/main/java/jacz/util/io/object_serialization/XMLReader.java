@@ -1,5 +1,6 @@
 package jacz.util.io.object_serialization;
 
+import jacz.util.hash.CRCMismatchException;
 import jacz.util.io.xml.Element;
 import jacz.util.io.xml.XMLDom;
 import jacz.util.lists.Duple;
@@ -18,10 +19,19 @@ public class XMLReader {
 
     private Element current;
 
-    private Stack<List<Element>> stack;
+    private final Stack<List<Element>> stack;
 
-    public XMLReader(String path) throws FileNotFoundException, XMLStreamException {
-        this.current = XMLDom.parse(path);
+    public XMLReader(String path, String... backupPaths) throws FileNotFoundException, XMLStreamException {
+        current = XMLDom.parse(path, backupPaths);
+        stack = new Stack<>();
+    }
+
+    public XMLReader(String path, boolean withCRC, String... backupPaths) throws FileNotFoundException, XMLStreamException, CRCMismatchException {
+        if (withCRC) {
+            current = XMLDom.parseWithCRC(path, backupPaths);
+        } else {
+            current = XMLDom.parse(path, backupPaths);
+        }
         stack = new Stack<>();
     }
 

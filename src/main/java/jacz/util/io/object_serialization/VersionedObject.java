@@ -10,11 +10,11 @@ import java.util.Map;
  */
 public interface VersionedObject {
 
-    String getCurrentVersion();
+    VersionStack getCurrentVersion();
 
     Map<String, Serializable> serialize();
 
-    void deserialize(Map<String, Object> attributes);
+    void deserialize(String version, Map<String, Object> attributes, VersionStack parentVersions) throws UnrecognizedVersionException;
 
-    void deserializeOldVersion(String version, Map<String, Object> attributes) throws UnrecognizedVersionException;
+//    void deserializeOldVersion(String version, Map<String, Object> attributes) throws UnrecognizedVersionException;
 }

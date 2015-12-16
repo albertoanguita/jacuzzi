@@ -14,14 +14,14 @@ public class VersionedSerializationException extends Exception {
         UNRECOGNIZED_VERSION
     }
 
-    public final String version;
+    public final VersionStack versionStack;
 
     public final Map<String, Object> attributes;
 
     public final Reason reason;
 
-    public VersionedSerializationException(String version, Map<String, Object> attributes, Reason reason) {
-        this.version = version;
+    public VersionedSerializationException(VersionStack versionStack, Map<String, Object> attributes, Reason reason) {
+        this.versionStack = versionStack;
         this.attributes = attributes;
         this.reason = reason;
     }
@@ -29,7 +29,7 @@ public class VersionedSerializationException extends Exception {
     @Override
     public String toString() {
         return "VersionedSerializationException{" +
-                "version='" + version + '\'' +
+                "versionStack='" + versionStack + '\'' +
                 ", attributes=" + attributes +
                 ", reason=" + reason +
                 '}';

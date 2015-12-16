@@ -1,5 +1,8 @@
 package jacz.util.io.xml;
 
+import jacz.util.hash.MD5;
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.util.*;
 
 /**
@@ -90,11 +93,6 @@ public class Element {
                 return false;
             }
         }
-//        for (String attr : getAttributeNames()) {
-//            if (!attributes.containsKey(attr) || !attributes.get(attr).equals(getAttributeValue(attr))) {
-//                return false;
-//            }
-//        }
         return true;
     }
 
@@ -114,7 +112,7 @@ public class Element {
         }
         this.children = children;
         if (this.children == null) {
-            this.children = new ArrayList<Element>();
+            this.children = new ArrayList<>();
         }
     }
 
@@ -122,6 +120,17 @@ public class Element {
         checkCanAddChildren();
         children.add(child);
         child.parent = this;
+    }
+
+    public void removeChildren(String name) {
+        int i = 0;
+        while (i < children.size()) {
+            if (children.get(i).getName().equals(name)) {
+                children.remove(i);
+            } else {
+                i++;
+            }
+        }
     }
 
     public void clearChildren() {
@@ -151,5 +160,26 @@ public class Element {
         if (hasChildren()) {
             throw new IllegalStateException("Cannot add text to element with children");
         }
+    }
+
+    public String getHash(Integer length, String... ignoreTags) {
+        MD5 md5 = new MD5(length);
+        md5.update(name);
+        md5.update(text);
+        for (Map.Entry<String, String> attribute : attributes.entrySet()) {
+            md5.update(attribute.getKey());
+            md5.update(attribute.getValue());
+        }
+        List<String> childrenHashes = new ArrayList<>();
+        for (Element child : children) {
+            if (!ArrayUtils.contains(ignoreTags, child.name)) {
+                childrenHashes.add(child.getHash(length));
+            }
+        }
+        Collections.sort(childrenHashes);
+        for (String hash : childrenHashes) {
+            md5.update(hash);
+        }
+        return md5.digestAsHex();
     }
 }

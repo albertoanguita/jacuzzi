@@ -228,7 +228,7 @@ public class ConcurrencyController implements DaemonAction {
      * @param activity type of activity that the client pretends to execute
      */
     public final QueueElement registerActivity(String activity) {
-        QueueElement queueElement = new QueueElement(activity, concurrencyControllerAction.getActivityPriority(activity));
+        QueueElement queueElement = new QueueElement(activity, getActivityPriority(activity));
         synchronized (this) {
             if (!alive && !activity.equals(STOP_ACTIVITY)) {
                 throw new IllegalStateException("Concurrency controller has been stopped. No more activities allowed");
@@ -237,6 +237,14 @@ public class ConcurrencyController implements DaemonAction {
         activityRequestsQueue.put(queueElement);
         daemon.stateChange();
         return queueElement;
+    }
+
+    private int getActivityPriority(String activity) {
+        if (activity.equals(STOP_ACTIVITY)) {
+            return Integer.MIN_VALUE;
+        } else {
+            return concurrencyControllerAction.getActivityPriority(activity);
+        }
     }
 
     public final void beginRegisteredActivity(QueueElement queueElement) {

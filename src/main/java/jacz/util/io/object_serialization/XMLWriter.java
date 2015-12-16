@@ -13,7 +13,7 @@ public class XMLWriter {
 
     static final String FIELD = "field";
 
-    static final String STRUCT = "str";
+    static final String STRUCT = "struct";
 
     static final String NAME = "name";
 
@@ -63,7 +63,11 @@ public class XMLWriter {
         current = current.getParent();
     }
 
-    public void write(String path) throws IOException, XMLStreamException {
-        XMLDom.write(path, root);
+    public void write(String path, String... backupPaths) throws IOException, XMLStreamException {
+        write(path, 0, backupPaths);
+    }
+
+    public void write(String path, int hashLength, String... backupPaths) throws IOException, XMLStreamException {
+        XMLDom.write(path, root, hashLength, backupPaths);
     }
 }

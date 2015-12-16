@@ -22,7 +22,7 @@ public class FragmentedByteArrayTest {
         byte[] a2 = new byte[2];
         a2[0] = 3;
         a2[1] = 4;
-        byte[] addArray = FragmentedByteArray.addArraysFinal(a1, a2);
+        byte[] addArray = FragmentedByteArray.addFinal(a1, a2);
 
         System.out.println(Arrays.toString(addArray));
     }

@@ -1,16 +1,45 @@
 package jacz.util.io.xml;
 
+import jacz.util.hash.CRCMismatchException;
+
 import javax.xml.stream.*;
 import java.io.*;
 import java.net.URL;
+import java.util.Arrays;
 
 /**
  * A simple XML-Dom API. It does not recognize the initial XML code with encoding information or XML version, nor PCData elements
  */
 public class XMLDom {
 
-    public static Element parse(String path) throws FileNotFoundException, XMLStreamException {
-        return parse(new File(path));
+    private static final String CRC_ELEMENT = "crc-element";
+
+    public static Element parse(String path, String... backupPaths) throws FileNotFoundException, XMLStreamException {
+        try {
+            return parse(new File(path));
+        } catch (Exception e) {
+            if (backupPaths.length > 0) {
+                String newPath = backupPaths[0];
+                backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
+                return parse(newPath, backupPaths);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public static Element parseWithCRC(String path, String... backupPaths) throws FileNotFoundException, XMLStreamException, CRCMismatchException {
+        try {
+            return parseWithCRC(new File(path));
+        } catch (Exception e) {
+            if (backupPaths.length > 0) {
+                String newPath = backupPaths[0];
+                backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
+                return parseWithCRC(newPath, backupPaths);
+            } else {
+                throw e;
+            }
+        }
     }
 
     /**
@@ -25,8 +54,16 @@ public class XMLDom {
         return parse(new FileReader(file));
     }
 
+    public static Element parseWithCRC(File file) throws FileNotFoundException, XMLStreamException, CRCMismatchException {
+        return parseWithCRC(new FileReader(file));
+    }
+
     public static Element parse(URL url) throws IOException, XMLStreamException {
         return parse(url.openStream());
+    }
+
+    public static Element parseWithCRC(URL url) throws IOException, XMLStreamException, CRCMismatchException {
+        return parseWithCRC(url.openStream());
     }
 
     public static Element parse(InputStreamReader inputStreamReader) throws FileNotFoundException, XMLStreamException {
@@ -34,9 +71,25 @@ public class XMLDom {
         return parse(xif.createXMLStreamReader(inputStreamReader));
     }
 
+    public static Element parseWithCRC(InputStreamReader inputStreamReader) throws FileNotFoundException, XMLStreamException, CRCMismatchException {
+        XMLInputFactory xif = XMLInputFactory.newFactory();
+        Element element = parse(xif.createXMLStreamReader(inputStreamReader));
+        checkCRC(element);
+        element.removeChildren(CRC_ELEMENT);
+        return element;
+    }
+
     public static Element parse(InputStream inputStream) throws XMLStreamException {
         XMLInputFactory xif = XMLInputFactory.newFactory();
         return parse(xif.createXMLStreamReader(inputStream));
+    }
+
+    public static Element parseWithCRC(InputStream inputStream) throws XMLStreamException, CRCMismatchException {
+        XMLInputFactory xif = XMLInputFactory.newFactory();
+        Element element = parse(xif.createXMLStreamReader(inputStream));
+        checkCRC(element);
+        element.removeChildren(CRC_ELEMENT);
+        return element;
     }
 
     private static Element parse(XMLStreamReader xsr) throws XMLStreamException {
@@ -45,6 +98,16 @@ public class XMLDom {
             xsr.next();
         }
         return parseElement(xsr);
+    }
+
+    private static void checkCRC(Element element) throws CRCMismatchException {
+        Element CRCElement = element.getChild(CRC_ELEMENT);
+        if (CRCElement != null) {
+            String crc = CRCElement.getText();
+            if (!crc.equals(element.getHash(crc.length(), CRC_ELEMENT))) {
+                throw new CRCMismatchException();
+            }
+        }
     }
 
     private static Element parseElement(XMLStreamReader xsr) throws XMLStreamException {
@@ -66,7 +129,7 @@ public class XMLDom {
                 if (!elementText.toString().trim().isEmpty() || !element.hasChildren()) {
                     element.setText(elementText.toString());
                 }
-                xsr.next();
+//                xsr.next();
                 return element;
             } else if (xsr.getEventType() == XMLStreamConstants.CHARACTERS) {
                 // an attribute of the current element
@@ -80,28 +143,58 @@ public class XMLDom {
         throw new XMLStreamException("End of the document unexpectedly reached. Element " + element.getName() + " not closed");
     }
 
-    public static void write(String path, Element element) throws XMLStreamException, IOException {
-        write(new File(path), element);
+    public static void write(String path, Element element, String... backupPaths) throws XMLStreamException, IOException {
+        write(path, element, 0, backupPaths);
+    }
+
+    public static void write(String path, Element element, int hashLength, String... backupPaths) throws XMLStreamException, IOException {
+        write(new File(path), element, hashLength);
+        for (String backupPath : backupPaths) {
+            write(new File(backupPath), element, hashLength);
+        }
     }
 
     public static void write(File file, Element element) throws XMLStreamException, IOException {
-        write(new FileWriter(file), element);
+        write(file, element, 0);
+    }
+
+    public static void write(File file, Element element, int hashLength) throws XMLStreamException, IOException {
+        write(new FileWriter(file), element, hashLength);
     }
 
     public static void write(Writer stream, Element element) throws XMLStreamException {
+        write(stream, element, 0);
+    }
+
+    public static void write(Writer stream, Element element, int hashLength) throws XMLStreamException {
         XMLOutputFactory xof = XMLOutputFactory.newInstance();
         XMLStreamWriter xtw = xof.createXMLStreamWriter(stream);
-        writeElement(xtw, element);
-        xtw.flush();
-        xtw.close();
+        writeXMLStreamWriter(xtw, element, hashLength);
     }
 
     public static void write(OutputStream stream, Element element) throws XMLStreamException {
+        write(stream, element, 0);
+    }
+
+    public static void write(OutputStream stream, Element element, int hashLength) throws XMLStreamException {
         XMLOutputFactory xof = XMLOutputFactory.newInstance();
         XMLStreamWriter xtw = xof.createXMLStreamWriter(stream);
+        writeXMLStreamWriter(xtw, element, hashLength);
+    }
+
+    private static void writeXMLStreamWriter(XMLStreamWriter xtw, Element element, int hashLength) throws XMLStreamException {
+        if (hashLength > 0) {
+            String hash = element.getHash(hashLength);
+            Element hashElement = new Element(CRC_ELEMENT);
+            hashElement.setText(hash);
+            element.addChild(hashElement);
+        }
         writeElement(xtw, element);
         xtw.flush();
         xtw.close();
+        if (hashLength > 0) {
+            element.removeChildren(CRC_ELEMENT);
+        }
     }
 
     private static void writeElement(XMLStreamWriter xtw, Element element) throws XMLStreamException {

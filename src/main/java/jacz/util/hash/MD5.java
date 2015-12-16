@@ -12,7 +12,7 @@ public class MD5 extends HashFunction {
     }
 
     public MD5(Integer hashLength) {
-        super(hashLength);
+        super(hashLength, 16);
         try {
             initialize("MD5");
         } catch (NoSuchAlgorithmException e) {

@@ -28,9 +28,9 @@ public class HashFunction {
         this.hashLength = hashLength;
     }
 
-    protected HashFunction(Integer hashLength) {
+    protected HashFunction(Integer hashLength, int maxLength) {
         messageDigest = null;
-        this.hashLength = hashLength;
+        this.hashLength = hashLength == null ? null : Math.min(hashLength, maxLength);
     }
 
     protected void initialize(String algorithm) throws NoSuchAlgorithmException {

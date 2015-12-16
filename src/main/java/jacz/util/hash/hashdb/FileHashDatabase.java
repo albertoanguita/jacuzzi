@@ -3,8 +3,7 @@ package jacz.util.hash.hashdb;
 import jacz.util.files.FileUtil;
 import jacz.util.hash.HashFunction;
 import jacz.util.hash.SHA_256;
-import jacz.util.io.object_serialization.UnrecognizedVersionException;
-import jacz.util.io.object_serialization.VersionedObject;
+import jacz.util.io.object_serialization.*;
 import jacz.util.lists.Duple;
 import jacz.util.maps.AutoKeyMap;
 
@@ -93,6 +92,10 @@ public class FileHashDatabase implements VersionedObject {
 
     public FileHashDatabase() {
         this(new FileKeyGenerator(), new FolderKeyGenerator());
+    }
+
+    public FileHashDatabase(String path, String... backupPaths) throws VersionedSerializationException, IOException {
+        VersionedObjectSerializer.deserialize(this, path, backupPaths);
     }
 
     protected FileHashDatabase(FileKeyGenerator fileKeyGenerator, FolderKeyGenerator folderKeyGenerator) {
@@ -208,8 +211,8 @@ public class FileHashDatabase implements VersionedObject {
     }
 
     @Override
-    public String getCurrentVersion() {
-        return CURRENT_VERSION;
+    public VersionStack getCurrentVersion() {
+        return new VersionStack(CURRENT_VERSION);
     }
 
     @Override
@@ -221,13 +224,12 @@ public class FileHashDatabase implements VersionedObject {
     }
 
     @Override
-    public void deserialize(Map<String, Object> attributes) {
-        filesMap = (AutoKeyMap<String, AnnotatedFile, IOException>) attributes.get("filesMap");
-        foldersMap = (AutoKeyMap<String, AnnotatedFolder, IOException>) attributes.get("foldersMap");
-    }
-
-    @Override
-    public void deserializeOldVersion(String version, Map<String, Object> attributes) throws UnrecognizedVersionException {
-        throw new UnrecognizedVersionException();
+    public void deserialize(String version, Map<String, Object> attributes, VersionStack parentVersions) throws UnrecognizedVersionException {
+        if (version.equals(CURRENT_VERSION)) {
+            filesMap = (AutoKeyMap<String, AnnotatedFile, IOException>) attributes.get("filesMap");
+            foldersMap = (AutoKeyMap<String, AnnotatedFolder, IOException>) attributes.get("foldersMap");
+        } else {
+            throw new UnrecognizedVersionException();
+        }
     }
 }

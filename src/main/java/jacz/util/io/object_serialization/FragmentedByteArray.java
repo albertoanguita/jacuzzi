@@ -15,20 +15,19 @@ public class FragmentedByteArray {
     public FragmentedByteArray(byte[]... arrays) {
         arrayList = new ArrayList<>();
         length = 0;
-        addArrays(arrays);
+        add(arrays);
     }
 
-    public FragmentedByteArray addArrays(byte[]... arrays) {
+    public FragmentedByteArray add(byte[]... arrays) {
         for (byte[] array : arrays) {
             addArray(array);
         }
         return this;
     }
 
-    public FragmentedByteArray addArray(byte[] array) {
+    private void addArray(byte[] array) {
         arrayList.add(array);
         length += array.length;
-        return this;
     }
 
     public byte[] generateArray() {
@@ -41,9 +40,9 @@ public class FragmentedByteArray {
         return array;
     }
 
-    public static byte[] addArraysFinal(byte[]... arrays) {
+    public static byte[] addFinal(byte[]... arrays) {
         FragmentedByteArray fragmentedByteArray = new FragmentedByteArray();
-        fragmentedByteArray.addArrays(arrays);
+        fragmentedByteArray.add(arrays);
         return fragmentedByteArray.generateArray();
     }
 }

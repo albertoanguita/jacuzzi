@@ -1,6 +1,8 @@
 package jacz.util.io.object_serialization.test;
 
 import jacz.util.io.object_serialization.XMLWriter;
+import jacz.util.io.xml.Element;
+import jacz.util.io.xml.XMLDom;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,6 +53,9 @@ public class TestXML {
         xmlWriter.addValue("c");
         xmlWriter.endStruct();
 
-        xmlWriter.write("Test.xml");
+        xmlWriter.write("Test.xml", 32, "Test.bak.xml");
+
+        Element newElement = XMLDom.parseWithCRC("Test.xml", "Test.bak.xml");
+        System.out.println(newElement.getName());
     }
 }

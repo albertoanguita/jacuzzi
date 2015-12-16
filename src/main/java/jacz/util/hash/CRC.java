@@ -18,9 +18,9 @@ public class CRC {
         if (addHeader) {
             // add length of data and length of CRC
             header = Serializer.addArrays(Serializer.serialize(data.length), Serializer.serialize(CRCBytes));
-            byteArray.addArrays(Serializer.serialize(data.length), Serializer.serialize(CRCBytes));
+            byteArray.add(Serializer.serialize(data.length), Serializer.serialize(CRCBytes));
         }
-        return byteArray.addArrays(data, calculateCRC(data, CRCBytes)).generateArray();
+        return byteArray.add(data, calculateCRC(data, CRCBytes)).generateArray();
     }
 
     public static byte[] calculateCRC(byte[] data, int CRCBytes) {

@@ -7,6 +7,15 @@ package jacz.util.AI.inference;
  */
 public class Mycin {
 
+    public static float combine(float firstValue, float... restOfValues) throws IllegalArgumentException {
+        checkCorrectCertaintyFactor(firstValue);
+        for (double oneValue : restOfValues) {
+            checkCorrectCertaintyFactor(oneValue);
+            firstValue = (float) combineTwoFactors(firstValue, oneValue);
+        }
+        return firstValue;
+    }
+
     public static double combine(double firstValue, double... restOfValues) throws IllegalArgumentException {
         checkCorrectCertaintyFactor(firstValue);
         for (double oneValue : restOfValues) {

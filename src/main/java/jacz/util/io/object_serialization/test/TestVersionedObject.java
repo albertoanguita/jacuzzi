@@ -1,9 +1,6 @@
 package jacz.util.io.object_serialization.test;
 
-import jacz.util.io.object_serialization.UnrecognizedVersionException;
-import jacz.util.io.object_serialization.VersionedObject;
-import jacz.util.io.object_serialization.VersionedObjectSerializer;
-import jacz.util.io.object_serialization.VersionedSerializationException;
+import jacz.util.io.object_serialization.*;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -82,8 +79,8 @@ public class TestVersionedObject implements VersionedObject {
     }
 
     @Override
-    public String getCurrentVersion() {
-        return "1.0";
+    public VersionStack getCurrentVersion() {
+        return new VersionStack("1.0");
     }
 
     @Override
@@ -101,19 +98,18 @@ public class TestVersionedObject implements VersionedObject {
     }
 
     @Override
-    public void deserialize(Map<String, Object> attributes) {
-        i = (int) attributes.get("i");
-        s = (String) attributes.get("s");
-        t = (Test.TestEnum) attributes.get("t");
-        b = (boolean) attributes.get("b");
-        l = (long) attributes.get("l");
-        f = (float) attributes.get("f");
-        serClass = (SerClass) attributes.get("serClass");
-        data = (byte[]) attributes.get("data");
-    }
-
-    @Override
-    public void deserializeOldVersion(String version, Map<String, Object> attributes) throws UnrecognizedVersionException {
-        throw new UnrecognizedVersionException();
+    public void deserialize(String version, Map<String, Object> attributes, VersionStack parentVersions) throws UnrecognizedVersionException {
+        if (version.equals("1.0")) {
+            i = (int) attributes.get("i");
+            s = (String) attributes.get("s");
+            t = (Test.TestEnum) attributes.get("t");
+            b = (boolean) attributes.get("b");
+            l = (long) attributes.get("l");
+            f = (float) attributes.get("f");
+            serClass = (SerClass) attributes.get("serClass");
+            data = (byte[]) attributes.get("data");
+        } else {
+            throw new UnrecognizedVersionException();
+        }
     }
 }

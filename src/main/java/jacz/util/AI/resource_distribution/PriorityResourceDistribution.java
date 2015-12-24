@@ -1,6 +1,6 @@
 package jacz.util.AI.resource_distribution;
 
-import jacz.util.lists.Triple;
+import jacz.util.lists.tuple.Triple;
 
 import java.util.Collection;
 

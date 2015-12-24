@@ -4,7 +4,7 @@ import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.timer.SimpleTimerAction;
 import jacz.util.concurrency.timer.Timer;
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 import jacz.util.numeric.range.LongRange;
 import jacz.util.numeric.range.Range;
 import jacz.util.queues.TimedQueue;

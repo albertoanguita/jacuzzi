@@ -1,6 +1,6 @@
 package jacz.util.files;
 
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 
 import java.io.*;
 import java.nio.channels.FileChannel;

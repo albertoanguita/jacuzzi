@@ -16,4 +16,23 @@ public class EightTuple<X, Y, Z, U, V, W, M, N> extends SevenTuple<X, Y, Z, U, V
     protected String concatenate() {
         return super.concatenate() + ", " + element8;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        EightTuple<?, ?, ?, ?, ?, ?, ?, ?> that = (EightTuple<?, ?, ?, ?, ?, ?, ?, ?>) o;
+
+        return element8.equals(that.element8);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + element8.hashCode();
+        return result;
+    }
 }

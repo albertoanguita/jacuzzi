@@ -1,7 +1,7 @@
 package jacz.util.io.http.test;
 
 import jacz.util.io.http.HttpClient;
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 
 /**
  * Created by Alberto on 06/11/2015.

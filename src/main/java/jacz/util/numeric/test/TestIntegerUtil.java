@@ -1,6 +1,6 @@
 package jacz.util.numeric.test;
 
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 import jacz.util.numeric.NumericUtil;
 
 import java.util.List;

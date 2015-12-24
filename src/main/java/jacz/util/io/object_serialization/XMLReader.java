@@ -3,7 +3,7 @@ package jacz.util.io.object_serialization;
 import jacz.util.hash.CRCMismatchException;
 import jacz.util.io.xml.Element;
 import jacz.util.io.xml.XMLDom;
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.FileNotFoundException;

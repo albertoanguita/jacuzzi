@@ -1,6 +1,6 @@
 package jacz.util.io.http;
 
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;

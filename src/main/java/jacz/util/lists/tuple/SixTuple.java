@@ -16,4 +16,23 @@ public class SixTuple<X, Y, Z, U, V, W> extends FiveTuple<X, Y, Z, U, V> {
     protected String concatenate() {
         return super.concatenate() + ", " + element6;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        SixTuple<?, ?, ?, ?, ?, ?> sixTuple = (SixTuple<?, ?, ?, ?, ?, ?>) o;
+
+        return element6.equals(sixTuple.element6);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + element6.hashCode();
+        return result;
+    }
 }

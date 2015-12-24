@@ -16,4 +16,23 @@ public class SevenTuple<X, Y, Z, U, V, W, M> extends SixTuple<X, Y, Z, U, V, W> 
     protected String concatenate() {
         return super.concatenate() + ", " + element7;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        SevenTuple<?, ?, ?, ?, ?, ?, ?> that = (SevenTuple<?, ?, ?, ?, ?, ?, ?>) o;
+
+        return element7.equals(that.element7);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + element7.hashCode();
+        return result;
+    }
 }

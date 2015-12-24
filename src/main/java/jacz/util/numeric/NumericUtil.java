@@ -1,6 +1,6 @@
 package jacz.util.numeric;
 
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 
 import java.util.ArrayList;
 import java.util.List;

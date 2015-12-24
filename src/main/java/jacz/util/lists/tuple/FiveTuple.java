@@ -1,7 +1,5 @@
 package jacz.util.lists.tuple;
 
-import jacz.util.lists.Four_Tuple;
-
 /**
  * Created by Alberto on 11/12/2015.
  */
@@ -17,5 +15,24 @@ public class FiveTuple<X, Y, Z, U, V> extends Four_Tuple<X, Y, Z, U> {
     @Override
     protected String concatenate() {
         return super.concatenate() + ", " + element5;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        FiveTuple<?, ?, ?, ?, ?> fiveTuple = (FiveTuple<?, ?, ?, ?, ?>) o;
+
+        return element5.equals(fiveTuple.element5);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + element5.hashCode();
+        return result;
     }
 }

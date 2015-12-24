@@ -104,7 +104,9 @@ public class XMLDom {
         Element CRCElement = element.getChild(CRC_ELEMENT);
         if (CRCElement != null) {
             String crc = CRCElement.getText();
-            if (!crc.equals(element.getHash(crc.length(), CRC_ELEMENT))) {
+            // the length in bytes is the number of characters divided by 2
+            int crcLength = crc.length() / 2;
+            if (!crc.equals(element.getHash(crcLength, CRC_ELEMENT))) {
                 throw new CRCMismatchException();
             }
         }

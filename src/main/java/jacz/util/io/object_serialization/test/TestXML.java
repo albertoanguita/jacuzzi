@@ -1,9 +1,11 @@
 package jacz.util.io.object_serialization.test;
 
+import jacz.util.io.object_serialization.XMLReader;
 import jacz.util.io.object_serialization.XMLWriter;
 import jacz.util.io.xml.Element;
 import jacz.util.io.xml.XMLDom;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,29 +35,33 @@ public class TestXML {
     }
 
     public static void main(String[] args) throws Exception {
-        List<String> l = new ArrayList<>();
-        l.add("a");
-        l.add("b");
-        l.add("c");
-        Map<String, String> map1 = new HashMap<>();
-        map1.put("a", "aaa");
-        map1.put("b", "bbb");
-        map1.put("c", "ccc");
-        TestXML testXML1 = new TestXML(5, "hello", null, l, map1);
+//        List<String> l = new ArrayList<>();
+//        l.add("a");
+//        l.add("b");
+//        l.add("c");
+//        Map<String, String> map1 = new HashMap<>();
+//        map1.put("a", "aaa");
+//        map1.put("b", "bbb");
+//        map1.put("c", "ccc");
+//        TestXML testXML1 = new TestXML(5, "hello", null, l, map1);
+//
+//        XMLWriter xmlWriter = new XMLWriter("root");
+//        xmlWriter.addField("x", Integer.toString(testXML1.x));
+//        xmlWriter.addField("s", testXML1.s);
+//        xmlWriter.addField("i", testXML1.i);
+//        xmlWriter.beginStruct("l");
+//        xmlWriter.addValue("a");
+//        xmlWriter.addValue("b");
+//        xmlWriter.addValue("c");
+//        xmlWriter.endStruct();
+//
+//        xmlWriter.write("Test.xml", 32, "Test.bak.xml");
+//
+//        Element newElement = XMLDom.parseWithCRC("Test.xml", "Test.bak.xml");
+//        System.out.println(newElement.getName());
 
-        XMLWriter xmlWriter = new XMLWriter("root");
-        xmlWriter.addField("x", Integer.toString(testXML1.x));
-        xmlWriter.addField("s", testXML1.s);
-        xmlWriter.addField("i", testXML1.i);
-        xmlWriter.beginStruct("l");
-        xmlWriter.addValue("a");
-        xmlWriter.addValue("b");
-        xmlWriter.addValue("c");
-        xmlWriter.endStruct();
 
-        xmlWriter.write("Test.xml", 32, "Test.bak.xml");
 
-        Element newElement = XMLDom.parseWithCRC("Test.xml", "Test.bak.xml");
-        System.out.println(newElement.getName());
+        XMLReader xmlReader = new XMLReader("config.xml", true, "config.bak");
     }
 }

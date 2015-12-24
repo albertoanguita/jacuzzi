@@ -4,7 +4,7 @@ import jacz.util.files.FileUtil;
 import jacz.util.hash.HashFunction;
 import jacz.util.hash.SHA_256;
 import jacz.util.io.object_serialization.*;
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 import jacz.util.maps.AutoKeyMap;
 
 import java.io.File;

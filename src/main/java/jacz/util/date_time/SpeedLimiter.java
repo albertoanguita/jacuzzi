@@ -1,7 +1,7 @@
 package jacz.util.date_time;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.lists.Duple;
+import jacz.util.lists.tuple.Duple;
 
 /**
  * This class adapts the behaviour of the SpeedMonitor class to implement a SpeedLimiter that acts as a limiter in the

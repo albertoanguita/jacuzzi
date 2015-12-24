@@ -1,13 +1,7 @@
-package jacz.util.io.object_serialization.test;
+package jacz.util.io.xml.test;
 
-import jacz.util.io.object_serialization.XMLReader;
-import jacz.util.io.object_serialization.XMLWriter;
-import jacz.util.io.xml.Element;
-import jacz.util.io.xml.XMLDom;
+import jacz.util.io.xml.XMLReader;
 
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

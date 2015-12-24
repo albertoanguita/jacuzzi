@@ -1,12 +1,11 @@
-package jacz.util.io.object_serialization.test;
+package jacz.util.io.xml.test;
 
 import jacz.util.hash.CRCMismatchException;
-import jacz.util.io.object_serialization.XMLReader;
-import jacz.util.io.object_serialization.XMLWriter;
+import jacz.util.io.xml.XMLReader;
+import jacz.util.io.xml.XMLWriter;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
-import java.nio.file.Paths;
 
 /**
  * Created by Alberto on 24/12/2015.

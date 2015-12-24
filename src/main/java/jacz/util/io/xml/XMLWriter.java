@@ -1,7 +1,4 @@
-package jacz.util.io.object_serialization;
-
-import jacz.util.io.xml.Element;
-import jacz.util.io.xml.XMLDom;
+package jacz.util.io.xml;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;

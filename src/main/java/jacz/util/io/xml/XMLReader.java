@@ -1,8 +1,6 @@
-package jacz.util.io.object_serialization;
+package jacz.util.io.xml;
 
 import jacz.util.hash.CRCMismatchException;
-import jacz.util.io.xml.Element;
-import jacz.util.io.xml.XMLDom;
 import jacz.util.lists.tuple.Duple;
 
 import javax.xml.stream.XMLStreamException;

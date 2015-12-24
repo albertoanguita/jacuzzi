@@ -1,8 +1,6 @@
-package jacz.util.io.object_serialization.test;
+package jacz.util.io.xml.test;
 
-import jacz.util.io.object_serialization.XMLReader;
-
-import java.io.File;
+import jacz.util.io.xml.XMLReader;
 
 /**
  * Created by Alberto on 20/09/2015.

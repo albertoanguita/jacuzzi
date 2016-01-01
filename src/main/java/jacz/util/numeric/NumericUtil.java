@@ -10,6 +10,12 @@ import java.util.List;
  */
 public class NumericUtil {
 
+    public enum AmbiguityBehavior {
+        MIN,
+        MID,
+        MAX
+    }
+
     public static List<Integer> divide(Integer i, int numSegments) {
         List<Long> longSegments = divide((long) i, numSegments);
         List<Integer> segments = new ArrayList<>(longSegments.size());
@@ -182,8 +188,22 @@ public class NumericUtil {
     }
 
     public static int displaceInRange(int value, int min, int max, int newMin, int newMax) {
+        return displaceInRange(value, min, max, newMin, newMax, AmbiguityBehavior.MIN);
+    }
+
+    public static int displaceInRange(int value, int min, int max, int newMin, int newMax, AmbiguityBehavior ambiguityBehavior) {
         if (min > max || value < min || value > max || newMin > newMax) {
             throw new IllegalArgumentException("Wrong arguments: " + value + ", " + min + ", " + max + ", " + newMin + ", " + newMax);
+        }
+        if (min == max) {
+            switch (ambiguityBehavior) {
+                case MIN:
+                    return newMin;
+                case MID:
+                    return (newMax - newMin) / 2;
+                case MAX:
+                    return newMax;
+            }
         }
         if (value == min) {
             return newMin;
@@ -203,8 +223,22 @@ public class NumericUtil {
     }
 
     public static long displaceInRange(long value, long min, long max, long newMin, long newMax) {
+        return displaceInRange(value, min, max, newMin, newMax, AmbiguityBehavior.MIN);
+    }
+
+    public static long displaceInRange(long value, long min, long max, long newMin, long newMax, AmbiguityBehavior ambiguityBehavior) {
         if (min > max || value < min || value > max || newMin > newMax) {
             throw new IllegalArgumentException("Wrong arguments: " + value + ", " + min + ", " + max + ", " + newMin + ", " + newMax);
+        }
+        if (min == max) {
+            switch (ambiguityBehavior) {
+                case MIN:
+                    return newMin;
+                case MID:
+                    return (newMax - newMin) / 2L;
+                case MAX:
+                    return newMax;
+            }
         }
         if (value == min) {
             return newMin;

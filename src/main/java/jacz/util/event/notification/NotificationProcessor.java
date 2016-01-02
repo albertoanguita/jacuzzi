@@ -6,6 +6,7 @@ import jacz.util.identifier.UniqueIdentifierFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An API for handling event notifications. Classes can emit events, and other classes can subscribe to the emitted so they receive
@@ -24,13 +25,16 @@ public class NotificationProcessor {
      */
     private Map<UniqueIdentifier, NotificationReceiverHandler> subscribedReceivers;
 
+    private boolean alive;
+
     public NotificationProcessor() {
         this(UniqueIdentifierFactory.getOneStaticIdentifier());
     }
 
     public NotificationProcessor(UniqueIdentifier emitterID) {
         this.emitterID = emitterID;
-        subscribedReceivers = new HashMap<UniqueIdentifier, NotificationReceiverHandler>();
+        subscribedReceivers = new HashMap<>();
+        alive = true;
     }
 
     /**
@@ -44,7 +48,9 @@ public class NotificationProcessor {
     }
 
     public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, String threadName) {
-        subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, null, 0, 1, threadName));
+        if (alive) {
+            subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, null, 0, 1, threadName));
+        }
         return emitterID;
     }
 
@@ -59,9 +65,11 @@ public class NotificationProcessor {
     }
 
     public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit, String threadName) {
-        Long checkedMillis = checkTime(millis);
-        limit = checkLimit(limit);
-        subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, checkedMillis, timeFactorAtEachEvent, limit, threadName));
+        if (alive) {
+            Long checkedMillis = checkTime(millis);
+            limit = checkLimit(limit);
+            subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, checkedMillis, timeFactorAtEachEvent, limit, threadName));
+        }
         return emitterID;
     }
 
@@ -71,9 +79,11 @@ public class NotificationProcessor {
 
     public synchronized void stop() {
         // unsubscribe all remaining receivers
-        for (UniqueIdentifier receiverID : subscribedReceivers.keySet()) {
+        Set<UniqueIdentifier> subscribedReceiversIds = subscribedReceivers.keySet();
+        for (UniqueIdentifier receiverID : subscribedReceiversIds) {
             unsubscribeReceiver(receiverID);
         }
+        alive = false;
     }
 
     private Long checkTime(long millis) {

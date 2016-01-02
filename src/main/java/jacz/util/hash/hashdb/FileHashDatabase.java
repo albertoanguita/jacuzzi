@@ -193,13 +193,16 @@ public class FileHashDatabase implements VersionedObject {
         return foldersMap.put(new AnnotatedFolder(folderPath, fileNames));
     }
 
-    public void remove(String key) throws IOException {
+    public String remove(String key) {
         if (filesMap.containsKey(key)) {
-            filesMap.remove(key);
+            AnnotatedFile annotatedFile = filesMap.remove(key);
+            return annotatedFile != null ? annotatedFile.path : null;
         }
         if (foldersMap.containsKey(key)) {
-            foldersMap.remove(key);
+            AnnotatedFolder annotatedFolder = foldersMap.remove(key);
+            return annotatedFolder != null ? annotatedFolder.path : null;
         }
+        return null;
     }
 
     public String removeValue(String path) throws IOException {

@@ -44,6 +44,10 @@ public class ObjectCount<E> {
         return new HashSet<>(objectCount.keySet());
     }
 
+    public final boolean containsObject(E object) {
+        return objectCount.containsKey(object);
+    }
+
     @SafeVarargs
     public final int getObjectCount(E... object) {
         return getObjectCount(Arrays.asList(object));

@@ -1,6 +1,8 @@
 package jacz.util.concurrency;
 
 import jacz.util.maps.ObjectCount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +14,8 @@ import java.util.Map;
  * It allows debugging in case, e.g., not all threads are closed at a process completion.
  */
 public class ManuallyRemovedElementBag {
+
+    private static final Logger logger = LoggerFactory.getLogger(ManuallyRemovedElementBag.class);
 
     private static Map<String, ManuallyRemovedElementBag> instancesMap = new HashMap<>();
 
@@ -25,18 +29,24 @@ public class ManuallyRemovedElementBag {
     }
 
     private ManuallyRemovedElementBag() {
-        elementCount = new ObjectCount<>(new HashSet<String>());
+        elementCount = new ObjectCount<>(new HashSet<String>(), true, true);
     }
 
-    public void createElement(String name) {
+    public synchronized void createElement(String name) {
         elementCount.addObject(name);
+        logger.debug("created manually removed element: " + name + getObjectCount(name));
     }
 
-    public void destroyElement(String name) {
+    public synchronized void destroyElement(String name) {
         elementCount.subtractObject(name);
+        logger.debug("destroyed manually removed element: " + name + getObjectCount(name));
     }
 
-    public ObjectCount<String> getRemainingElements() {
+    public synchronized ObjectCount<String> getRemainingElements() {
         return elementCount;
+    }
+
+    private String getObjectCount(String name) {
+        return ". There are " + elementCount.getObjectCount(name) + " objects";
     }
 }

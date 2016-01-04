@@ -12,7 +12,7 @@ public class SHA_384 extends HashFunction {
     }
 
     public SHA_384(Integer hashLength) {
-        super(hashLength, 48);
+        super(hashLength);
         try {
             initialize("SHA-384");
         } catch (NoSuchAlgorithmException e) {

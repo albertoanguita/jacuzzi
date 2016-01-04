@@ -1,8 +1,8 @@
 package jacz.util.hash;
 
-import jacz.util.io.object_serialization.FragmentedByteArray;
-import jacz.util.io.object_serialization.MutableOffset;
-import jacz.util.io.object_serialization.Serializer;
+import jacz.util.io.serialization.FragmentedByteArray;
+import jacz.util.io.serialization.MutableOffset;
+import jacz.util.io.serialization.Serializer;
 
 import java.util.Arrays;
 import java.util.zip.CRC32;

@@ -1,4 +1,4 @@
-package jacz.util.io.object_serialization;
+package jacz.util.io.serialization;
 
 /**
  * Offset used in the serialization of objects

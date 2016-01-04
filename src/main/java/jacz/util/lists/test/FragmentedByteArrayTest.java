@@ -1,6 +1,6 @@
 package jacz.util.lists.test;
 
-import jacz.util.io.object_serialization.FragmentedByteArray;
+import jacz.util.io.serialization.FragmentedByteArray;
 
 import java.util.Arrays;
 

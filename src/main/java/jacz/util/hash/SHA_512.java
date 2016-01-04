@@ -12,7 +12,7 @@ public class SHA_512 extends HashFunction {
     }
 
     public SHA_512(Integer hashLength) {
-        super(hashLength, 64);
+        super(hashLength);
         try {
             initialize("SHA-512");
         } catch (NoSuchAlgorithmException e) {

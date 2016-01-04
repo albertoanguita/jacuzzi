@@ -96,6 +96,12 @@ public class ConcurrencyController implements DaemonAction {
     private boolean alive;
 
     /**
+     * After being stopped, subsequent tasks will be ignored if this flag is set to true
+     * If set to false, tasks will produce an exception
+     */
+    private boolean ignoreFutureTasks;
+
+    /**
      * Default class constructor. Initializes the concurrency controller with no limit of simultaneous executions
      */
     public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
@@ -230,7 +236,7 @@ public class ConcurrencyController implements DaemonAction {
     public final QueueElement registerActivity(String activity) {
         QueueElement queueElement = new QueueElement(activity, getActivityPriority(activity));
         synchronized (this) {
-            if (!alive && !activity.equals(STOP_ACTIVITY)) {
+            if (!alive && !activity.equals(STOP_ACTIVITY) && !ignoreFutureTasks) {
                 throw new IllegalStateException("Concurrency controller has been stopped. No more activities allowed");
             }
         }
@@ -291,8 +297,13 @@ public class ConcurrencyController implements DaemonAction {
     }
 
     public void stopAndWaitForFinalization() {
+        stopAndWaitForFinalization(true);
+    }
+
+    public void stopAndWaitForFinalization(boolean ignoreFutureTasks) {
         synchronized (this) {
             alive = false;
+            this.ignoreFutureTasks = ignoreFutureTasks;
         }
         beginActivity(STOP_ACTIVITY);
         endActivity(STOP_ACTIVITY);

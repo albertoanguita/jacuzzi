@@ -1,10 +1,11 @@
-package jacz.util.io.object_serialization.test;
+package jacz.util.io.serialization.test;
 
-import jacz.util.io.object_serialization.UnrecognizedVersionException;
-import jacz.util.io.object_serialization.VersionStack;
-import jacz.util.io.object_serialization.VersionedObjectSerializer;
-import jacz.util.io.object_serialization.VersionedSerializationException;
+import jacz.util.io.serialization.UnrecognizedVersionException;
+import jacz.util.io.serialization.VersionStack;
+import jacz.util.io.serialization.VersionedObjectSerializer;
+import jacz.util.io.serialization.VersionedSerializationException;
 
+import java.io.NotSerializableException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class TestVersionObjectChild extends TestVersionedObjectParent {
     }
 
 
-    public static void main(String[] args) throws VersionedSerializationException {
+    public static void main(String[] args) throws VersionedSerializationException, NotSerializableException {
         TestVersionObjectChild testVersionObjectChild = new TestVersionObjectChild("sonnn", 3);
 
         byte[] data = VersionedObjectSerializer.serialize(testVersionObjectChild);

@@ -2,8 +2,9 @@ package jacz.util.hash.hashdb;
 
 import jacz.util.files.FileUtil;
 import jacz.util.hash.HashFunction;
+import jacz.util.hash.MD5;
 import jacz.util.hash.SHA_256;
-import jacz.util.io.object_serialization.*;
+import jacz.util.io.serialization.*;
 import jacz.util.lists.tuple.Duple;
 import jacz.util.maps.AutoKeyMap;
 
@@ -11,6 +12,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +38,13 @@ public class FileHashDatabase implements VersionedObject {
         protected AnnotatedFile(String path) {
             this.path = path;
         }
+
+        @Override
+        public String toString() {
+            return "AnnotatedFile{" +
+                    "path='" + path + '\'' +
+                    '}';
+        }
     }
 
     protected static class AnnotatedFolder implements Serializable {
@@ -52,17 +61,37 @@ public class FileHashDatabase implements VersionedObject {
 
     protected static class FileKeyGenerator implements AutoKeyMap.KeyGenerator<String, AnnotatedFile, IOException>, Serializable {
 
+        private transient HashFunction hashFunction;
+
+        public FileKeyGenerator(HashFunction hashFunction) {
+            this.hashFunction = hashFunction;
+        }
+
+        public void setHashFunction(HashFunction hashFunction) {
+            this.hashFunction = hashFunction;
+        }
+
         @Override
         public String generateKey(AnnotatedFile value) throws IOException {
             if (!FileUtil.isFile(value.path)) {
                 throw new FileNotFoundException();
             }
             File file = new File(value.path);
-            return getHash(file);
+            return hashFunction.digestAsHex(file);
         }
     }
 
     protected static class FolderKeyGenerator implements AutoKeyMap.KeyGenerator<String, AnnotatedFolder, IOException>, Serializable {
+
+        private transient HashFunction hashFunction;
+
+        public FolderKeyGenerator(HashFunction hashFunction) {
+            this.hashFunction = hashFunction;
+        }
+
+        public void setHashFunction(HashFunction hashFunction) {
+            this.hashFunction = hashFunction;
+        }
 
         @Override
         public String generateKey(AnnotatedFolder value) throws IOException {
@@ -75,7 +104,7 @@ public class FileHashDatabase implements VersionedObject {
                 if (!file.isFile()) {
                     throw new FileNotFoundException();
                 }
-                String fileHash = getHash(file);
+                String fileHash = hashFunction.digestAsHex(file);
                 totalHash.update(fileHash);
             }
             return totalHash.digestAsHex();
@@ -86,25 +115,36 @@ public class FileHashDatabase implements VersionedObject {
 
     private static final String CURRENT_VERSION = VERSION_0_1;
 
+    private HashFunction hashFunction;
+
     protected AutoKeyMap<String, AnnotatedFile, IOException> filesMap;
 
     protected AutoKeyMap<String, AnnotatedFolder, IOException> foldersMap;
 
     public FileHashDatabase() {
-        this(new FileKeyGenerator(), new FolderKeyGenerator());
+        this(new MD5());
+    }
+
+    public FileHashDatabase(HashFunction hashFunction) {
+        this(hashFunction, new FileKeyGenerator(hashFunction), new FolderKeyGenerator(hashFunction));
     }
 
     public FileHashDatabase(String path, String... backupPaths) throws VersionedSerializationException, IOException {
         VersionedObjectSerializer.deserialize(this, path, backupPaths);
     }
 
-    protected FileHashDatabase(FileKeyGenerator fileKeyGenerator, FolderKeyGenerator folderKeyGenerator) {
+    protected FileHashDatabase(HashFunction hashFunction, FileKeyGenerator fileKeyGenerator, FolderKeyGenerator folderKeyGenerator) {
+        this.hashFunction = hashFunction;
         filesMap = new AutoKeyMap<>(fileKeyGenerator);
         foldersMap = new AutoKeyMap<>(folderKeyGenerator);
     }
 
-    public static String getHash(File file) throws IOException {
-        return new SHA_256().digestAsHex(file);
+//    public static String getHash(File file) throws IOException {
+//        return hashFunction.digestAsHex(file);
+//    }
+
+    public static String getHash(File file, HashFunction hashFunction) throws IOException {
+        return hashFunction.digestAsHex(file);
     }
 
     public boolean containsKey(String key) {
@@ -131,7 +171,7 @@ public class FileHashDatabase implements VersionedObject {
                 // also check that the file exists, and that the hash is correct
                 File file = new File(entry.getValue().path);
                 try {
-                    if (!entry.getKey().equals(getHash(file))) {
+                    if (!entry.getKey().equals(getHash(file, hashFunction))) {
                         wrongEntries.put(entry.getKey(), entry.getValue().path);
                     }
                 } catch (IOException e) {
@@ -221,6 +261,8 @@ public class FileHashDatabase implements VersionedObject {
     @Override
     public Map<String, Serializable> serialize() {
         Map<String, Serializable> map = new HashMap<>();
+        map.put("hashFunction-algorithm", hashFunction.getAlgorithm());
+        map.put("hashFunction-hashLength", hashFunction.getHashLength());
         map.put("filesMap", filesMap);
         map.put("foldersMap", foldersMap);
         return map;
@@ -229,8 +271,15 @@ public class FileHashDatabase implements VersionedObject {
     @Override
     public void deserialize(String version, Map<String, Object> attributes, VersionStack parentVersions) throws UnrecognizedVersionException {
         if (version.equals(CURRENT_VERSION)) {
+            try {
+                hashFunction = new HashFunction((String) attributes.get("hashFunction-algorithm"), (Integer) attributes.get("hashFunction-hashLength"));
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException("Invalid algorithm for hash function: " + attributes.get("hashFunction-algorithm"));
+            }
             filesMap = (AutoKeyMap<String, AnnotatedFile, IOException>) attributes.get("filesMap");
+            ((FileKeyGenerator) (filesMap.getKeyGenerator())).setHashFunction(hashFunction);
             foldersMap = (AutoKeyMap<String, AnnotatedFolder, IOException>) attributes.get("foldersMap");
+            ((FolderKeyGenerator) (foldersMap.getKeyGenerator())).setHashFunction(hashFunction);
         } else {
             throw new UnrecognizedVersionException();
         }

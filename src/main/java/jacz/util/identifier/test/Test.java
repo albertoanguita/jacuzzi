@@ -2,7 +2,7 @@ package jacz.util.identifier.test;
 
 import jacz.util.identifier.UniqueIdentifier;
 import jacz.util.identifier.UniqueIdentifierFactory;
-import jacz.util.io.object_serialization.MutableOffset;
+import jacz.util.io.serialization.MutableOffset;
 
 import java.util.Map;
 import java.util.HashMap;

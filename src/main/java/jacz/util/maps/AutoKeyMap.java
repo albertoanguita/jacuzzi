@@ -26,6 +26,10 @@ public class AutoKeyMap<K, V, E extends Throwable> implements Serializable {
         this.keyGenerator = keyGenerator;
     }
 
+    public KeyGenerator<K, V, E> getKeyGenerator() {
+        return keyGenerator;
+    }
+
     public boolean isEmpty() {
         return map.isEmpty();
     }

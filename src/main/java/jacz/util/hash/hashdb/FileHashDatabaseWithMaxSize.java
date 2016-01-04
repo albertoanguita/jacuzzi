@@ -2,7 +2,7 @@ package jacz.util.hash.hashdb;
 
 import jacz.util.files.FileUtil;
 import jacz.util.hash.SHA_256;
-import jacz.util.io.object_serialization.Serializer;
+import jacz.util.io.serialization.Serializer;
 
 import java.io.File;
 import java.io.FileNotFoundException;

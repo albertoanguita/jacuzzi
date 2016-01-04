@@ -2,7 +2,7 @@ package jacz.util.files.backup;
 
 import jacz.util.files.RandomAccess;
 import jacz.util.hash.MD5;
-import jacz.util.io.object_serialization.Serializer;
+import jacz.util.io.serialization.Serializer;
 
 import java.io.BufferedReader;
 import java.io.File;

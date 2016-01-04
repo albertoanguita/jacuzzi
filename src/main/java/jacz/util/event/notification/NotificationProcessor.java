@@ -5,6 +5,7 @@ import jacz.util.identifier.UniqueIdentifier;
 import jacz.util.identifier.UniqueIdentifierFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -79,7 +80,7 @@ public class NotificationProcessor {
 
     public synchronized void stop() {
         // unsubscribe all remaining receivers
-        Set<UniqueIdentifier> subscribedReceiversIds = subscribedReceivers.keySet();
+        Set<UniqueIdentifier> subscribedReceiversIds = new HashSet<>(subscribedReceivers.keySet());
         for (UniqueIdentifier receiverID : subscribedReceiversIds) {
             unsubscribeReceiver(receiverID);
         }

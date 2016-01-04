@@ -28,13 +28,21 @@ public class HashFunction {
         this.hashLength = hashLength;
     }
 
-    protected HashFunction(Integer hashLength, int maxLength) {
+    protected HashFunction(Integer hashLength) {
         messageDigest = null;
-        this.hashLength = hashLength == null ? null : Math.min(hashLength, maxLength);
+        this.hashLength = hashLength;
     }
 
     protected void initialize(String algorithm) throws NoSuchAlgorithmException {
         messageDigest = MessageDigest.getInstance(algorithm);
+    }
+
+    public String getAlgorithm() {
+        return messageDigest.getAlgorithm();
+    }
+
+    public Integer getHashLength() {
+        return hashLength;
     }
 
     public HashFunction update(byte[] data) {

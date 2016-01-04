@@ -60,14 +60,16 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements SimpleTimerActio
         return result;
     }
 
-    public synchronized void stop() {
+    public void stop() {
         super.stop();
         kill();
     }
 
-    public synchronized void kill() {
+    public void kill() {
         timer.kill();
-        timedOut = true;
+        synchronized (this) {
+            timedOut = true;
+        }
     }
 
     @Override

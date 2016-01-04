@@ -56,7 +56,9 @@ public class ObjectCount<E> {
     public int getObjectCount(Collection<E> objects) {
         int count = 0;
         for (E object : objects) {
-            count += objectCount.get(object);
+            if (objectCount.containsKey(object)) {
+                count += objectCount.get(object);
+            }
         }
         return count;
     }

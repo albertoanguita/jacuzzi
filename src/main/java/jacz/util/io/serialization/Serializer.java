@@ -1,6 +1,7 @@
-package jacz.util.io.object_serialization;
+package jacz.util.io.serialization;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,13 +43,13 @@ public class Serializer {
      * @param o Object to serialize
      * @return byte array containing the object
      */
-    public static byte[] serializeObject(Serializable o) {
+    public static byte[] serializeObject(Serializable o) throws NotSerializableException {
         byte[] objectData = serializeObjectWithoutLengthHeader(o);
         return addArrays(Serializer.serialize(objectData.length), objectData);
     }
 
 
-    public static byte[] serializeObjectWithoutLengthHeader(Serializable o) {
+    public static byte[] serializeObjectWithoutLengthHeader(Serializable o) throws NotSerializableException {
         try {
             ByteArrayOutputStream bo = new ByteArrayOutputStream();
             ObjectOutputStream so = new ObjectOutputStream(bo);
@@ -58,8 +59,8 @@ public class Serializer {
             bo.close();
             return bo.toByteArray();
         } catch (IOException e) {
-            // ignore, cannot happen
-            return new byte[0];
+            // the object is not serializable
+            throw new NotSerializableException(o.getClass().toString());
         }
     }
 
@@ -543,7 +544,7 @@ public class Serializer {
             hex = hex + addZerosLeft(byteToHex(data[i + offset.value()]), 2);
         }
         offset.add(byteCount);
-        return Long.parseLong(hex, 16);
+        return new BigInteger(hex, 16).longValue();
     }
 
     public static byte[] deserializeBytes(byte[] data, MutableOffset offset) {

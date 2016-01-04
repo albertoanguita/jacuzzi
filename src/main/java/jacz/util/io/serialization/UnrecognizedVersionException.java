@@ -1,4 +1,4 @@
-package jacz.util.io.object_serialization;
+package jacz.util.io.serialization;
 
 /**
  * Created by Alberto on 03/10/2015.

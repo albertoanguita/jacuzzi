@@ -1,4 +1,4 @@
-package jacz.util.io.object_serialization;
+package jacz.util.io.serialization;
 
 import jacz.util.files.FileReaderWriter;
 import jacz.util.files.FileUtil;
@@ -6,6 +6,7 @@ import jacz.util.hash.CRC;
 import jacz.util.hash.InvalidCRCException;
 
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -69,7 +70,7 @@ public class VersionedObjectSerializer {
         }
     }
 
-    public static byte[] serialize(List<? extends VersionedObject> versionedObjectList) {
+    public static byte[] serialize(List<? extends VersionedObject> versionedObjectList) throws NotSerializableException {
         FragmentedByteArray byteArray = new FragmentedByteArray();
         for (VersionedObject versionedObject : versionedObjectList) {
             byteArray.add(serialize(versionedObject));
@@ -77,11 +78,11 @@ public class VersionedObjectSerializer {
         return byteArray.generateArray();
     }
 
-    public static byte[] serialize(VersionedObject versionedObject) {
+    public static byte[] serialize(VersionedObject versionedObject) throws NotSerializableException {
         return serialize(versionedObject, 0);
     }
 
-    public static byte[] serialize(List<? extends VersionedObject> versionedObjectList, int CRCBytes) {
+    public static byte[] serialize(List<? extends VersionedObject> versionedObjectList, int CRCBytes) throws NotSerializableException {
         FragmentedByteArray byteArray = new FragmentedByteArray();
         for (VersionedObject versionedObject : versionedObjectList) {
             byteArray.add(serialize(versionedObject, CRCBytes));
@@ -89,7 +90,7 @@ public class VersionedObjectSerializer {
         return byteArray.generateArray();
     }
 
-    public static byte[] serialize(VersionedObject versionedObject, int CRCBytes) {
+    public static byte[] serialize(VersionedObject versionedObject, int CRCBytes) throws NotSerializableException {
         FragmentedByteArray data = new FragmentedByteArray(Serializer.serializeObject(versionedObject.getCurrentVersion()));
         Map<String, Serializable> attributes = versionedObject.serialize();
         data.add(Serializer.serialize(attributes.size()));
@@ -136,14 +137,8 @@ public class VersionedObjectSerializer {
             }
             data.add(attributeName, type, attributeArray).generateArray();
         }
-        byte[] finalData = CRC.addCRC(data.generateArray(), CRCBytes, true);
-        return finalData;
+        return CRC.addCRC(data.generateArray(), CRCBytes, true);
     }
-
-//    public static void deserialize(VersionedObject versionedObject, String path) throws VersionedSerializationException, IOException {
-//        byte[] data = FileReaderWriter.readBytes(path);
-//        deserialize(versionedObject, data);
-//    }
 
     public static int deserialize(VersionedObject versionedObject, String path, String... backupPaths) throws VersionedSerializationException, IOException {
         try {
@@ -235,13 +230,7 @@ public class VersionedObjectSerializer {
                 }
             }
             versionedObject.deserialize(versionStack.retrieveVersion(), attributes, versionStack);
-//            if (version == null || version.equals(versionedObject.getCurrentVersion())) {
-//                versionedObject.deserialize(attributes);
-//            } else {
-//                versionedObject.deserializeOldVersion(version, attributes);
-//            }
         } catch (RuntimeException e) {
-            e.printStackTrace();
             throw new VersionedSerializationException(versionStack, attributes, VersionedSerializationException.Reason.INCORRECT_DATA);
         } catch (UnrecognizedVersionException e) {
             throw new VersionedSerializationException(versionStack, attributes, VersionedSerializationException.Reason.UNRECOGNIZED_VERSION);
@@ -251,106 +240,4 @@ public class VersionedObjectSerializer {
             throw new VersionedSerializationException(null, attributes, VersionedSerializationException.Reason.CRC_MISMATCH);
         }
     }
-
-//    public static Duple<VersionStack, Map<String, Object>> deserialize(String path) throws VersionedSerializationException, IOException {
-//        byte[] data = FileReaderWriter.readBytes(path);
-//        return deserialize(data);
-//    }
-//
-//    public static Triple<Integer, VersionStack, Map<String, Object>> deserialize(String path, String... backupPaths) throws VersionedSerializationException, IOException {
-//        try {
-//            Duple<VersionStack, Map<String, Object>> duple = deserialize(path);
-//            return new Triple<>(0, duple.element1, duple.element2);
-//        } catch (VersionedSerializationException | IOException e) {
-//            // try with backup
-//            if (backupPaths.length > 0) {
-//                path = backupPaths[0];
-//                backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
-//                Triple<Integer, VersionStack, Map<String, Object>> triple = deserialize(path, backupPaths);
-//                return new Triple<>(triple.element1 + 1, triple.element2, triple.element3);
-//            } else {
-//                throw e;
-//            }
-//        }
-//    }
-//
-//    public static Duple<VersionStack, Map<String, Object>> deserialize(byte[] data) throws VersionedSerializationException {
-//        return deserialize(data, new MutableOffset());
-//    }
-//
-//    public static Duple<VersionStack, Map<String, Object>> deserialize(byte[] data, MutableOffset offset) throws VersionedSerializationException {
-//        VersionStack versionStack = null;
-//        Map<String, Object> attributes = new HashMap<>();
-//        try {
-//            data = CRC.extractDataWithCRC(data, offset);
-//            MutableOffset dataOffset = new MutableOffset();
-//            versionStack = (VersionStack) Serializer.deserializeObject(data, dataOffset);
-//            int attributeCount = Serializer.deserializeIntValue(data, dataOffset);
-//            for (int i = 0; i < attributeCount; i++) {
-//                String attributeName = Serializer.deserializeString(data, dataOffset);
-//                String type = Serializer.deserializeString(data, dataOffset);
-//                if (type == null) {
-//                    throw new RuntimeException();
-//                }
-//                switch (type) {
-//                    case "String":
-//                        attributes.put(attributeName, Serializer.deserializeString(data, dataOffset));
-//                        break;
-//
-//                    case "Boolean":
-//                        attributes.put(attributeName, Serializer.deserializeBoolean(data, dataOffset));
-//                        break;
-//
-//                    case "Byte":
-//                        attributes.put(attributeName, Serializer.deserializeByte(data, dataOffset));
-//                        break;
-//
-//                    case "Short":
-//                        attributes.put(attributeName, Serializer.deserializeShort(data, dataOffset));
-//                        break;
-//
-//                    case "Integer":
-//                        attributes.put(attributeName, Serializer.deserializeInt(data, dataOffset));
-//                        break;
-//
-//                    case "Long":
-//                        attributes.put(attributeName, Serializer.deserializeLong(data, dataOffset));
-//                        break;
-//
-//                    case "Float":
-//                        attributes.put(attributeName, Serializer.deserializeFloat(data, dataOffset));
-//                        break;
-//
-//                    case "Double":
-//                        attributes.put(attributeName, Serializer.deserializeDouble(data, dataOffset));
-//                        break;
-//
-//                    case "Enum":
-//                        String enumType = Serializer.deserializeString(data, dataOffset);
-//                        Class enumClass = Class.forName(enumType);
-//                        attributes.put(attributeName, Serializer.deserializeEnum(enumClass, data, dataOffset));
-//                        break;
-//
-//                    case "ByteArray":
-//                        attributes.put(attributeName, Serializer.deserializeBytes(data, dataOffset));
-//                        break;
-//
-//                    case "Serializable":
-//                        attributes.put(attributeName, Serializer.deserializeObject(data, dataOffset));
-//                        break;
-//
-//                    default:
-//                        // the VersionedObjectSerializer failed when deserializing the byte array
-//                        throw new RuntimeException("Unexpected type: " + type);
-//                }
-//            }
-//            return new Duple<>(versionStack, attributes);
-//        } catch (RuntimeException e) {
-//            throw new VersionedSerializationException(versionStack, attributes, VersionedSerializationException.Reason.INCORRECT_DATA);
-//        } catch (ClassNotFoundException e) {
-//            throw new VersionedSerializationException(versionStack, attributes, VersionedSerializationException.Reason.CLASS_NOT_FOUND);
-//        } catch (InvalidCRCException e) {
-//            throw new VersionedSerializationException(null, attributes, VersionedSerializationException.Reason.CRC_MISMATCH);
-//        }
-//    }
 }

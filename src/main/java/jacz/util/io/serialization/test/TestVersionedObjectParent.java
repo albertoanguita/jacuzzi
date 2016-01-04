@@ -1,8 +1,7 @@
-package jacz.util.io.object_serialization.test;
+package jacz.util.io.serialization.test;
 
-import jacz.util.io.object_serialization.*;
+import jacz.util.io.serialization.*;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;

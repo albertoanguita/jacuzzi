@@ -1,4 +1,4 @@
-package jacz.util.io.object_serialization;
+package jacz.util.io.serialization;
 
 import java.util.Map;
 

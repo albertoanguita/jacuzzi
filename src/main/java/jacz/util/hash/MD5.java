@@ -12,9 +12,9 @@ public class MD5 extends HashFunction {
     }
 
     public MD5(Integer hashLength) {
-        super(hashLength, 16);
+        super(hashLength);
         try {
-            initialize("MD5");
+            initialize(("MD5"));
         } catch (NoSuchAlgorithmException e) {
             // cannot happen
             e.printStackTrace();

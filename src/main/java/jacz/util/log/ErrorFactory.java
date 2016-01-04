@@ -11,7 +11,8 @@ import java.util.Date;
 public class ErrorFactory {
 
     public static void reportError(ErrorHandler errorHandler, String message, Object... data) {
-        PrintStream ps = new PrintStream(new ByteArrayOutputStream());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
         ps.println("ERROR THROWN");
         ps.println("------------");
         ps.println(new SimpleDateFormat("YYY/MM/dd-HH:mm:ss:SSS").format(new Date()));
@@ -20,7 +21,7 @@ public class ErrorFactory {
         ps.println("-------------------------------------------------------");
         ps.println("Stack trace:");
         new RuntimeException().printStackTrace(ps);
-        errorHandler.errorRaised(ps.toString());
+        errorHandler.errorRaised(baos.toString());
         ps.close();
     }
 

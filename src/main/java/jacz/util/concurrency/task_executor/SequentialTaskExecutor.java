@@ -33,10 +33,13 @@ public class SequentialTaskExecutor implements DaemonAction {
 
     private boolean alive;
 
+    private boolean ignoreFutureTasks;
+
     public SequentialTaskExecutor() {
         daemon = new Daemon(this);
         taskQueue = new ArrayDeque<>();
         alive = true;
+        ignoreFutureTasks = false;
     }
 
     @Override
@@ -55,7 +58,7 @@ public class SequentialTaskExecutor implements DaemonAction {
 
     public void executeTask(ParallelTask parallelTask) {
         synchronized (this) {
-            if (alive || parallelTask instanceof StopTask) {
+            if (alive || parallelTask instanceof StopTask || ignoreFutureTasks) {
                 taskQueue.add(parallelTask);
             } else {
                 throw new IllegalStateException();
@@ -65,8 +68,13 @@ public class SequentialTaskExecutor implements DaemonAction {
     }
 
     public void stopAndWaitForFinalization() {
+        stopAndWaitForFinalization(true);
+    }
+
+    public void stopAndWaitForFinalization(boolean ignoreFutureTasks) {
         synchronized (this) {
             alive = false;
+            this.ignoreFutureTasks = ignoreFutureTasks;
         }
         PausableElement pausableElement = new PausableElement();
         pausableElement.pause();

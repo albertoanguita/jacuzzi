@@ -1,4 +1,4 @@
-package jacz.util.io.object_serialization;
+package jacz.util.io.serialization;
 
 /**
  * Methods for casting strings (included null values) to different basic types

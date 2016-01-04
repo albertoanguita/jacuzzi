@@ -10,11 +10,11 @@ import java.util.Set;
  * This class implements a two-direction map. It thus implements a functional and inverse functional relation of
  * elements (bijective function)
  */
-public class DoubleMap<T, S> implements Serializable {
+public class DoubleMap<K, V> implements Serializable {
 
-    private Map<T, S> directMap;
+    private Map<K, V> directMap;
 
-    private Map<S, T> reverseMap;
+    private Map<V, K> reverseMap;
 
     public DoubleMap() {
         directMap = new HashMap<>();
@@ -31,52 +31,52 @@ public class DoubleMap<T, S> implements Serializable {
         reverseMap = new HashMap<>(initialCapacity, loadFactor);
     }
 
-    public DoubleMap(DoubleMap<T, S> doubleMap) {
+    public DoubleMap(DoubleMap<K, V> doubleMap) {
         directMap = new HashMap<>(doubleMap.directMap);
         reverseMap = new HashMap<>(doubleMap.reverseMap);
     }
 
-    public void put(T t, S s) {
-        if (directMap.containsKey(t)) {
-            remove(t);
+    public void put(K k, V v) {
+        if (directMap.containsKey(k)) {
+            remove(k);
         }
-        if (reverseMap.containsKey(s)) {
-            removeReverse(s);
+        if (reverseMap.containsKey(v)) {
+            removeReverse(v);
         }
-        directMap.put(t, s);
-        reverseMap.put(s, t);
+        directMap.put(k, v);
+        reverseMap.put(v, k);
     }
 
-    public S get(T t) {
-        return directMap.get(t);
+    public V get(K k) {
+        return directMap.get(k);
     }
 
-    public T getReverse(S s) {
-        return reverseMap.get(s);
+    public K getReverse(V v) {
+        return reverseMap.get(v);
     }
 
-    public boolean contains(T t) {
-        return directMap.containsKey(t);
+    public boolean contains(K k) {
+        return directMap.containsKey(k);
     }
 
-    public boolean containsReverse(S s) {
-        return reverseMap.containsKey(s);
+    public boolean containsReverse(V v) {
+        return reverseMap.containsKey(v);
     }
 
-    public S remove(T t) {
-        S s = directMap.remove(t);
-        if (s != null) {
-            reverseMap.remove(s);
+    public V remove(K k) {
+        V v = directMap.remove(k);
+        if (v != null) {
+            reverseMap.remove(v);
         }
-        return s;
+        return v;
     }
 
-    public T removeReverse(S s) {
-        T t = reverseMap.remove(s);
-        if (t != null) {
-            directMap.remove(t);
+    public K removeReverse(V v) {
+        K k = reverseMap.remove(v);
+        if (k != null) {
+            directMap.remove(k);
         }
-        return t;
+        return k;
     }
 
     public boolean isEmpty() {
@@ -87,15 +87,15 @@ public class DoubleMap<T, S> implements Serializable {
         return directMap.size();
     }
 
-    public Set<T> keySet() {
+    public Set<K> keySet() {
         return directMap.keySet();
     }
 
-    public Collection<S> values() {
+    public Collection<V> values() {
         return directMap.values();
     }
 
-    public Set<Map.Entry<T, S>> entrySet() {
+    public Set<Map.Entry<K, V>> entrySet() {
         return directMap.entrySet();
     }
 }

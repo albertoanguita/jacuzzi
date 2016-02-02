@@ -1,6 +1,11 @@
 package jacz.util.io.xml;
 
+import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import jacz.util.hash.CRCMismatchException;
+import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
 
 import javax.xml.stream.*;
 import java.io.*;
@@ -178,12 +183,31 @@ public class XMLDom {
         write(stream, element, 0);
     }
 
+//    public static void write(OutputStream stream, Element element, int hashLength) throws XMLStreamException {
+//        try {
+//            Serializer serializer = new Processor(new Configuration()).newSerializer();
+//            serializer.setOutputProperty(Serializer.Property.METHOD, "xml");
+//            serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
+//            serializer.setOutputStream(stream);
+//            XMLStreamWriter xtw = serializer.getXMLStreamWriter();
+//            writeXMLStreamWriter(xtw, element, hashLength);
+//        } catch (SaxonApiException e) {
+//            throw new XMLStreamException(e.getMessage());
+//        }
+//    }
+
     public static void write(OutputStream stream, Element element, int hashLength) throws XMLStreamException {
         XMLOutputFactory xof = XMLOutputFactory.newInstance();
-        XMLStreamWriter xtw = xof.createXMLStreamWriter(stream);
+        IndentingXMLStreamWriter xtw = new IndentingXMLStreamWriter(xof.createXMLStreamWriter(stream));
         writeXMLStreamWriter(xtw, element, hashLength);
     }
 
+//    public static void write(OutputStream stream, Element element, int hashLength) throws XMLStreamException {
+//        XMLOutputFactory xof = XMLOutputFactory.newInstance();
+//        IndentingXMLStreamWriter xtw = new IndentingXMLStreamWriter(xof.createXMLStreamWriter(stream));
+//        writeXMLStreamWriter(xtw, element, hashLength);
+//    }
+//
     private static void writeXMLStreamWriter(XMLStreamWriter xtw, Element element, int hashLength) throws XMLStreamException {
         if (hashLength > 0) {
             String hash = element.getHash(hashLength);
@@ -192,6 +216,7 @@ public class XMLDom {
             element.addChild(hashElement);
         }
         writeElement(xtw, element);
+        xtw.writeEndDocument();
         xtw.flush();
         xtw.close();
         if (hashLength > 0) {

@@ -8,10 +8,7 @@ import jacz.util.hash.InvalidCRCException;
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Class with static methods for saving and restoring objects implementing the VersionedObject interface
@@ -91,7 +88,7 @@ public class VersionedObjectSerializer {
     }
 
     public static byte[] serialize(VersionedObject versionedObject, int CRCBytes) throws NotSerializableException {
-        FragmentedByteArray data = new FragmentedByteArray(Serializer.serializeObject(versionedObject.getCurrentVersion()));
+        FragmentedByteArray data = new FragmentedByteArray(Serializer.serializeObject(versionedObject.getCurrentVersion().toArrayList()));
         Map<String, Serializable> attributes = versionedObject.serialize();
         data.add(Serializer.serialize(attributes.size()));
         for (Map.Entry<String, Serializable> entry : attributes.entrySet()) {
@@ -169,7 +166,7 @@ public class VersionedObjectSerializer {
         try {
             data = CRC.extractDataWithCRC(data, offset);
             MutableOffset dataOffset = new MutableOffset();
-            versionStack = (VersionStack) Serializer.deserializeObject(data, dataOffset);
+            versionStack = new VersionStack ((ArrayList<String>) Serializer.deserializeObject(data, dataOffset));
             int attributeCount = Serializer.deserializeIntValue(data, dataOffset);
             for (int i = 0; i < attributeCount; i++) {
                 String attributeName = Serializer.deserializeString(data, dataOffset);

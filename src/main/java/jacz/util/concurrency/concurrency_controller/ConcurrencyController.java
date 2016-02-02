@@ -6,6 +6,7 @@ import jacz.util.concurrency.execution_control.PausableElement;
 import jacz.util.maps.ObjectCount;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
@@ -274,26 +275,52 @@ public class ConcurrencyController implements DaemonAction {
 
     @Override
     public boolean solveState() {
-        QueueElement queueElement = activityRequestsQueue.peek();
-        if (queueElement == null) {
+        // we try to execute one of the tasks stored in the activity queue. If one cannot execute, we try with the
+        // next one (as a subsequent one might unblock the execution of the previous ones)
+//        QueueElement queueElement = activityRequestsQueue.peek();
+        QueueElement[] queueArray = activityRequestsQueue.toArray(new QueueElement[1]);
+        Arrays.sort(queueArray);
+        if (queueArray.length == 0 || queueArray[0] == null) {
+//        if (queueElement == null) {
             // the queue was empty, the state is solved
             return true;
-        }
-        String activity = queueElement.getActivity();
-        if (callActivityCanExecute(activity)) {
-            // the activity can execute now -> allow continue and remove it from the activity queue
-            concurrencyControllerAction.activityIsGoingToBegin(activity, numberOfExecutionsOfActivities);
-            synchronized (this) {
-                numberOfExecutionsOfActivities.addObject(activity);
-            }
-            queueElement.allowContinue();
-            activityRequestsQueue.remove();
-            // allow the daemon to check for more activities in the queue
-            return false;
         } else {
-            // there is an activity in the queue, but it cannot execute yet -> wait for other opportunity
+            // search for the first element that can execute
+            for (QueueElement queueElement : queueArray) {
+                String activity = queueElement.getActivity();
+                if (callActivityCanExecute(activity)) {
+                    // this activity can execute now -> allow continue and remove it from the activity queue
+                    concurrencyControllerAction.activityIsGoingToBegin(activity, numberOfExecutionsOfActivities);
+                    synchronized (this) {
+                        numberOfExecutionsOfActivities.addObject(activity);
+                    }
+                    queueElement.allowContinue();
+                    // remove this specific element from the queue (since queue elements do not implement equals,
+                    // they are compared by their memory address)
+                    activityRequestsQueue.remove(queueElement);
+                    // allow the daemon to check for more activities in the queue to unlock
+                    return false;
+                }
+            }
+            // there are activities in the queue, but none of them can execute yet -> wait for future opportunities
             return true;
         }
+
+//        String activity = queueElement.getActivity();
+//        if (callActivityCanExecute(activity)) {
+//            // the activity can execute now -> allow continue and remove it from the activity queue
+//            concurrencyControllerAction.activityIsGoingToBegin(activity, numberOfExecutionsOfActivities);
+//            synchronized (this) {
+//                numberOfExecutionsOfActivities.addObject(activity);
+//            }
+//            queueElement.allowContinue();
+//            activityRequestsQueue.remove();
+//            // allow the daemon to check for more activities in the queue
+//            return false;
+//        } else {
+//            // there is an activity in the queue, but it cannot execute yet -> wait for other opportunity
+//            return true;
+//        }
     }
 
     public void stopAndWaitForFinalization() {

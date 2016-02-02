@@ -22,21 +22,21 @@ public class testXML2 {
             String tempDownloadsPath,
             String basedDataPath) throws IOException, XMLStreamException {
         XMLWriter xmlWriter = new XMLWriter("config");
-//        xmlWriter.addField("peer-id", peerID);
-//        xmlWriter.addField("port", localPort);
-//        xmlWriter.addField("external-port", externalPort);
-//        xmlWriter.addField("nick", ownNick);
+        xmlWriter.addField("peer-id", peerID);
+        xmlWriter.addField("port", localPort);
+        xmlWriter.addField("external-port", externalPort);
+        xmlWriter.addField("nick", ownNick);
 
-//        xmlWriter.beginStruct("friend-peers");
-//        xmlWriter.endStruct();
-//        xmlWriter.beginStruct("blocked-peers");
-//        xmlWriter.endStruct();
+        xmlWriter.beginStruct("friend-peers");
+        xmlWriter.endStruct();
+        xmlWriter.beginStruct("blocked-peers");
+        xmlWriter.endStruct();
 
-//        xmlWriter.addField("max-download-speed", maxDownloadSpeed);
-//        xmlWriter.addField("max-upload-speed", maxUploadSpeed);
+        xmlWriter.addField("max-download-speed", maxDownloadSpeed);
+        xmlWriter.addField("max-upload-speed", maxUploadSpeed);
 
-//        xmlWriter.addField("temp-downloads-path", tempDownloadsPath);
-//        xmlWriter.addField("base-data-path", basedDataPath);
+        xmlWriter.addField("temp-downloads-path", tempDownloadsPath);
+        xmlWriter.addField("base-data-path", basedDataPath);
 
         xmlWriter.write("config.xml", 8);
     }

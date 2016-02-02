@@ -5,6 +5,7 @@ import jacz.util.lists.tuple.Duple;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -12,12 +13,24 @@ import java.util.StringTokenizer;
  * Utility operations for copying, moving, etc files.
  * <p/>
  * todo use http://www.java7developer.com/blog/?p=334
+ * <p/>
+ * todo remove unnecessary methods that are available in apache commons
+ * <p/>
+ * todo move package to io
  */
 public class FileUtil {
 
     public static final String FILE_EXTENSION_SEPARATOR = ".";
 
     public static final Character FILE_EXTENSION_SEPARATOR_CHAR = '.';
+
+    private final static int[] ILLEGAL_FILENAME_CHARS = {34, 60, 62, 124, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 58, 42, 63, 92, 47};
+
+    private final static int LEGAL_FILENAME_CHAR_REPLACEMENT = (int) '_';
+
+    static {
+        Arrays.sort(ILLEGAL_FILENAME_CHARS);
+    }
 
     public static void copy(String sourceFile, String destinationFile) throws IOException {
         copy(sourceFile, destinationFile, true);
@@ -423,6 +436,27 @@ public class FileUtil {
                 throw new IOException("Invalid dir: " + dir);
             }
         }
+    }
+
+    /**
+     * Sanitizes a file name for any OS. Illegal characters are replaced by an underscore.
+     * (algorithm copied from http://stackoverflow.com/questions/1155107/is-there-a-cross-platform-java-method-to-remove-filename-special-chars)
+     *
+     * @param filename original filename
+     * @return sanitized filename
+     */
+    public static String sanitizeFilenameXPlatform(String filename) {
+        StringBuilder cleanName = new StringBuilder();
+        for (int i = 0; i < filename.length(); i++) {
+            int c = (int) filename.charAt(i);
+            if (Arrays.binarySearch(ILLEGAL_FILENAME_CHARS, c) < 0) {
+                // legal char
+                cleanName.append((char) c);
+            } else {
+                cleanName.append(LEGAL_FILENAME_CHAR_REPLACEMENT);
+            }
+        }
+        return cleanName.toString();
     }
 
 //    public static String createNonExistingFileNameWithIndex(String dir, String baseFileName, String extension, boolean startWithoutIndex) throws IOException {

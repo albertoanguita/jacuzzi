@@ -17,7 +17,7 @@ public class Test {
 
     public static void main(String args[]) {
         int x = 1000;
-        ConcurrencyController cc = new ConcurrencyController(new ConcurrencyControllerReadWrite());
+        ConcurrencyController cc = new ConcurrencyControllerReadWrite();
 
         //IOUtil.pauseEnter("pausa");
         TaskFinalizationIndicator[] tfi = new TaskFinalizationIndicator[8];

@@ -173,19 +173,17 @@ public class FileUtil {
     }
 
     public static void clearDirectory(String path) throws FileNotFoundException {
-        // todo must join paths
         String[] files = getDirectoryContents(path);
         if (files != null) {
             for (String f : files) {
-                if (isDirectory(f)) {
-                    clearDirectory(f);
+                if (isDirectory(joinPaths(path, f))) {
+                    clearDirectory(joinPaths(path, f));
+                    new File(joinPaths(path, f)).delete();
                 } else {
-                    deleteFile(f);
+                    deleteFile(joinPaths(path, f));
                 }
             }
         }
-        //noinspection ResultOfMethodCallIgnored
-        new File(path).delete();
     }
 
     public static String[] getDirectoryContents(String path) throws FileNotFoundException {

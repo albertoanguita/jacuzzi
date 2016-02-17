@@ -143,8 +143,14 @@ public class FileHashDatabase implements VersionedObject {
 //        return hashFunction.digestAsHex(file);
 //    }
 
+
     public static String getHash(File file, HashFunction hashFunction) throws IOException {
         return hashFunction.digestAsHex(file);
+    }
+
+    public void clear() {
+        filesMap.clear();
+        foldersMap.clear();
     }
 
     public boolean containsKey(String key) {

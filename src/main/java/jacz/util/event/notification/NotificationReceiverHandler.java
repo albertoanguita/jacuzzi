@@ -88,6 +88,7 @@ class NotificationReceiverHandler implements SimpleTimerAction {
     }
 
     private synchronized void notifyReceiver() {
+        // todo parallelize this to avoid possible deadlocks
         if (eventCount > 0) {
             notificationReceiver.newEvent(emitterID, eventCount, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
             resetMessages();

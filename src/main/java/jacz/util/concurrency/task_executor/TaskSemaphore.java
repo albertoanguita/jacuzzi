@@ -19,7 +19,7 @@ public class TaskSemaphore {
     /**
      * The parallel task executing
      */
-    private Task task;
+    private Runnable task;
 
     /**
      * Class constructor
@@ -27,7 +27,7 @@ public class TaskSemaphore {
      * @param parallelTaskExecutorThread the parallel task bond to this object
      * @param task               the parallel task related to this finalization indicator
      */
-    TaskSemaphore(ParallelTaskExecutorThread parallelTaskExecutorThread, Task task) {
+    TaskSemaphore(ParallelTaskExecutorThread parallelTaskExecutorThread, Runnable task) {
         this.parallelTaskExecutorThread = parallelTaskExecutorThread;
         this.task = task;
         semaphore = new Semaphore(0);
@@ -70,7 +70,7 @@ public class TaskSemaphore {
         return parallelTaskExecutorThread.isInterrupted();
     }
 
-    public Task getTask() {
+    public Runnable getTask() {
         return task;
     }
 }

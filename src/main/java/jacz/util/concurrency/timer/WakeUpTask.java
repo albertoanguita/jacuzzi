@@ -1,11 +1,9 @@
 package jacz.util.concurrency.timer;
 
-import jacz.util.concurrency.task_executor.Task;
-
 /**
  * Task that waits the specified millis and then invokes the timer wake up method
  */
-class WakeUpTask implements Task {
+class WakeUpTask implements Runnable {
 
     private Timer timer;
 
@@ -16,7 +14,7 @@ class WakeUpTask implements Task {
     }
 
     @Override
-    public void performTask() {
+    public void run() {
         while (!finished) {
             try {
                 Thread.sleep(timer.getMillis());

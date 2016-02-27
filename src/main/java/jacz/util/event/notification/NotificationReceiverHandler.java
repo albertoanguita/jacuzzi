@@ -1,12 +1,13 @@
 package jacz.util.event.notification;
 
-import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.task_executor.SequentialTaskExecutor;
 import jacz.util.concurrency.timer.SimpleTimerAction;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.identifier.UniqueIdentifier;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * This class handles the process of notifying events emitted by an emitter to the subscribed receivers
@@ -99,9 +100,9 @@ class NotificationReceiverHandler implements SimpleTimerAction {
     private synchronized void notifyReceiver() {
         if (eventCount > 0) {
             final int eventCountCopy = eventCount;
-            sequentialTaskExecutor.executeTask(new Task() {
+            sequentialTaskExecutor.executeTask(new Runnable() {
                 @Override
-                public void performTask() {
+                public void run() {
                     notificationReceiver.newEvent(emitterID, eventCountCopy, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
                 }
             });

@@ -1,6 +1,5 @@
 package jacz.util.network;
 
-import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.timer.SimpleTimerAction;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.date_time.SpeedMonitor;
@@ -15,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * This class implements the task of downloading a file to disk, allowing to carry out that task in parallel
  */
-class DownloadTask implements Task, SimpleTimerAction {
+class DownloadTask implements Runnable, SimpleTimerAction {
 
     private static final int BUFFER_LENGTH = 1024;
 
@@ -72,7 +71,7 @@ class DownloadTask implements Task, SimpleTimerAction {
 
 
     @Override
-    public void performTask() {
+    public void run() {
         byte[] buffer = new byte[BUFFER_LENGTH];
         boolean finished = false;
         while (!finished) {

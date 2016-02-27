@@ -25,7 +25,7 @@ public class ParallelTaskExecutor {
      *         (its subsequent use is optional, only necessary if the parent thread must know when the
      *         child thread has finished its task. If not necessary it can just be ignored)
      */
-    public static TaskSemaphore executeTask(Task task) {
+    public static TaskSemaphore executeTask(Runnable task) {
         return executeTask(task, ThreadUtil.invokerName(1));
     }
 
@@ -38,7 +38,7 @@ public class ParallelTaskExecutor {
      *         (its subsequent use is optional, only necessary if the parent thread must know when the
      *         child thread has finished its task. If not necessary it can just be ignored)
      */
-    public static TaskSemaphore executeTask(Task task, String threadName) {
+    public static TaskSemaphore executeTask(Runnable task, String threadName) {
         // create a parallel task executor thread for this task
         ParallelTaskExecutorThread parallelTaskExecutorThread = new ParallelTaskExecutorThread(task, threadName);
         return runParallelTask(parallelTaskExecutorThread);
@@ -58,7 +58,7 @@ public class ParallelTaskExecutor {
      *         child thread has finished its task. If not necessary it can just be ignored)
      */
     public static TaskSemaphore executeTask(
-            Task task,
+            Runnable task,
             ConcurrencyController concurrencyController,
             String concurrentActivity) {
         return executeTask(task, ThreadUtil.invokerName(1), concurrencyController, concurrentActivity);
@@ -77,7 +77,7 @@ public class ParallelTaskExecutor {
      *         child thread has finished its task. If not necessary it can just be ignored)
      */
     public static TaskSemaphore executeTask(
-            Task task,
+            Runnable task,
             String threadName,
             ConcurrencyController concurrencyController,
             String concurrentActivity) {
@@ -97,7 +97,7 @@ public class ParallelTaskExecutor {
      *         child thread has finished its task. If not necessary it can just be ignored)
      */
     public static TaskSemaphore executeTask(
-            Task task,
+            Runnable task,
             ConcurrencyController concurrencyController,
             String concurrentActivity,
             boolean sequentialActivityRegistration) {
@@ -117,7 +117,7 @@ public class ParallelTaskExecutor {
      *         child thread has finished its task. If not necessary it can just be ignored)
      */
     public static TaskSemaphore executeTask(
-            Task task,
+            Runnable task,
             String threadName,
             ConcurrencyController concurrencyController,
             String concurrentActivity,

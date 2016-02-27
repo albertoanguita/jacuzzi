@@ -1,12 +1,11 @@
 package jacz.util.concurrency.execution_control.test;
 
 import jacz.util.concurrency.execution_control.PausableElement;
-import jacz.util.concurrency.task_executor.Task;
 
 /**
  *
  */
-public class Pauser implements Task {
+public class Pauser implements Runnable {
 
     private PausableElement pausableElement;
 
@@ -15,7 +14,7 @@ public class Pauser implements Task {
     }
 
     @Override
-    public void performTask() {
+    public void run() {
 
         sleep(500);
 

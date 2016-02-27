@@ -3,7 +3,6 @@ package jacz.util.concurrency.daemon;
 import jacz.util.bool.MutableBoolean;
 import jacz.util.bool.SynchedBoolean;
 import jacz.util.concurrency.execution_control.PausableElement;
-import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.task_executor.TaskSemaphore;
 
@@ -16,7 +15,7 @@ import jacz.util.concurrency.task_executor.TaskSemaphore;
  */
 public class Daemon {
 
-    private static class DaemonTask implements Task {
+    private static class DaemonTask implements Runnable {
 
         private final Daemon daemon;
 
@@ -25,7 +24,7 @@ public class Daemon {
         }
 
         @Override
-        public void performTask() {
+        public void run() {
             boolean finished = false;
             while (!finished) {
                 if (!daemon.alive.isValue()) {

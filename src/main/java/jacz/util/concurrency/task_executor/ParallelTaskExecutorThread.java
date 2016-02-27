@@ -10,7 +10,7 @@ class ParallelTaskExecutorThread extends Thread {
     /**
      * Task that is executed
      */
-    private Task task;
+    private Runnable task;
 
     /**
      * Concurrency controller employed to monitor this task (null if not to be used)
@@ -38,7 +38,7 @@ class ParallelTaskExecutorThread extends Thread {
      * @param task       task that must be executed
      * @param threadName name of the thread to create
      */
-    ParallelTaskExecutorThread(Task task, String threadName) {
+    ParallelTaskExecutorThread(Runnable task, String threadName) {
         this(task, threadName, null, null, null);
     }
 
@@ -51,7 +51,7 @@ class ParallelTaskExecutorThread extends Thread {
      * @param concurrentActivity    the concurrent activity to execute under the monitoring of the concurrency controller
      */
     ParallelTaskExecutorThread(
-            Task task,
+            Runnable task,
             String threadName,
             ConcurrencyController concurrencyController,
             ConcurrencyController.QueueElement queueElement,
@@ -88,7 +88,7 @@ class ParallelTaskExecutorThread extends Thread {
             }
         }
         // perform the task
-        task.performTask();
+        task.run();
 
         if (concurrencyController != null) {
             // indicate the execution start to the given concurrency controller

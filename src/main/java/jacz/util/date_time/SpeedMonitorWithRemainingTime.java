@@ -1,7 +1,6 @@
 package jacz.util.date_time;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.numeric.range.LongRange;
@@ -16,7 +15,7 @@ import java.util.List;
  */
 public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
 
-    private static class RemainingTimeTask implements Task {
+    private static class RemainingTimeTask implements Runnable {
 
         private final RemainingTimeAction remainingTimeAction;
 
@@ -28,7 +27,7 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
         }
 
         @Override
-        public void performTask() {
+        public void run() {
             remainingTimeAction.remainingTime(remainingTime);
         }
     }

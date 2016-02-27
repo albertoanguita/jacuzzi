@@ -12,7 +12,7 @@ import java.util.Queue;
  */
 public class SequentialTaskExecutor implements DaemonAction {
 
-    private static class StopTask implements Task {
+    private static class StopTask implements Runnable {
 
         private final PausableElement pausableElement;
 
@@ -21,7 +21,7 @@ public class SequentialTaskExecutor implements DaemonAction {
         }
 
         @Override
-        public void performTask() {
+        public void run() {
             pausableElement.resume();
         }
 
@@ -29,7 +29,7 @@ public class SequentialTaskExecutor implements DaemonAction {
 
     private final Daemon daemon;
 
-    private final Queue<Task> taskQueue;
+    private final Queue<Runnable> taskQueue;
 
     private boolean alive;
 
@@ -44,7 +44,7 @@ public class SequentialTaskExecutor implements DaemonAction {
 
     @Override
     public boolean solveState() {
-        Task task;
+        Runnable task;
         synchronized (this) {
             if (!taskQueue.isEmpty()) {
                 task = taskQueue.remove();
@@ -52,11 +52,11 @@ public class SequentialTaskExecutor implements DaemonAction {
                 return true;
             }
         }
-        task.performTask();
+        task.run();
         return taskQueue.isEmpty();
     }
 
-    public void executeTask(Task task) {
+    public void executeTask(Runnable task) {
         synchronized (this) {
             if (alive || task instanceof StopTask || ignoreFutureTasks) {
                 taskQueue.add(task);

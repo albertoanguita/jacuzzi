@@ -1,7 +1,5 @@
 package jacz.util.concurrency.concurrency_controller.test;
 
-import jacz.util.concurrency.task_executor.Task;
-
 /**
  * Class description
  * <p/>
@@ -9,7 +7,7 @@ import jacz.util.concurrency.task_executor.Task;
  * Date: 09-may-2008<br>
  * Last Modified: 09-may-2008
  */
-public class TestTask implements Task {
+public class TestTask implements Runnable {
 
     private String name;
 
@@ -24,7 +22,7 @@ public class TestTask implements Task {
         System.out.println(name + " (" + concurrentActivity + "): ready to execute");
     }
 
-    public void performTask() {
+    public void run() {
         System.out.println(name + " (" + concurrentActivity + "): starts executing");
         for (int i = 0; i < limit; i++) {
             for (int j = 0; j < limit; j++) {

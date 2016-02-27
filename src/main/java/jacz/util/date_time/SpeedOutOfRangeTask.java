@@ -1,7 +1,5 @@
 package jacz.util.date_time;
 
-import jacz.util.concurrency.task_executor.Task;
-
 /**
  * Class description
  * <p/>
@@ -9,7 +7,7 @@ import jacz.util.concurrency.task_executor.Task;
  * Date: 04-jun-2010<br>
  * Last Modified: 04-jun-2010
  */
-public class SpeedOutOfRangeTask implements Task {
+public class SpeedOutOfRangeTask implements Runnable {
 
     private SpeedMonitorAction speedMonitorAction;
 
@@ -24,7 +22,7 @@ public class SpeedOutOfRangeTask implements Task {
     }
 
     @Override
-    public void performTask() {
+    public void run() {
         if (speedAbove) {
             speedMonitorAction.speedAboveRange(speed);
         } else {

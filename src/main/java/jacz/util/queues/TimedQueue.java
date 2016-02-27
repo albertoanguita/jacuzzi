@@ -1,6 +1,5 @@
 package jacz.util.queues;
 
-import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.timer.SimpleTimerAction;
 import jacz.util.concurrency.timer.Timer;
@@ -43,7 +42,7 @@ public class TimedQueue<T> implements SimpleTimerAction {
         }
     }
 
-    private static class TimedQueueInterfaceTask<T> implements Task {
+    private static class TimedQueueInterfaceTask<T> implements Runnable {
 
         private final TimedQueueInterface<T> timedQueueInterface;
 
@@ -55,7 +54,7 @@ public class TimedQueue<T> implements SimpleTimerAction {
         }
 
         @Override
-        public void performTask() {
+        public void run() {
             timedQueueInterface.elementsRemoved(removedElements);
         }
     }

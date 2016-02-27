@@ -1,15 +1,13 @@
 package jacz.util.lists;
 
-import jacz.util.concurrency.task_executor.Task;
-
-import java.util.List;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * This class implements a parallel task for the quick sort algorithm. The actual implementation of the
  * algorithm is located in the Lists class (it is invoked from here)
  */
-class QuickSortTask<T> implements Task {
+class QuickSortTask<T> implements Runnable {
 
     private List<T> list;
 
@@ -30,7 +28,7 @@ class QuickSortTask<T> implements Task {
         this.relatedLists = relatedLists;
     }
 
-    public void performTask() {
+    public void run() {
         Lists.sortAux(list, comparator, reverseOrder, numThreads, relatedLists);
     }
 }

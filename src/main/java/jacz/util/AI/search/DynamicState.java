@@ -4,12 +4,14 @@ import jacz.util.bool.SynchedBoolean;
 import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.daemon.Daemon;
 import jacz.util.concurrency.daemon.DaemonAction;
-import jacz.util.concurrency.task_executor.Task;
+import jacz.util.concurrency.task_executor.SequentialTaskExecutor;
+import jacz.util.concurrency.timer.SimpleTimerAction;
+import jacz.util.concurrency.timer.Timer;
 
 /**
  * State and goal must be mutable objects that are never re-assigned
  */
-public class DynamicState<S, G> implements DaemonAction {
+public class DynamicState<S, G> implements DaemonAction, SimpleTimerAction {
 
     public interface Transitions<S, G> {
 
@@ -54,13 +56,15 @@ public class DynamicState<S, G> implements DaemonAction {
         }
     }
 
-    private S state;
+    protected S state;
 
     private G goal;
 
     private final Transitions<S, G> transitions;
 
-    private final Daemon daemon;
+    protected final Daemon daemon;
+
+    protected final SequentialTaskExecutor hookExecutor;
 
     private final SynchedBoolean alive;
 
@@ -69,26 +73,16 @@ public class DynamicState<S, G> implements DaemonAction {
         this.goal = initialGoal;
         this.transitions = transitions;
         daemon = new Daemon(this);
+        hookExecutor = new SequentialTaskExecutor();
         alive = new SynchedBoolean(true);
     }
 
-    public void setStateTimer(S state, long millis) {
-
-    }
-
-    public void setStateHook(S state, Task task) {
-
+    public void setGeneralTimer(long millis) {
+        // todo
     }
 
     public synchronized S state() {
         return state;
-    }
-
-    public synchronized void setState(S newState) {
-        if (!state.equals(newState)) {
-            state = newState;
-            daemon.stateChange();
-        }
     }
 
     public synchronized G goal() {
@@ -103,25 +97,19 @@ public class DynamicState<S, G> implements DaemonAction {
     }
 
     public synchronized boolean hasReachedGoal() {
-        return transitions.getTransition(state, goal) != null;
+        return transitions.getTransition(state(), goal()) != null;
     }
 
     @Override
     public boolean solveState() {
         if (alive.isValue()) {
-            Transition<S, G> transition;
-            synchronized (this) {
-                transition = transitions.getTransition(state, goal);
-            }
+            Transition<S, G> transition = transitions.getTransition(state(), goal());
             if (transition != null) {
                 if (transition instanceof TransitionWithEvents) {
                     TransitionWithEvents<S, G> transitionWithEvents = (TransitionWithEvents<S, G>) transition;
                     transition = new TransitionWithEventsExecutor<>(transitionWithEvents);
                 }
-                Long wait;
-                synchronized (this) {
-                    wait = transition.actOnState(this);
-                }
+                Long wait = transition.actOnState(this);
                 if (wait != null) {
                     ThreadUtil.safeSleep(wait);
                 }
@@ -136,12 +124,20 @@ public class DynamicState<S, G> implements DaemonAction {
         }
     }
 
+    @Override
+    public Long wakeUp(Timer timer) {
+        // some reminder timer woke up
+        daemon.stateChange();
+        return null;
+    }
+
     public void blockUntilStateIsSolved() {
         daemon.blockUntilStateIsSolved();
     }
 
     public synchronized void stop() {
         daemon.stop();
+        hookExecutor.stopAndWaitForFinalization();
     }
 
 

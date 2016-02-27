@@ -1,7 +1,5 @@
 package jacz.util.concurrency.task_executor.example;
 
-import jacz.util.concurrency.task_executor.Task;
-
 /**
  * Count to a million task. Counts to a million and stores the result
  * <p/>
@@ -9,11 +7,11 @@ import jacz.util.concurrency.task_executor.Task;
  * Date: 16-nov-2008<br>
  * Last Modified: 16-nov-2008
  */
-public class CountToMillionTask implements Task {
+public class CountToMillionTask implements Runnable {
 
     private int result;
 
-    public void performTask() {
+    public void run() {
         try {
             Thread.sleep(1500);
         } catch (InterruptedException e) {

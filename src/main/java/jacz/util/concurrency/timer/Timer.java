@@ -1,7 +1,6 @@
 package jacz.util.concurrency.timer;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.task_executor.TaskSemaphore;
 import jacz.util.identifier.UniqueIdentifier;
@@ -16,7 +15,7 @@ import jacz.util.identifier.UniqueIdentifierFactory;
  */
 public class Timer<T> {
 
-    private class ConcurrentGoOffTask implements Task {
+    private class ConcurrentGoOffTask implements Runnable {
 
         private final Timer timer;
 
@@ -25,12 +24,12 @@ public class Timer<T> {
         }
 
         @Override
-        public void performTask() {
+        public void run() {
             timer.sequentialGoOff();
         }
     }
 
-    private class ConcurrentResetTask implements Task {
+    private class ConcurrentResetTask implements Runnable {
 
         private Timer timer;
 
@@ -57,7 +56,7 @@ public class Timer<T> {
         }
 
         @Override
-        public void performTask() {
+        public void run() {
             if (factorWithLastDelay == null && millis == null) {
                 timer.sequentialReset();
             } else if (factorWithLastDelay != null) {
@@ -68,7 +67,7 @@ public class Timer<T> {
         }
     }
 
-    private class ConcurrentStopTask implements Task {
+    private class ConcurrentStopTask implements Runnable {
 
         private Timer timer;
 
@@ -77,12 +76,12 @@ public class Timer<T> {
         }
 
         @Override
-        public void performTask() {
+        public void run() {
             timer.sequentialStop();
         }
     }
 
-    private class ConcurrentKillTask implements Task {
+    private class ConcurrentKillTask implements Runnable {
 
         private Timer timer;
 
@@ -91,7 +90,7 @@ public class Timer<T> {
         }
 
         @Override
-        public void performTask() {
+        public void run() {
             timer.sequentialKill();
         }
     }

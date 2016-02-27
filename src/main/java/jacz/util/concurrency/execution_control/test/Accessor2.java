@@ -1,12 +1,11 @@
 package jacz.util.concurrency.execution_control.test;
 
 import jacz.util.concurrency.execution_control.PausableElement;
-import jacz.util.concurrency.task_executor.Task;
 
 /**
  *
  */
-public class Accessor2 implements Task {
+public class Accessor2 implements Runnable {
 
     private PausableElement pausableElement;
 
@@ -15,7 +14,7 @@ public class Accessor2 implements Task {
     }
 
     @Override
-    public void performTask() {
+    public void run() {
 
         access(1);
         access(2);

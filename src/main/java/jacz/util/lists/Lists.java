@@ -1,7 +1,7 @@
 package jacz.util.lists;
 
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.concurrency.task_executor.TaskFinalizationIndicator;
+import jacz.util.concurrency.task_executor.TaskSemaphore;
 import jacz.util.numeric.NumericUtil;
 
 import java.util.*;
@@ -202,8 +202,8 @@ public class Lists {
 
                 QuickSortTask<T> quickSortTaskLeft = new QuickSortTask<T>(less, comparator, reverseOrder, leftThreads, relatedLess);
                 QuickSortTask<T> quickSortTaskRight = new QuickSortTask<T>(greater, comparator, reverseOrder, rightThreads, relatedGreater);
-                TaskFinalizationIndicator tfiLeft = ParallelTaskExecutor.executeTask(quickSortTaskLeft);
-                TaskFinalizationIndicator tfiRight = ParallelTaskExecutor.executeTask(quickSortTaskRight);
+                TaskSemaphore tfiLeft = ParallelTaskExecutor.executeTask(quickSortTaskLeft);
+                TaskSemaphore tfiRight = ParallelTaskExecutor.executeTask(quickSortTaskRight);
                 tfiLeft.waitForFinalization();
                 tfiRight.waitForFinalization();
 
@@ -322,13 +322,13 @@ public class Lists {
             // divide list for each thread
             List<List<T>> subLists = divideList(list, threads);
             List<FilterElementsTask> filterElementsTaskList = new ArrayList<FilterElementsTask>(threads);
-            Set<TaskFinalizationIndicator> tfiSet = new HashSet<TaskFinalizationIndicator>(threads);
+            Set<TaskSemaphore> tfiSet = new HashSet<TaskSemaphore>(threads);
             for (List<T> subList : subLists) {
                 FilterElementsTask filterElementsTask = new FilterElementsTask(subList, filter);
                 filterElementsTaskList.add(filterElementsTask);
                 tfiSet.add(ParallelTaskExecutor.executeTask(filterElementsTask));
             }
-            for (TaskFinalizationIndicator tfi : tfiSet) {
+            for (TaskSemaphore tfi : tfiSet) {
                 tfi.waitForFinalization();
             }
 

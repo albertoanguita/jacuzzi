@@ -3,14 +3,14 @@ package jacz.util.concurrency.task_executor;
 import jacz.util.concurrency.concurrency_controller.ConcurrencyController;
 
 /**
- * This class implements threads that can execute tasks implementing the ParallelTask interface
+ * This class implements threads that can execute tasks implementing the Task interface
  */
 class ParallelTaskExecutorThread extends Thread {
 
     /**
      * Task that is executed
      */
-    private ParallelTask task;
+    private Task task;
 
     /**
      * Concurrency controller employed to monitor this task (null if not to be used)
@@ -30,7 +30,7 @@ class ParallelTaskExecutorThread extends Thread {
     /**
      * Indicator of finalization of the task execution
      */
-    private TaskFinalizationIndicator taskFinalizationIndicator;
+    private TaskSemaphore taskSemaphore;
 
     /**
      * Constructor of class
@@ -38,7 +38,7 @@ class ParallelTaskExecutorThread extends Thread {
      * @param task       task that must be executed
      * @param threadName name of the thread to create
      */
-    ParallelTaskExecutorThread(ParallelTask task, String threadName) {
+    ParallelTaskExecutorThread(Task task, String threadName) {
         this(task, threadName, null, null, null);
     }
 
@@ -51,7 +51,7 @@ class ParallelTaskExecutorThread extends Thread {
      * @param concurrentActivity    the concurrent activity to execute under the monitoring of the concurrency controller
      */
     ParallelTaskExecutorThread(
-            ParallelTask task,
+            Task task,
             String threadName,
             ConcurrencyController concurrencyController,
             ConcurrencyController.QueueElement queueElement,
@@ -62,7 +62,7 @@ class ParallelTaskExecutorThread extends Thread {
         this.queueElement = queueElement;
         this.concurrentActivity = concurrentActivity;
         // creates a new indicator
-        taskFinalizationIndicator = new TaskFinalizationIndicator(this, task);
+        taskSemaphore = new TaskSemaphore(this, task);
     }
 
     /**
@@ -70,8 +70,8 @@ class ParallelTaskExecutorThread extends Thread {
      *
      * @return the task finalization indicator of this thread
      */
-    public TaskFinalizationIndicator getTaskFinalizationIndicator() {
-        return taskFinalizationIndicator;
+    public TaskSemaphore getTaskSemaphore() {
+        return taskSemaphore;
     }
 
     /**
@@ -95,6 +95,6 @@ class ParallelTaskExecutorThread extends Thread {
             concurrencyController.endActivity(concurrentActivity);
         }
         // indicate that the task has been finalised
-        taskFinalizationIndicator.finaliseTask();
+        taskSemaphore.finaliseTask();
     }
 }

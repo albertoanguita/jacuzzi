@@ -6,34 +6,30 @@ import java.util.concurrent.Semaphore;
 /**
  * This class indicates the finalization state of the execution of a task. It allows other threads
  * to query this state and wait until the task is finalized (not mandatory to use)
- * <p/>
- * User: Alberto<br>
- * Date: 26-abr-2008<br>
- * Last Modified: 26-abr-2008
  */
-public class TaskFinalizationIndicator {
+public class TaskSemaphore {
 
     private Semaphore semaphore;
 
     /**
-     * The thread for which this TaskFinalizationIndicator is waiting to finish
+     * The thread for which this TaskSemaphore is waiting to finish
      */
     private ParallelTaskExecutorThread parallelTaskExecutorThread;
 
     /**
      * The parallel task executing
      */
-    private ParallelTask parallelTask;
+    private Task task;
 
     /**
      * Class constructor
      *
      * @param parallelTaskExecutorThread the parallel task bond to this object
-     * @param parallelTask               the parallel task related to this finalization indicator
+     * @param task               the parallel task related to this finalization indicator
      */
-    TaskFinalizationIndicator(ParallelTaskExecutorThread parallelTaskExecutorThread, ParallelTask parallelTask) {
+    TaskSemaphore(ParallelTaskExecutorThread parallelTaskExecutorThread, Task task) {
         this.parallelTaskExecutorThread = parallelTaskExecutorThread;
-        this.parallelTask = parallelTask;
+        this.task = task;
         semaphore = new Semaphore(0);
     }
 
@@ -60,8 +56,8 @@ public class TaskFinalizationIndicator {
      *
      * @param tfiCollection collection of task finalization indicators
      */
-    public static void waitForFinalization(Collection<TaskFinalizationIndicator> tfiCollection) {
-        for (TaskFinalizationIndicator tfi : tfiCollection) {
+    public static void waitForFinalization(Collection<TaskSemaphore> tfiCollection) {
+        for (TaskSemaphore tfi : tfiCollection) {
             tfi.waitForFinalization();
         }
     }
@@ -74,7 +70,7 @@ public class TaskFinalizationIndicator {
         return parallelTaskExecutorThread.isInterrupted();
     }
 
-    public ParallelTask getParallelTask() {
-        return parallelTask;
+    public Task getTask() {
+        return task;
     }
 }

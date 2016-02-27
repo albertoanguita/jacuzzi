@@ -1,12 +1,12 @@
 package jacz.util.concurrency.execution_control.test;
 
 import jacz.util.concurrency.execution_control.PausableElement;
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 
 /**
  *
  */
-public class Accessor2 implements ParallelTask {
+public class Accessor2 implements Task {
 
     private PausableElement pausableElement;
 

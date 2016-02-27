@@ -1,6 +1,6 @@
 package jacz.util.concurrency.task_executor.example;
 
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 
 /**
  * Count to a million task. Counts to a million and stores the result
@@ -9,7 +9,7 @@ import jacz.util.concurrency.task_executor.ParallelTask;
  * Date: 16-nov-2008<br>
  * Last Modified: 16-nov-2008
  */
-public class CountToMillionTask implements ParallelTask {
+public class CountToMillionTask implements Task {
 
     private int result;
 

@@ -1,9 +1,9 @@
 package jacz.util.concurrency.timer;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.concurrency.task_executor.TaskFinalizationIndicator;
+import jacz.util.concurrency.task_executor.TaskSemaphore;
 import jacz.util.identifier.UniqueIdentifier;
 import jacz.util.identifier.UniqueIdentifierFactory;
 
@@ -16,7 +16,7 @@ import jacz.util.identifier.UniqueIdentifierFactory;
  */
 public class Timer<T> {
 
-    private class ConcurrentGoOffTask implements ParallelTask {
+    private class ConcurrentGoOffTask implements Task {
 
         private final Timer timer;
 
@@ -30,7 +30,7 @@ public class Timer<T> {
         }
     }
 
-    private class ConcurrentResetTask implements ParallelTask {
+    private class ConcurrentResetTask implements Task {
 
         private Timer timer;
 
@@ -68,7 +68,7 @@ public class Timer<T> {
         }
     }
 
-    private class ConcurrentStopTask implements ParallelTask {
+    private class ConcurrentStopTask implements Task {
 
         private Timer timer;
 
@@ -82,7 +82,7 @@ public class Timer<T> {
         }
     }
 
-    private class ConcurrentKillTask implements ParallelTask {
+    private class ConcurrentKillTask implements Task {
 
         private Timer timer;
 
@@ -104,7 +104,7 @@ public class Timer<T> {
 
     private final T event;
 
-    private TaskFinalizationIndicator tfi;
+    private TaskSemaphore tfi;
 
     private boolean active;
 

@@ -1,19 +1,22 @@
 package jacz.util.concurrency.daemon;
 
 import jacz.util.bool.MutableBoolean;
+import jacz.util.bool.SynchedBoolean;
 import jacz.util.concurrency.execution_control.PausableElement;
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.concurrency.task_executor.TaskFinalizationIndicator;
+import jacz.util.concurrency.task_executor.TaskSemaphore;
 
 /**
  * This class implements a Daemon which is waiting for events and asynchronously performs actions upon such events.
  * <p/>
  * The events modify a "wish state". The daemon always tries to satisfy that wish
+ *
+ * todo add stop method
  */
 public class Daemon {
 
-    private static class DaemonTask implements ParallelTask {
+    private static class DaemonTask implements Task {
 
         private final Daemon daemon;
 
@@ -25,10 +28,15 @@ public class Daemon {
         public void performTask() {
             boolean finished = false;
             while (!finished) {
-                finished = daemon.executeAction();
-                if (finished) {
-                    // check if we can really finish (if there are unresolved state changes, we must keep working)
+                if (!daemon.alive.isValue()) {
+                    // the daemon was stopped -> ignore action and request finish
                     finished = daemon.requestKillDaemonThread();
+                } else {
+                    finished = daemon.executeAction();
+                    if (finished) {
+                        // check if we can really finish (if there are unresolved state changes, we must keep working)
+                        finished = daemon.requestKillDaemonThread();
+                    }
                 }
             }
         }
@@ -40,9 +48,9 @@ public class Daemon {
     private final DaemonAction daemonAction;
 
     /**
-     * TaskFinalizationIndicator for the currently running thread (or null if no thread is running)
+     * TaskSemaphore for the currently running thread (or null if no thread is running)
      */
-    private TaskFinalizationIndicator taskFinalizationIndicator;
+    private TaskSemaphore taskSemaphore;
 
     /**
      * Flag indicating if the state has changed (true = there is a change that must be solved)
@@ -59,13 +67,16 @@ public class Daemon {
      */
     private final PausableElement blockUntilStateSolve;
 
+    private final SynchedBoolean alive;
+
 
     public Daemon(DaemonAction daemonAction) {
         this.daemonAction = daemonAction;
-        taskFinalizationIndicator = null;
+        taskSemaphore = null;
         stateChangeFlag = new MutableBoolean(false);
         daemonThreadFlag = new MutableBoolean(false);
         blockUntilStateSolve = new PausableElement();
+        alive = new SynchedBoolean(true);
     }
 
     /**
@@ -78,7 +89,7 @@ public class Daemon {
         if (!daemonThreadFlag.isValue()) {
             daemonThreadFlag.setValue(true);
             stateChangeFlag.setValue(false);
-            taskFinalizationIndicator = ParallelTaskExecutor.executeTask(new DaemonTask(this));
+            taskSemaphore = ParallelTaskExecutor.executeTask(new DaemonTask(this));
         }
     }
 
@@ -86,8 +97,8 @@ public class Daemon {
      * Interrupts the daemon thread (if any thread running)
      */
     public synchronized void interrupt() {
-        if (taskFinalizationIndicator != null) {
-            taskFinalizationIndicator.interrupt();
+        if (taskSemaphore != null) {
+            taskSemaphore.interrupt();
         }
     }
 
@@ -99,6 +110,11 @@ public class Daemon {
         blockUntilStateSolve.access();
     }
 
+    public void stop() {
+        alive.setValue(false);
+        interrupt();
+    }
+
     /**
      * Requests to kill the daemon thread. It will check for unresolved state changes
      *
@@ -106,10 +122,11 @@ public class Daemon {
      */
     private synchronized boolean requestKillDaemonThread() {
         // if there are no state changes active, we allow to kill the thread
-        if (!stateChangeFlag.isValue()) {
+        if (!stateChangeFlag.isValue() || !alive.isValue()) {
             // there are no registered state changes, the thread can finish ok
+            // or the daemon has been stopped
             daemonThreadFlag.setValue(false);
-            taskFinalizationIndicator = null;
+            taskSemaphore = null;
             blockUntilStateSolve.resume();
             return true;
         } else {

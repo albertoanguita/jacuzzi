@@ -12,7 +12,7 @@ import java.util.Queue;
  */
 public class SequentialTaskExecutor implements DaemonAction {
 
-    private static class StopTask implements ParallelTask {
+    private static class StopTask implements Task {
 
         private final PausableElement pausableElement;
 
@@ -29,7 +29,7 @@ public class SequentialTaskExecutor implements DaemonAction {
 
     private final Daemon daemon;
 
-    private final Queue<ParallelTask> taskQueue;
+    private final Queue<Task> taskQueue;
 
     private boolean alive;
 
@@ -44,22 +44,22 @@ public class SequentialTaskExecutor implements DaemonAction {
 
     @Override
     public boolean solveState() {
-        ParallelTask parallelTask;
+        Task task;
         synchronized (this) {
             if (!taskQueue.isEmpty()) {
-                parallelTask = taskQueue.remove();
+                task = taskQueue.remove();
             } else {
                 return true;
             }
         }
-        parallelTask.performTask();
+        task.performTask();
         return taskQueue.isEmpty();
     }
 
-    public void executeTask(ParallelTask parallelTask) {
+    public void executeTask(Task task) {
         synchronized (this) {
-            if (alive || parallelTask instanceof StopTask || ignoreFutureTasks) {
-                taskQueue.add(parallelTask);
+            if (alive || task instanceof StopTask || ignoreFutureTasks) {
+                taskQueue.add(task);
             } else {
                 throw new IllegalStateException();
             }

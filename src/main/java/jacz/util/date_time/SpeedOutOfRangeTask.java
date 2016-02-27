@@ -1,6 +1,6 @@
 package jacz.util.date_time;
 
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 
 /**
  * Class description
@@ -9,7 +9,7 @@ import jacz.util.concurrency.task_executor.ParallelTask;
  * Date: 04-jun-2010<br>
  * Last Modified: 04-jun-2010
  */
-public class SpeedOutOfRangeTask implements ParallelTask {
+public class SpeedOutOfRangeTask implements Task {
 
     private SpeedMonitorAction speedMonitorAction;
 

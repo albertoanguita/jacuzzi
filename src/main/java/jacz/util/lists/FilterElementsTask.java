@@ -1,6 +1,6 @@
 package jacz.util.lists;
 
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import static jacz.util.lists.Lists.filterElements;
  * Date: 13-mar-2010<br>
  * Last Modified: 13-mar-2010
  */
-class FilterElementsTask implements ParallelTask {
+class FilterElementsTask implements Task {
 
     private List<? extends Filterable> list;
 

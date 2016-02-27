@@ -1,6 +1,6 @@
 package jacz.util.queues;
 
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.timer.SimpleTimerAction;
 import jacz.util.concurrency.timer.Timer;
@@ -43,7 +43,7 @@ public class TimedQueue<T> implements SimpleTimerAction {
         }
     }
 
-    private static class TimedQueueInterfaceTask<T> implements ParallelTask {
+    private static class TimedQueueInterfaceTask<T> implements Task {
 
         private final TimedQueueInterface<T> timedQueueInterface;
 

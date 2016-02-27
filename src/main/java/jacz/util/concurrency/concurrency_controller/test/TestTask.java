@@ -1,6 +1,6 @@
 package jacz.util.concurrency.concurrency_controller.test;
 
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 
 /**
  * Class description
@@ -9,7 +9,7 @@ import jacz.util.concurrency.task_executor.ParallelTask;
  * Date: 09-may-2008<br>
  * Last Modified: 09-may-2008
  */
-public class TestParallelTask implements ParallelTask {
+public class TestTask implements Task {
 
     private String name;
 
@@ -17,7 +17,7 @@ public class TestParallelTask implements ParallelTask {
 
     private String concurrentActivity;
 
-    public TestParallelTask(String name, int limit, String concurrentActivity) {
+    public TestTask(String name, int limit, String concurrentActivity) {
         this.name = name;
         this.limit = limit;
         this.concurrentActivity = concurrentActivity;

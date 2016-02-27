@@ -1,11 +1,11 @@
 package jacz.util.concurrency.timer;
 
-import jacz.util.concurrency.task_executor.ParallelTask;
+import jacz.util.concurrency.task_executor.Task;
 
 /**
  * Task that waits the specified millis and then invokes the timer wake up method
  */
-class WakeUpTask implements ParallelTask {
+class WakeUpTask implements Task {
 
     private Timer timer;
 

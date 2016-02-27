@@ -10,5 +10,5 @@ public interface DaemonAction {
      *
      * @return true if the state is now in the desired point, false otherwise
      */
-    public boolean solveState();
+    boolean solveState();
 }

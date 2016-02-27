@@ -1,5 +1,7 @@
 package jacz.util.event.notification;
 
+import jacz.util.concurrency.task_executor.Task;
+import jacz.util.concurrency.task_executor.SequentialTaskExecutor;
 import jacz.util.concurrency.timer.SimpleTimerAction;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.identifier.UniqueIdentifier;
@@ -44,6 +46,12 @@ class NotificationReceiverHandler implements SimpleTimerAction {
      */
     private final Timer timer;
 
+    /**
+     * Task executor for sequentially notifying events to the observers (plus, we decouple the notification from
+     * the thread that causes the event)
+     */
+    private final SequentialTaskExecutor sequentialTaskExecutor;
+
 
     NotificationReceiverHandler(NotificationReceiver notificationReceiver, UniqueIdentifier emitterID, Long millis, double timeFactorAtEachEvent, int limit, String threadName) {
         this.notificationReceiver = notificationReceiver;
@@ -59,6 +67,7 @@ class NotificationReceiverHandler implements SimpleTimerAction {
         eventCount = 0;
         nonGroupedMessages = new ArrayList<>();
         groupedMessages = new ArrayList<>();
+        sequentialTaskExecutor = new SequentialTaskExecutor();
     }
 
     synchronized void newEvent(Object... messages) {
@@ -88,9 +97,14 @@ class NotificationReceiverHandler implements SimpleTimerAction {
     }
 
     private synchronized void notifyReceiver() {
-        // todo parallelize this to avoid possible deadlocks
         if (eventCount > 0) {
-            notificationReceiver.newEvent(emitterID, eventCount, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
+            final int eventCountCopy = eventCount;
+            sequentialTaskExecutor.executeTask(new Task() {
+                @Override
+                public void performTask() {
+                    notificationReceiver.newEvent(emitterID, eventCountCopy, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
+                }
+            });
             resetMessages();
             eventCount = 0;
         }
@@ -114,5 +128,6 @@ class NotificationReceiverHandler implements SimpleTimerAction {
         if (timer != null) {
             timer.kill();
         }
+        sequentialTaskExecutor.stopAndWaitForFinalization();
     }
 }

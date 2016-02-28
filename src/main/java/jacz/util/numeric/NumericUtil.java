@@ -3,6 +3,7 @@ package jacz.util.numeric;
 import jacz.util.lists.tuple.Duple;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -385,5 +386,77 @@ public class NumericUtil {
 
     public static double logBaseN(double n, double base) {
         return Math.log(n) / Math.log(base);
+    }
+
+    public static int min(int a, int... rest) {
+        if (rest.length == 0) {
+            return a;
+        } else {
+            int[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
+            return min(Math.min(a, rest[0]), newRest);
+        }
+    }
+
+    public static float min(float a, float... rest) {
+        if (rest.length == 0) {
+            return a;
+        } else {
+            float[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
+            return min(Math.min(a, rest[0]), newRest);
+        }
+    }
+
+    public static double min(double a, double... rest) {
+        if (rest.length == 0) {
+            return a;
+        } else {
+            double[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
+            return min(Math.min(a, rest[0]), newRest);
+        }
+    }
+
+    public static long min(long a, long... rest) {
+        if (rest.length == 0) {
+            return a;
+        } else {
+            long[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
+            return min(Math.min(a, rest[0]), newRest);
+        }
+    }
+
+    public static int max(int a, int... rest) {
+        if (rest.length == 0) {
+            return a;
+        } else {
+            int[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
+            return min(Math.max(a, rest[0]), newRest);
+        }
+    }
+
+    public static float max(float a, float... rest) {
+        if (rest.length == 0) {
+            return a;
+        } else {
+            float[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
+            return min(Math.max(a, rest[0]), newRest);
+        }
+    }
+
+    public static double max(double a, double... rest) {
+        if (rest.length == 0) {
+            return a;
+        } else {
+            double[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
+            return min(Math.max(a, rest[0]), newRest);
+        }
+    }
+
+    public static long max(long a, long... rest) {
+        if (rest.length == 0) {
+            return a;
+        } else {
+            long[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
+            return min(Math.max(a, rest[0]), newRest);
+        }
     }
 }

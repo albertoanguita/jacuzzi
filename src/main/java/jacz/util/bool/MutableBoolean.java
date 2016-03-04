@@ -1,11 +1,7 @@
 package jacz.util.bool;
 
 /**
- * Class description
- * <p/>
- * User: Alberto<br>
- * Date: 09-abr-2010<br>
- * Last Modified: 09-abr-2010
+ * todo remove, use AtomicBoolean???
  */
 public class MutableBoolean {
 

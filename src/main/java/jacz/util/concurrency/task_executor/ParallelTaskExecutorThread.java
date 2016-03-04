@@ -3,7 +3,7 @@ package jacz.util.concurrency.task_executor;
 import jacz.util.concurrency.concurrency_controller.ConcurrencyController;
 
 /**
- * This class implements threads that can execute tasks implementing the Task interface
+ * This class implements threads that can execute tasks implementing the Runnable interface
  */
 class ParallelTaskExecutorThread extends Thread {
 

@@ -232,7 +232,9 @@ public class Timer<T> {
 
     public long remainingTime() {
         synchronized (activationTimeAndMillisSynch) {
-            return activationTime + millis - System.currentTimeMillis();
+            long remainingTime = activationTime + millis - System.currentTimeMillis();
+            // prevent from returning negative values
+            return Math.max(remainingTime, 1);
         }
     }
 

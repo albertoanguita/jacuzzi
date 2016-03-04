@@ -1,7 +1,6 @@
 package jacz.util.AI.evolve;
 
 import jacz.util.bool.SynchedBoolean;
-import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.daemon.Daemon;
 import jacz.util.concurrency.daemon.DaemonAction;
 import jacz.util.concurrency.task_executor.SequentialTaskExecutor;
@@ -14,25 +13,17 @@ import java.util.*;
 /**
  * State and goal must be mutable objects that are never re-assigned
  */
-public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimerAction {
+public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTimerAction, EvolvingStateController<S, G> {
 
     public interface Transitions<S, G> {
 
         /**
          * @param state current state
          * @param goal  current goal
-         * @return null if no transition required
          */
-        Transition<S, G> getTransition(S state, G goal);
-    }
+        void runTransition(S state, G goal, EvolvingStateController<S, G> controller);
 
-    public interface Transition<S, G> {
-
-        /**
-         * @return null if synchronous, no active wait required. Non-null and positive if asynchronous and active
-         * wait required, or unexpected result that requires waiting for a subsequent try
-         */
-        Long actOnState(DynamicState<S, G, ?> dynamicState);
+        boolean hasReachedGoal(S state, G goal);
     }
 
     private static class TimerSource<P> {
@@ -75,6 +66,32 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
         }
     }
 
+    /**
+     * The action of a timer can be simply invoke the evolve method, run a specific transition, or run a generic runnable
+     */
+    private static class TimerAction {
+
+        private final long millis;
+
+        private final boolean evolve;
+
+        private final Runnable runnable;
+
+        private TimerAction(long millis, boolean evolve, Runnable runnable) {
+            this.millis = millis;
+            this.evolve = evolve;
+            this.runnable = runnable;
+        }
+
+        public static TimerAction evolve(long millis) {
+            return new TimerAction(millis, true, null);
+        }
+
+        public static TimerAction runnable(long millis, Runnable runnable) {
+            return new TimerAction(millis, false, runnable);
+        }
+    }
+
     protected S state;
 
     private G goal;
@@ -83,9 +100,9 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
 
     protected final Daemon daemon;
 
-    private final Map<P, Long> registeredStateTimers;
+    private final Map<P, TimerAction> registeredStateTimers;
 
-    private Long generalTimer;
+    private TimerAction generalTimer;
 
     private final Timer stateTimer;
 
@@ -103,8 +120,9 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
     protected final SequentialTaskExecutor hookExecutor;
 
     private final SynchedBoolean alive;
+//    private final AtomicBoolean alive2;
 
-    public DynamicState(S state, G initialGoal, Transitions<S, G> transitions) {
+    public EvolvingState(S state, G initialGoal, Transitions<S, G> transitions) {
         this.state = state;
         this.goal = initialGoal;
         this.transitions = transitions;
@@ -121,8 +139,16 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
         alive = new SynchedBoolean(true);
     }
 
+    public void evolve() {
+        daemon.stateChange();
+    }
+
     public void setGeneralTimer(long millis) {
-        generalTimer = millis;
+        generalTimer = TimerAction.evolve(millis);
+    }
+
+    public void setGeneralTimer(long millis, Runnable runnable) {
+        generalTimer = TimerAction.runnable(millis, runnable);
     }
 
     public void stopGeneralTimer() {
@@ -133,7 +159,7 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
         return state;
     }
 
-    protected synchronized void stateHasChanged() {
+    public synchronized void stateHasChanged() {
         checkStateTimers();
         checkStateHooks();
     }
@@ -159,8 +185,8 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
                 // timer source found here
                 timerSourceIsActive = true;
             }
-            if (minTime == null || registeredStateTimers.get(portion) < minTime) {
-                minTime = registeredStateTimers.get(portion);
+            if (minTime == null || registeredStateTimers.get(portion).millis < minTime) {
+                minTime = registeredStateTimers.get(portion).millis;
                 timerSource.sourceIsPortionTimer(portion);
             }
         }
@@ -170,15 +196,15 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
                 // timer source found in general timer
                 timerSourceIsActive = true;
             }
-            if (minTime == null || generalTimer < minTime) {
-                minTime = generalTimer;
+            if (minTime == null || generalTimer.millis < minTime) {
+                minTime = generalTimer.millis;
                 timerSource.sourceIsGeneralTimer();
             }
         }
         // check the remaining time
         if (timerRemainingTime != null && timerSourceIsActive) {
             // the timer source is active --> consider the remaining time as possible min time
-            if (minTime == null || timerRemainingTime < minTime) {
+            if (timerRemainingTime < minTime) {
                 minTime = timerRemainingTime;
                 // set the timer source as the original one
                 timerSource.restoreState();
@@ -212,9 +238,15 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
     }
 
     public synchronized void setGoal(G newGoal) {
+        setGoal(newGoal, true);
+    }
+
+    public synchronized void setGoal(G newGoal, boolean evolve) {
         if (!goal.equals(newGoal)) {
             goal = newGoal;
-            daemon.stateChange();
+            if (evolve) {
+                evolve();
+            }
         }
     }
 
@@ -222,12 +254,17 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
 
     protected abstract Set<P> matchingPortions(S state, Set<P> portions);
 
-    public synchronized void setStateTimer(P portion, long millis) {
-        registeredStateTimers.put(portion, millis);
+    protected synchronized void setStateTimer(P portion, long millis) {
+        registeredStateTimers.put(portion, TimerAction.evolve(millis));
         checkStateTimers();
     }
 
-    public synchronized void removeStateTimer(P portion) {
+    protected synchronized void setStateTimer(P portion, long millis, Runnable runnable) {
+        registeredStateTimers.put(portion, TimerAction.runnable(millis, runnable));
+        checkStateTimers();
+    }
+
+    protected synchronized void removeStateTimer(P portion) {
         registeredStateTimers.remove(portion);
         checkStateTimers();
     }
@@ -250,23 +287,14 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
 
 
     public synchronized boolean hasReachedGoal() {
-        return transitions.getTransition(state(), goal()) != null;
+        return transitions.hasReachedGoal(state(), goal());
     }
 
     @Override
-    public boolean solveState() {
+    public synchronized boolean solveState() {
         if (alive.isValue()) {
-            Transition<S, G> transition = transitions.getTransition(state(), goal());
-            if (transition != null) {
-                Long wait = transition.actOnState(this);
-                if (wait != null) {
-                    ThreadUtil.safeSleep(wait);
-                }
-                return false;
-            } else {
-                // goal reached
-                return true;
-            }
+            transitions.runTransition(state(), goal(), this);
+            return true;
         } else {
             // stopped
             return true;
@@ -276,8 +304,21 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
     @Override
     public Long wakeUp(Timer timer) {
         // some reminder timer woke up
-        daemon.stateChange();
+        // find the source and then the action to invoke
+        if (timerSource.generalTimer) {
+            performTimerAction(generalTimer);
+        } else if (timerSource.portionTimer != null) {
+            performTimerAction(registeredStateTimers.get(timerSource.portionTimer));
+        }
         return null;
+    }
+
+    private synchronized void performTimerAction(TimerAction timerAction) {
+        if (timerAction.evolve) {
+            daemon.stateChange();
+        } else {
+            timerAction.runnable.run();
+        }
     }
 
     public void blockUntilStateIsSolved() {
@@ -285,6 +326,7 @@ public abstract class DynamicState<S, G, P> implements DaemonAction, SimpleTimer
     }
 
     public synchronized void stop() {
+        stateTimer.kill();
         daemon.stop();
         hookExecutor.stopAndWaitForFinalization();
     }

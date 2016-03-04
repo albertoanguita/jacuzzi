@@ -6,26 +6,32 @@ import java.util.Set;
 /**
  * Created by Alberto on 26/02/2016.
  */
-public class DiscreteDynamicState<S, G> extends DynamicState<S, G, S> {
+public class DiscreteEvolvingState<S, G> extends EvolvingState<S, G, S> {
 
-    public DiscreteDynamicState(S initialState, G goal, Transitions<S, G> transitions) {
+    public DiscreteEvolvingState(S initialState, G goal, Transitions<S, G> transitions) {
         super(initialState, goal, transitions);
-//        stateTimers = new HashMap<>();
-//        enterStateHooks = new HashMap<>();
-//        exitStateHooks = new HashMap<>();
     }
-
 
     public synchronized void setState(S newState) {
         if (!state.equals(newState)) {
             state = newState;
             stateHasChanged();
-//            S oldState = state;
-//            state = newState;
-//            stateHasChanged(oldState);
-//            daemon.stateChange();
         }
     }
+
+    public synchronized void setStateTimer(S state, long millis) {
+        super.setStateTimer(state, millis);
+    }
+
+    public synchronized void setStateTimer(S state, long millis, Runnable runnable) {
+        super.setStateTimer(state, millis, runnable);
+    }
+
+    public synchronized void removeStateTimer(S state) {
+        super.removeStateTimer(state);
+    }
+
+
 
     @Override
     protected boolean stateIsInPortion(S state, S portion) {

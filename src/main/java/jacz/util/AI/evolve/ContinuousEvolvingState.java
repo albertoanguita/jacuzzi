@@ -6,15 +6,26 @@ import java.util.Set;
 /**
  * Created by Alberto on 27/02/2016.
  */
-public class ContinuousDynamicState<S, G> extends DynamicState<S, G, ContinuousDynamicState.StatePortion<S>> {
+public class ContinuousEvolvingState<S, G> extends EvolvingState<S, G, ContinuousEvolvingState.StatePortion<S>> {
 
     public interface StatePortion<S> {
 
         boolean isInPortion(S state);
     }
 
-    public ContinuousDynamicState(S state, G initialGoal, Transitions<S, G> transitions) {
+    public ContinuousEvolvingState(S state, G initialGoal, Transitions<S, G> transitions) {
         super(state, initialGoal, transitions);
+    }
+
+    @Override
+    public void setState(S newState) {
+        // forbidden
+        throw new IllegalStateException("State cannot be modified in " + this.getClass().getName());
+    }
+
+    @Override
+    public synchronized void stateHasChanged() {
+        super.stateHasChanged();
     }
 
     @Override

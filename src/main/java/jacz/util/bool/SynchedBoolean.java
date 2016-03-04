@@ -1,7 +1,7 @@
 package jacz.util.bool;
 
 /**
- * Created by Alberto on 27/02/2016.
+ * todo remove, use AtomicBoolean instead
  */
 public class SynchedBoolean extends MutableBoolean {
 

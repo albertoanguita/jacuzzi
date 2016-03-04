@@ -1,6 +1,6 @@
 package jacz.util.numeric.range;
 
-import jacz.util.concurrency.execution_control.PausableElement;
+import jacz.util.concurrency.execution_control.TrafficControl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class RangeQueue<T extends Range<Y>, Y extends Number & Comparable<Y>> im
      * This pausable element should be paused whenever no data is available, and resumed whenever some data is
      * available
      */
-    private PausableElement retrieveDataLock;
+    private TrafficControl retrieveDataLock;
 
     public RangeQueue() {
         this(false);
@@ -32,7 +32,7 @@ public class RangeQueue<T extends Range<Y>, Y extends Number & Comparable<Y>> im
 
     public RangeQueue(boolean fair) {
         ranges = new ArrayList<>();
-        retrieveDataLock = new PausableElement(fair);
+        retrieveDataLock = new TrafficControl(fair);
         retrieveDataLock.pause();
     }
 

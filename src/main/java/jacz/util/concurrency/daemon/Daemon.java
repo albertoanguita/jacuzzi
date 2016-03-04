@@ -2,7 +2,7 @@ package jacz.util.concurrency.daemon;
 
 import jacz.util.bool.MutableBoolean;
 import jacz.util.bool.SynchedBoolean;
-import jacz.util.concurrency.execution_control.PausableElement;
+import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.task_executor.TaskSemaphore;
 
@@ -64,7 +64,7 @@ public class Daemon {
     /**
      * A block element for client that want to wait until the state is solved
      */
-    private final PausableElement blockUntilStateSolve;
+    private final TrafficControl blockUntilStateSolve;
 
     private final SynchedBoolean alive;
 
@@ -74,7 +74,7 @@ public class Daemon {
         taskSemaphore = null;
         stateChangeFlag = new MutableBoolean(false);
         daemonThreadFlag = new MutableBoolean(false);
-        blockUntilStateSolve = new PausableElement();
+        blockUntilStateSolve = new TrafficControl();
         alive = new SynchedBoolean(true);
     }
 

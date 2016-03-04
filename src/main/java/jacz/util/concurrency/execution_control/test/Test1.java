@@ -1,6 +1,6 @@
 package jacz.util.concurrency.execution_control.test;
 
-import jacz.util.concurrency.execution_control.PausableElement;
+import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 
 /**
@@ -14,9 +14,9 @@ public class Test1 {
 
     public static void main(String args[]) {
 
-        PausableElement pausableElement = new PausableElement();
-        ParallelTaskExecutor.executeTask(new Pauser(pausableElement));
-        ParallelTaskExecutor.executeTask(new Accessor1(pausableElement));
-        ParallelTaskExecutor.executeTask(new Accessor2(pausableElement));
+        TrafficControl trafficControl = new TrafficControl();
+        ParallelTaskExecutor.executeTask(new Pauser(trafficControl));
+        ParallelTaskExecutor.executeTask(new Accessor1(trafficControl));
+        ParallelTaskExecutor.executeTask(new Accessor2(trafficControl));
     }
 }

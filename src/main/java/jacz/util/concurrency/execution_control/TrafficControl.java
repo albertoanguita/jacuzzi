@@ -3,9 +3,11 @@ package jacz.util.concurrency.execution_control;
 import java.util.concurrent.Semaphore;
 
 /**
- *
+ * This class provides simple stop/let go functionality to threads. Controller has two methods for opening or closing
+ * access. Access threads invoke a method that is non-blocking (returns immediately) if access is open, and is blocking
+ * if access is closed (until a controller thread opens access again)
  */
-public class PausableElement {
+public class TrafficControl {
 
     /**
      * Semaphore used to control the execution flow
@@ -17,11 +19,11 @@ public class PausableElement {
      */
     private boolean paused;
 
-    public PausableElement() {
+    public TrafficControl() {
         this(false);
     }
 
-    public PausableElement(boolean fairness) {
+    public TrafficControl(boolean fairness) {
         semaphore = new Semaphore(1, fairness);
         paused = false;
     }

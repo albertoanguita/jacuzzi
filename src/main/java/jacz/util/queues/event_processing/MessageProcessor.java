@@ -1,7 +1,7 @@
 package jacz.util.queues.event_processing;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.concurrency.execution_control.PausableElement;
+import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.identifier.UniqueIdentifier;
 import jacz.util.identifier.UniqueIdentifierFactory;
 
@@ -49,9 +49,9 @@ public class MessageProcessor {
      */
     private boolean separateThreads;
 
-    private PausableElement readerPausableElement;
+    private TrafficControl readerTrafficControl;
 
-    private PausableElement handlerPausableElement;
+    private TrafficControl handlerTrafficControl;
 
     public MessageProcessor(MessageReader messageReader) throws IllegalArgumentException {
         this(ThreadUtil.invokerName(1), messageReader, null, DEFAULT_QUEUE_CAPACITY, true);
@@ -107,8 +107,8 @@ public class MessageProcessor {
             messageReaderHandlerThread = new MessageReaderHandlerThread(name, this, messageReader, messageHandler);
         }
         this.separateThreads = separateThreads;
-        readerPausableElement = new PausableElement();
-        handlerPausableElement = new PausableElement();
+        readerTrafficControl = new TrafficControl();
+        handlerTrafficControl = new TrafficControl();
     }
 
     public void start() {
@@ -145,27 +145,27 @@ public class MessageProcessor {
     }
 
     public void pauseReader() {
-        readerPausableElement.pause();
+        readerTrafficControl.pause();
     }
 
     public void resumeReader() {
-        readerPausableElement.resume();
+        readerTrafficControl.resume();
     }
 
     void accessReaderPausableElement() {
-        readerPausableElement.access();
+        readerTrafficControl.access();
     }
 
     public void pauseHandler() {
-        handlerPausableElement.pause();
+        handlerTrafficControl.pause();
     }
 
     public void resumeHandler() {
-        handlerPausableElement.resume();
+        handlerTrafficControl.resume();
     }
 
     void accessHandlerPausableElement() {
-        handlerPausableElement.access();
+        handlerTrafficControl.access();
     }
 
     public void addMessage(Object message) throws InterruptedException {

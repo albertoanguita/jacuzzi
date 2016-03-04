@@ -1,16 +1,16 @@
 package jacz.util.concurrency.execution_control.test;
 
-import jacz.util.concurrency.execution_control.PausableElement;
+import jacz.util.concurrency.execution_control.TrafficControl;
 
 /**
  *
  */
 public class Accessor1 implements Runnable {
 
-    private PausableElement pausableElement;
+    private TrafficControl trafficControl;
 
-    public Accessor1(PausableElement pausableElement) {
-        this.pausableElement = pausableElement;
+    public Accessor1(TrafficControl trafficControl) {
+        this.trafficControl = trafficControl;
     }
 
     @Override
@@ -29,7 +29,7 @@ public class Accessor1 implements Runnable {
     }
 
     private void access(int i) {
-        pausableElement.access();
+        trafficControl.access();
         System.out.println("Accessor1: access #" + i + " OK");
     }
 

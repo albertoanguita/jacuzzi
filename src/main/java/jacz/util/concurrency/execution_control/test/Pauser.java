@@ -1,16 +1,16 @@
 package jacz.util.concurrency.execution_control.test;
 
-import jacz.util.concurrency.execution_control.PausableElement;
+import jacz.util.concurrency.execution_control.TrafficControl;
 
 /**
  *
  */
 public class Pauser implements Runnable {
 
-    private PausableElement pausableElement;
+    private TrafficControl trafficControl;
 
-    public Pauser(PausableElement pausableElement) {
-        this.pausableElement = pausableElement;
+    public Pauser(TrafficControl trafficControl) {
+        this.trafficControl = trafficControl;
     }
 
     @Override
@@ -28,12 +28,12 @@ public class Pauser implements Runnable {
     }
 
     private void pause(int i) {
-        pausableElement.pause();
+        trafficControl.pause();
         System.out.println("Pauser: pause #" + i + " OK");
     }
 
     private void resume(int i) {
-        pausableElement.resume();
+        trafficControl.resume();
         System.out.println("Pauser: resume #" + i + " OK");
     }
 

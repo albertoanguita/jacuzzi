@@ -2,7 +2,7 @@ package jacz.util.concurrency.concurrency_controller;
 
 import jacz.util.concurrency.daemon.Daemon;
 import jacz.util.concurrency.daemon.DaemonAction;
-import jacz.util.concurrency.execution_control.PausableElement;
+import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.maps.ObjectCount;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,13 +25,13 @@ public class ConcurrencyController implements DaemonAction {
 
         private final int priority;
 
-        private final PausableElement pausableElement;
+        private final TrafficControl trafficControl;
 
         private QueueElement(String activity, int priority) {
             this.activity = activity;
             this.priority = priority;
-            pausableElement = new PausableElement();
-            pausableElement.pause();
+            trafficControl = new TrafficControl();
+            trafficControl.pause();
         }
 
         private String getActivity() {
@@ -49,11 +49,11 @@ public class ConcurrencyController implements DaemonAction {
         }
 
         private void waitForPermissionToContinue() {
-            pausableElement.access();
+            trafficControl.access();
         }
 
         private void allowContinue() {
-            pausableElement.resume();
+            trafficControl.resume();
         }
     }
 

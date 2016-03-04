@@ -2,7 +2,7 @@ package jacz.util.concurrency.task_executor;
 
 import jacz.util.concurrency.daemon.Daemon;
 import jacz.util.concurrency.daemon.DaemonAction;
-import jacz.util.concurrency.execution_control.PausableElement;
+import jacz.util.concurrency.execution_control.TrafficControl;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -14,15 +14,15 @@ public class SequentialTaskExecutor implements DaemonAction {
 
     private static class StopTask implements Runnable {
 
-        private final PausableElement pausableElement;
+        private final TrafficControl trafficControl;
 
-        private StopTask(PausableElement pausableElement) {
-            this.pausableElement = pausableElement;
+        private StopTask(TrafficControl trafficControl) {
+            this.trafficControl = trafficControl;
         }
 
         @Override
         public void run() {
-            pausableElement.resume();
+            trafficControl.resume();
         }
 
     }
@@ -76,9 +76,9 @@ public class SequentialTaskExecutor implements DaemonAction {
             alive = false;
             this.ignoreFutureTasks = ignoreFutureTasks;
         }
-        PausableElement pausableElement = new PausableElement();
-        pausableElement.pause();
-        executeTask(new StopTask(pausableElement));
-        pausableElement.access();
+        TrafficControl trafficControl = new TrafficControl();
+        trafficControl.pause();
+        executeTask(new StopTask(trafficControl));
+        trafficControl.access();
     }
 }

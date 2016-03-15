@@ -1,7 +1,7 @@
 package jacz.util.queues;
 
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.concurrency.timer.SimpleTimerAction;
+import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * A queue where elements die after a period of time, and are automatically removed from the queue
  */
-public class TimedQueue<T> implements SimpleTimerAction {
+public class TimedQueue<T> implements TimerAction {
 
     private class QueueElement<T> implements Comparable<QueueElement<T>> {
 

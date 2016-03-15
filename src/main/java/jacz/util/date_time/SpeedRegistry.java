@@ -1,6 +1,6 @@
 package jacz.util.date_time;
 
-import jacz.util.concurrency.timer.SimpleTimerAction;
+import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 
 import java.util.ArrayDeque;
@@ -9,7 +9,7 @@ import java.util.Queue;
 /**
  * Stores periodic speeds from a speed monitor
  */
-public class SpeedRegistry implements SimpleTimerAction {
+public class SpeedRegistry implements TimerAction {
 
     private final SpeedMonitor speedMonitor;
 

@@ -1,27 +1,29 @@
 package jacz.util.AI.evolve;
 
-import jacz.util.bool.SynchedBoolean;
+import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.daemon.Daemon;
 import jacz.util.concurrency.daemon.DaemonAction;
 import jacz.util.concurrency.task_executor.SequentialTaskExecutor;
-import jacz.util.concurrency.timer.SimpleTimerAction;
+import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * State and goal must be mutable objects that are never re-assigned
  */
-public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTimerAction, EvolvingStateController<S, G> {
+public abstract class EvolvingState<S, G, P> implements DaemonAction, TimerAction, EvolvingStateController<S, G> {
 
     public interface Transitions<S, G> {
 
         /**
          * @param state current state
          * @param goal  current goal
+         * @return true if state is stable now. False otherwise, so more transitions must be immediately run
          */
-        void runTransition(S state, G goal, EvolvingStateController<S, G> controller);
+        boolean runTransition(S state, G goal, EvolvingStateController<S, G> controller);
 
         boolean hasReachedGoal(S state, G goal);
     }
@@ -104,7 +106,7 @@ public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTime
 
     private TimerAction generalTimer;
 
-    private final Timer stateTimer;
+    private final Timer timer;
 
     private final TimerSource<P> timerSource;
 
@@ -119,8 +121,7 @@ public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTime
 
     protected final SequentialTaskExecutor hookExecutor;
 
-    private final SynchedBoolean alive;
-//    private final AtomicBoolean alive2;
+    private final AtomicBoolean alive;
 
     public EvolvingState(S state, G initialGoal, Transitions<S, G> transitions) {
         this.state = state;
@@ -129,14 +130,14 @@ public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTime
         daemon = new Daemon(this);
         registeredStateTimers = new HashMap<>();
         generalTimer = null;
-        stateTimer = new Timer(0, this, false, this.getClass().toString());
+        timer = new Timer(0, this, false, this.getClass().toString());
         timerSource = new TimerSource<>();
         registeredEnterStateHooks = new HashMap<>();
         activeEnterStateHooks = new HashSet<>();
         registeredExitStateHooks = new HashMap<>();
         activeExitStateHooks = new HashSet<>();
         hookExecutor = new SequentialTaskExecutor();
-        alive = new SynchedBoolean(true);
+        alive = new AtomicBoolean(true);
     }
 
     public void evolve() {
@@ -166,16 +167,16 @@ public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTime
 
     private void checkStateTimers() {
         Long timerRemainingTime = null;
-        if (stateTimer.isRunning()) {
+        if (timer.isRunning()) {
             // store the remaining time in case we need it. If the portion (or general timer) that caused the current
             // timer to be running is still active after the following check, we will use the remaining time in the
             // min time computation. Otherwise, it will be discarded
-            timerRemainingTime = stateTimer.remainingTime();
+            timerRemainingTime = timer.remainingTime();
             // also, save the state of the timer source. If we finally restore the remaining time, we also have to
             // make sure that the timer source state remains the same
             timerSource.saveState();
         }
-        stateTimer.stop();
+        timer.stop();
         boolean timerSourceIsActive = false;
         Long minTime = null;
         Set<P> activeStateTimers = matchingPortions(state, registeredStateTimers.keySet());
@@ -212,7 +213,7 @@ public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTime
         }
         if (minTime != null) {
             // the timer must be set
-            stateTimer.reset(minTime);
+            timer.reset(minTime);
         }
     }
 
@@ -292,17 +293,11 @@ public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTime
 
     @Override
     public synchronized boolean solveState() {
-        if (alive.isValue()) {
-            transitions.runTransition(state(), goal(), this);
-            return true;
-        } else {
-            // stopped
-            return true;
-        }
+        return !alive.get() || transitions.runTransition(state(), goal(), this);
     }
 
     @Override
-    public Long wakeUp(Timer timer) {
+    public synchronized Long wakeUp(Timer timer) {
         // some reminder timer woke up
         // find the source and then the action to invoke
         if (timerSource.generalTimer) {
@@ -322,13 +317,22 @@ public abstract class EvolvingState<S, G, P> implements DaemonAction, SimpleTime
     }
 
     public void blockUntilStateIsSolved() {
+        // todo check synchronization of this...
         daemon.blockUntilStateIsSolved();
+        // todo we might concurrently invoke methods on transitions...
+        while (!transitions.hasReachedGoal(state(), goal())) {
+            if (timer.isRunning()) {
+                ThreadUtil.safeSleep(timer.remainingTime());
+            }
+            daemon.blockUntilStateIsSolved();
+        }
     }
 
     public synchronized void stop() {
-        stateTimer.kill();
+        timer.kill();
         daemon.stop();
         hookExecutor.stopAndWaitForFinalization();
+        alive.set(false);
     }
 
 

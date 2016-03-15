@@ -1,17 +1,15 @@
 package jacz.util.concurrency.daemon;
 
-import jacz.util.bool.MutableBoolean;
-import jacz.util.bool.SynchedBoolean;
 import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.task_executor.TaskSemaphore;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class implements a Daemon which is waiting for events and asynchronously performs actions upon such events.
  * <p/>
  * The events modify a "wish state". The daemon always tries to satisfy that wish
- *
- * todo add stop method
  */
 public class Daemon {
 
@@ -27,7 +25,7 @@ public class Daemon {
         public void run() {
             boolean finished = false;
             while (!finished) {
-                if (!daemon.alive.isValue()) {
+                if (!daemon.alive.get()) {
                     // the daemon was stopped -> ignore action and request finish
                     finished = daemon.requestKillDaemonThread();
                 } else {
@@ -54,40 +52,40 @@ public class Daemon {
     /**
      * Flag indicating if the state has changed (true = there is a change that must be solved)
      */
-    private final MutableBoolean stateChangeFlag;
+    private final AtomicBoolean stateChangeFlag;
 
     /**
      * Flag indicating if a daemon thread currently exists
      */
-    private final MutableBoolean daemonThreadFlag;
+    private final AtomicBoolean daemonThreadFlag;
 
     /**
      * A block element for client that want to wait until the state is solved
      */
     private final TrafficControl blockUntilStateSolve;
 
-    private final SynchedBoolean alive;
+    private final AtomicBoolean alive;
 
 
     public Daemon(DaemonAction daemonAction) {
         this.daemonAction = daemonAction;
         taskSemaphore = null;
-        stateChangeFlag = new MutableBoolean(false);
-        daemonThreadFlag = new MutableBoolean(false);
+        stateChangeFlag = new AtomicBoolean(false);
+        daemonThreadFlag = new AtomicBoolean(false);
         blockUntilStateSolve = new TrafficControl();
-        alive = new SynchedBoolean(true);
+        alive = new AtomicBoolean(true);
     }
 
     /**
      * Indicates a state change that must be solved by the daemon
      */
     public synchronized void stateChange() {
-        stateChangeFlag.setValue(true);
+        stateChangeFlag.set(true);
         blockUntilStateSolve.pause();
         // check if we need to create a new daemon thread
-        if (!daemonThreadFlag.isValue()) {
-            daemonThreadFlag.setValue(true);
-            stateChangeFlag.setValue(false);
+        if (!daemonThreadFlag.get()) {
+            daemonThreadFlag.set(true);
+            stateChangeFlag.set(false);
             taskSemaphore = ParallelTaskExecutor.executeTask(new DaemonTask(this));
         }
     }
@@ -102,7 +100,7 @@ public class Daemon {
     }
 
     public synchronized boolean isStateSolved() {
-        return !stateChangeFlag.isValue() && !daemonThreadFlag.isValue();
+        return !stateChangeFlag.get() && !daemonThreadFlag.get();
     }
 
     public void blockUntilStateIsSolved() {
@@ -110,7 +108,7 @@ public class Daemon {
     }
 
     public void stop() {
-        alive.setValue(false);
+        alive.set(false);
         interrupt();
     }
 
@@ -121,16 +119,16 @@ public class Daemon {
      */
     private synchronized boolean requestKillDaemonThread() {
         // if there are no state changes active, we allow to kill the thread
-        if (!stateChangeFlag.isValue() || !alive.isValue()) {
+        if (!stateChangeFlag.get() || !alive.get()) {
             // there are no registered state changes, the thread can finish ok
             // or the daemon has been stopped
-            daemonThreadFlag.setValue(false);
+            daemonThreadFlag.set(false);
             taskSemaphore = null;
             blockUntilStateSolve.resume();
             return true;
         } else {
             // there is an unresolved state change, thread must keep working
-            stateChangeFlag.setValue(false);
+            stateChangeFlag.set(false);
             return false;
         }
     }

@@ -7,7 +7,7 @@ package jacz.util.concurrency.timer;
  * Date: 18-abr-2010<br>
  * Last Modified: 18-abr-2010
  */
-public interface SimpleTimerAction {
+public interface TimerAction {
 
     /**
      * This method is invoked by a timer when its specified delay concludes (finished = true)

@@ -1,6 +1,6 @@
 package jacz.util.network;
 
-import jacz.util.concurrency.timer.SimpleTimerAction;
+import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.date_time.SpeedMonitor;
 import jacz.util.files.FileUtil;
@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * This class implements the task of downloading a file to disk, allowing to carry out that task in parallel
  */
-class DownloadTask implements Runnable, SimpleTimerAction {
+class DownloadTask implements Runnable, TimerAction {
 
     private static final int BUFFER_LENGTH = 1024;
 

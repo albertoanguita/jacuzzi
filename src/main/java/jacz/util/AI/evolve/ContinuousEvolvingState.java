@@ -28,6 +28,14 @@ public class ContinuousEvolvingState<S, G> extends EvolvingState<S, G, Continuou
         super.stateHasChanged();
     }
 
+    public synchronized void setStateTimer(ContinuousEvolvingState.StatePortion<S> portion, long millis) {
+        super.setStateTimer(portion, millis);
+    }
+
+    public synchronized void setStateTimer(ContinuousEvolvingState.StatePortion<S> portion, long millis, Runnable runnable) {
+        super.setStateTimer(portion, millis, runnable);
+    }
+
     @Override
     protected boolean stateIsInPortion(S state, StatePortion<S> portion) {
         return portion.isInPortion(state);

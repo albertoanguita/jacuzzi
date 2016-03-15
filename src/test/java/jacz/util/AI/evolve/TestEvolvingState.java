@@ -63,25 +63,25 @@ public class TestEvolvingState {
 
         EvolvingState.Transitions<DiscreteState, Boolean> transitions = new EvolvingState.Transitions<DiscreteState, Boolean>() {
             @Override
-            public void runTransition(DiscreteState state, Boolean goal, EvolvingStateController<DiscreteState, Boolean> controller) {
+            public boolean runTransition(DiscreteState state, Boolean goal, EvolvingStateController<DiscreteState, Boolean> controller) {
                 if (goal) {
                     switch (state) {
 
                         case A:
                             controller.setState(DiscreteState.B);
-                            break;
+                            return true;
 
                         case B:
                             controller.setState(DiscreteState.C);
-                            break;
+                            return true;
 
                         case C:
                             controller.setState(DiscreteState.D);
-                            break;
+                            return true;
 
                         case D:
                             controller.setState(DiscreteState.E);
-                            break;
+                            return true;
 
                     }
                 } else {
@@ -89,19 +89,20 @@ public class TestEvolvingState {
 
                         case D:
                             controller.setState(DiscreteState.C);
-                            break;
+                            return true;
 
                         case E:
                             controller.setState(DiscreteState.D);
-                            break;
+                            return true;
 
                     }
                 }
+                return true;
             }
 
             @Override
             public boolean hasReachedGoal(DiscreteState state, Boolean goal) {
-                return goal && state == DiscreteState.E || !goal && (state == DiscreteState.A || state == DiscreteState.B || state == DiscreteState.C);
+                return true;
             }
         };
         DiscreteEvolvingState<DiscreteState, Boolean> evolvingState = new DiscreteEvolvingState<>(DiscreteState.A, true, transitions);
@@ -202,7 +203,7 @@ public class TestEvolvingState {
 
         EvolvingState.Transitions<ContState, Boolean> transitions = new EvolvingState.Transitions<ContState, Boolean>() {
             @Override
-            public void runTransition(ContState state, Boolean goal, EvolvingStateController<ContState, Boolean> controller) {
+            public boolean runTransition(ContState state, Boolean goal, EvolvingStateController<ContState, Boolean> controller) {
                 if (goal) {
                     if (state.value() <= 3) {
                         // low
@@ -218,21 +219,22 @@ public class TestEvolvingState {
                         controller.stateHasChanged();
                     }
                 } else {
-                    if (state.value() <= 6) {
+                    if (state.value() >= 3 && state.value() <= 6) {
                         // medium
                         state.add(-1);
                         controller.stateHasChanged();
-                    } else {
+                    } else if (state.value() > 6) {
                         // high
                         state.add(-2);
                         controller.stateHasChanged();
                     }
                 }
+                return true;
             }
 
             @Override
             public boolean hasReachedGoal(ContState state, Boolean goal) {
-                return goal && state.value() > 8 || !goal && state.value() <= 3;
+                return true;
             }
         };
 
@@ -317,7 +319,7 @@ public class TestEvolvingState {
         ThreadUtil.safeSleep(1000);
         confirmContinuousState(3, evolvingState);
         ThreadUtil.safeSleep(6000);
-        confirmContinuousState(3, evolvingState);
+        confirmContinuousState(2, evolvingState);
     }
 
     private <S> void confirmContinuousState(int value, ContinuousEvolvingState<ContState, Boolean> evolvingState) {

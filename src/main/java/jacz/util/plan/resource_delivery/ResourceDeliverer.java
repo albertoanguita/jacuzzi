@@ -1,6 +1,6 @@
 package jacz.util.plan.resource_delivery;
 
-import jacz.util.concurrency.timer.SimpleTimerAction;
+import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.queues.event_processing.MessageHandler;
 import jacz.util.queues.event_processing.MessageProcessor;
@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p/>
  * todo remove if not used in a long time
  */
-public class ResourceDeliverer<T, Y extends Resource> implements SimpleTimerAction {
+public class ResourceDeliverer<T, Y extends Resource> implements TimerAction {
 
     private static final int INITIAL_QUEUE_CAPACITY = 1024;
 

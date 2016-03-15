@@ -5,5 +5,5 @@ package jacz.util.concurrency.daemon;
  */
 public interface DaemonQueueAction<T> {
 
-    public void solveEvent(T event);
+    void solveEvent(T event);
 }

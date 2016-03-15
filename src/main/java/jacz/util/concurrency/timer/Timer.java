@@ -12,6 +12,8 @@ import jacz.util.identifier.UniqueIdentifierFactory;
  * <p/>
  * Note that if you have activated a timer and then you assign your Timer object a null value or any other Timer,
  * the first timer will still activate itself. You must stop it first!!!
+ * <p/>
+ * todo check synchronization
  */
 public class Timer<T> {
 
@@ -97,11 +99,7 @@ public class Timer<T> {
 
     private final UniqueIdentifier id;
 
-    private final SimpleTimerAction simpleTimerAction;
-
-    private final ComplexTimerAction<T> complexTimerAction;
-
-    private final T event;
+    private final TimerAction timerAction;
 
     private TaskSemaphore tfi;
 
@@ -130,36 +128,18 @@ public class Timer<T> {
      */
     private WakeUpTask wakeUpTask;
 
-    public Timer(long millis, SimpleTimerAction simpleTimerAction) {
-        this(millis, simpleTimerAction, ThreadUtil.invokerName(1));
+    public Timer(long millis, TimerAction timerAction) {
+        this(millis, timerAction, ThreadUtil.invokerName(1));
     }
 
-    public Timer(long millis, SimpleTimerAction simpleTimerAction, String threadName) {
-        this(millis, simpleTimerAction, true, threadName);
+    public Timer(long millis, TimerAction timerAction, String threadName) {
+        this(millis, timerAction, true, threadName);
     }
 
-    public Timer(long millis, SimpleTimerAction simpleTimerAction, boolean start, String threadName) {
-        this(millis, simpleTimerAction, null, null, start, threadName);
-    }
-
-    public Timer(long millis, ComplexTimerAction<T> complexTimerAction, T event) {
-        this(millis, complexTimerAction, event, ThreadUtil.invokerName(1));
-    }
-
-    public Timer(long millis, ComplexTimerAction<T> complexTimerAction, T event, String threadName) {
-        this(millis, complexTimerAction, event, true, threadName);
-    }
-
-    public Timer(long millis, ComplexTimerAction<T> complexTimerAction, T event, boolean start, String threadName) {
-        this(millis, null, complexTimerAction, event, start, threadName);
-    }
-
-    private Timer(long millis, SimpleTimerAction simpleTimerAction, ComplexTimerAction<T> complexTimerAction, T event, boolean start, String threadName) {
+    private Timer(long millis, TimerAction timerAction, boolean start, String threadName) {
         id = UniqueIdentifierFactory.getOneStaticIdentifier();
         this.millis = millis;
-        this.simpleTimerAction = simpleTimerAction;
-        this.complexTimerAction = complexTimerAction;
-        this.event = event;
+        this.timerAction = timerAction;
         active = false;
         alive = true;
         activeSynch = new Object();
@@ -196,11 +176,7 @@ public class Timer<T> {
         try {
             if (wakeUpTask == null || wakeUpTask == this.wakeUpTask) {
                 Long timerAction;
-                if (simpleTimerAction != null) {
-                    timerAction = simpleTimerAction.wakeUp(this);
-                } else {
-                    timerAction = complexTimerAction.wakeUp(this, event);
-                }
+                timerAction = this.timerAction.wakeUp(this);
                 synchronized (activeSynch) {
                     active = timerAction == null || timerAction > 0;
                 }

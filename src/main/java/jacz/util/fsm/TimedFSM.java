@@ -1,12 +1,12 @@
 package jacz.util.fsm;
 
-import jacz.util.concurrency.timer.SimpleTimerAction;
+import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 
 /**
  * FSM with timeout capability
  */
-public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements SimpleTimerAction {
+public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
 
     private final TimedFSMAction<T, Y> timedFSMAction;
 

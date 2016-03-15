@@ -116,43 +116,12 @@ public class ConcurrencyController implements DaemonAction {
      */
     public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction, int maxNumberOfExecutionsAllowed) {
         this.concurrencyControllerAction = concurrencyControllerAction;
-//        activityListAndPriorities = new ActivityListAndPriorities();
-//        initializeActivityList(activityListAndPriorities);
-//        addStopActivity();
         activityRequestsQueue = new PriorityBlockingQueue<>();
-//        Set<String> supportedActivitiesSet = activityListAndPriorities.supportedActivitiesSet();
-//        numberOfExecutionsOfActivities = new ObjectCount<>(supportedActivitiesSet, false, false);
         numberOfExecutionsOfActivities = new ObjectCount<>();
         this.maxNumberOfExecutionsAllowed = maxNumberOfExecutionsAllowed;
         daemon = new Daemon(this);
         alive = true;
     }
-
-//    /**
-//     * Initializes the activity list with the corresponding priorities. The object activityListAndPriorities
-//     * has already been constructed, but it is isEmpty and must be filled here with the activities that are to
-//     * be supported and their corresponding priorities. For each activity, an entry in the Map must be created.
-//     * The activity itself will act as key, being its priority the associated value
-//     *
-//     * @param activityListAndPriorities ActivityListAndPriorities object for defining the list of supported
-//     *                                  activities and their respective priorities
-//     */
-//    protected abstract void initializeActivityList(ActivityListAndPriorities activityListAndPriorities);
-
-//    private void addStopActivity() {
-//        // find the lowest priority
-//        int lowestPriority = Integer.MAX_VALUE;
-//        for (String activity : activityListAndPriorities.supportedActivitiesSet()) {
-//            if (activity.equals(STOP_ACTIVITY)) {
-//                throw new IllegalArgumentException("Activities cannot have the name " + STOP_ACTIVITY);
-//            }
-//            int priority = activityListAndPriorities.getPriority(activity);
-//            if (priority < lowestPriority) {
-//                lowestPriority = priority;
-//            }
-//        }
-//        activityListAndPriorities.addActivity(STOP_ACTIVITY, lowestPriority - 1);
-//    }
 
     /**
      * This functions provides the activityCanExecute function with the required synchronism (abstract methods
@@ -179,17 +148,6 @@ public class ConcurrencyController implements DaemonAction {
             return concurrencyControllerAction.activityCanExecute(activity, numberOfExecutionsOfActivities);
         }
     }
-
-//    /**
-//     * This functions informs whether a specific activity can be executed, depending on other active activities
-//     * and in what number each of them is being executed. This functions takes care of ensuring that no
-//     * incompatible activities execute at the same time.
-//     *
-//     * @param activity                       activity pretended to be executed
-//     * @param numberOfExecutionsOfActivities number of active executions of each active activity
-//     * @return true if this activity can be executed at this moment
-//     */
-//    protected abstract boolean activityCanExecute(String activity, ObjectCount<String> numberOfExecutionsOfActivities);
 
     /**
      * Request permission for performing a registered activity. This call will block until the conditions for
@@ -277,12 +235,9 @@ public class ConcurrencyController implements DaemonAction {
     public boolean solveState() {
         // we try to execute one of the tasks stored in the activity queue. If one cannot execute, we try with the
         // next one (as a subsequent one might unblock the execution of the previous ones)
-//        QueueElement queueElement = activityRequestsQueue.peek();
         QueueElement[] queueArray = activityRequestsQueue.toArray(new QueueElement[1]);
         Arrays.sort(queueArray);
         if (queueArray.length == 0 || queueArray[0] == null) {
-//        if (queueElement == null) {
-            // the queue was empty, the state is solved
             return true;
         } else {
             // search for the first element that can execute
@@ -305,22 +260,6 @@ public class ConcurrencyController implements DaemonAction {
             // there are activities in the queue, but none of them can execute yet -> wait for future opportunities
             return true;
         }
-
-//        String activity = queueElement.getActivity();
-//        if (callActivityCanExecute(activity)) {
-//            // the activity can execute now -> allow continue and remove it from the activity queue
-//            concurrencyControllerAction.activityIsGoingToBegin(activity, numberOfExecutionsOfActivities);
-//            synchronized (this) {
-//                numberOfExecutionsOfActivities.addObject(activity);
-//            }
-//            queueElement.allowContinue();
-//            activityRequestsQueue.remove();
-//            // allow the daemon to check for more activities in the queue
-//            return false;
-//        } else {
-//            // there is an activity in the queue, but it cannot execute yet -> wait for other opportunity
-//            return true;
-//        }
     }
 
     public void stopAndWaitForFinalization() {

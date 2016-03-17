@@ -1,8 +1,7 @@
 package jacz.util.event.notification;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.identifier.UniqueIdentifier;
-import jacz.util.identifier.UniqueIdentifierFactory;
+import jacz.util.id.AlphaNumFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,20 +18,20 @@ public class NotificationProcessor {
      * ID of the emitter (if receiver is subscribed to several emitters, this will help him identifying them). It is
      * given to the subscribers each time they subscribe (they can, if they want to, ignore it)
      */
-    private UniqueIdentifier emitterID;
+    private String emitterID;
 
     /**
      * List of subscribed receivers (they must receive any notification of the associated emitter)
      */
-    private Map<UniqueIdentifier, NotificationReceiverHandler> subscribedReceivers;
+    private Map<String, NotificationReceiverHandler> subscribedReceivers;
 
     private boolean alive;
 
     public NotificationProcessor() {
-        this(UniqueIdentifierFactory.getOneStaticIdentifier());
+        this(AlphaNumFactory.getStaticId());
     }
 
-    public NotificationProcessor(UniqueIdentifier emitterID) {
+    public NotificationProcessor(String emitterID) {
         this.emitterID = emitterID;
         subscribedReceivers = new HashMap<>();
         alive = true;
@@ -44,11 +43,11 @@ public class NotificationProcessor {
      * @param notificationReceiver object that will receive event notifications
      * @return the ID of this emitter
      */
-    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver) {
+    public synchronized String subscribeReceiver(String receiverID, NotificationReceiver notificationReceiver) {
         return subscribeReceiver(receiverID, notificationReceiver, ThreadUtil.invokerName(1));
     }
 
-    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, String threadName) {
+    public synchronized String subscribeReceiver(String receiverID, NotificationReceiver notificationReceiver, String threadName) {
         if (alive) {
             subscribedReceivers.put(receiverID, new NotificationReceiverHandler(notificationReceiver, emitterID, null, 0, 1, threadName));
         }
@@ -61,11 +60,11 @@ public class NotificationProcessor {
      * @param notificationReceiver object that will receive event notifications
      * @return the ID of this emitter
      */
-    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit) {
+    public synchronized String subscribeReceiver(String receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit) {
         return subscribeReceiver(receiverID, notificationReceiver, millis, timeFactorAtEachEvent, limit, ThreadUtil.invokerName(1));
     }
 
-    public synchronized UniqueIdentifier subscribeReceiver(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit, String threadName) {
+    public synchronized String subscribeReceiver(String receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit, String threadName) {
         if (alive) {
             Long checkedMillis = checkTime(millis);
             limit = checkLimit(limit);
@@ -74,14 +73,14 @@ public class NotificationProcessor {
         return emitterID;
     }
 
-    public synchronized void unsubscribeReceiver(UniqueIdentifier receiverID) {
+    public synchronized void unsubscribeReceiver(String receiverID) {
         subscribedReceivers.remove(receiverID).stop();
     }
 
     public synchronized void stop() {
         // unsubscribe all remaining receivers
-        Set<UniqueIdentifier> subscribedReceiversIds = new HashSet<>(subscribedReceivers.keySet());
-        for (UniqueIdentifier receiverID : subscribedReceiversIds) {
+        Set<String> subscribedReceiversIds = new HashSet<>(subscribedReceivers.keySet());
+        for (String receiverID : subscribedReceiversIds) {
             unsubscribeReceiver(receiverID);
         }
         alive = false;

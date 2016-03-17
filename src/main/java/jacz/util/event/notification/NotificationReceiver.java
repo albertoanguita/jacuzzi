@@ -1,7 +1,5 @@
 package jacz.util.event.notification;
 
-import jacz.util.identifier.UniqueIdentifier;
-
 import java.util.List;
 
 /**
@@ -9,5 +7,5 @@ import java.util.List;
  */
 public interface NotificationReceiver {
 
-    void newEvent(UniqueIdentifier emitterID, int eventCount, List<List<Object>> nonGroupedMessages, List<Object> groupedMessages);
+    void newEvent(String emitterID, int eventCount, List<List<Object>> nonGroupedMessages, List<Object> groupedMessages);
 }

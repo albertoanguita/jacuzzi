@@ -2,8 +2,7 @@ package jacz.util.queues.event_processing;
 
 import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.execution_control.TrafficControl;
-import jacz.util.identifier.UniqueIdentifier;
-import jacz.util.identifier.UniqueIdentifierFactory;
+import jacz.util.id.AlphaNumFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -17,7 +16,7 @@ public class MessageProcessor {
      */
     private final static int DEFAULT_QUEUE_CAPACITY = 1024;
 
-    private final UniqueIdentifier id;
+    private final String id;
 
     /**
      * Fairness of petitions is always true
@@ -93,7 +92,7 @@ public class MessageProcessor {
         } else if (!separateThreads && (messageReader == null || messageHandler == null)) {
             throw new IllegalArgumentException("Both MessageReader and MessageHandler objects must be received if no separate threads are employed");
         }
-        id = UniqueIdentifierFactory.getOneStaticIdentifier();
+        id = AlphaNumFactory.getStaticId();
         if (separateThreads) {
             messageQueue = new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
         }

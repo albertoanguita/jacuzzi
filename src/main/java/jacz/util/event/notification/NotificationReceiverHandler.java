@@ -1,9 +1,8 @@
 package jacz.util.event.notification;
 
 import jacz.util.concurrency.task_executor.SequentialTaskExecutor;
-import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
-import jacz.util.identifier.UniqueIdentifier;
+import jacz.util.concurrency.timer.TimerAction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +15,7 @@ class NotificationReceiverHandler implements TimerAction {
 
     private final NotificationReceiver notificationReceiver;
 
-    private final UniqueIdentifier emitterID;
+    private final String emitterID;
 
     /**
      * Delay for emitting notifications (null for no delay)
@@ -54,7 +53,7 @@ class NotificationReceiverHandler implements TimerAction {
     private final SequentialTaskExecutor sequentialTaskExecutor;
 
 
-    NotificationReceiverHandler(NotificationReceiver notificationReceiver, UniqueIdentifier emitterID, Long millis, double timeFactorAtEachEvent, int limit, String threadName) {
+    NotificationReceiverHandler(NotificationReceiver notificationReceiver, String emitterID, Long millis, double timeFactorAtEachEvent, int limit, String threadName) {
         this.notificationReceiver = notificationReceiver;
         this.emitterID = emitterID;
         this.millis = (millis != null && millis < 1L) ? null : millis;

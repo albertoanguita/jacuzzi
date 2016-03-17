@@ -3,8 +3,7 @@ package jacz.util.concurrency.timer;
 import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.task_executor.TaskSemaphore;
-import jacz.util.identifier.UniqueIdentifier;
-import jacz.util.identifier.UniqueIdentifierFactory;
+import jacz.util.id.AlphaNumFactory;
 
 /**
  * This class offers a timer which activates after a specified time, invoking a given method. The timer will keep
@@ -97,7 +96,7 @@ public class Timer<T> {
         }
     }
 
-    private final UniqueIdentifier id;
+    private final String id;
 
     private final TimerAction timerAction;
 
@@ -136,8 +135,8 @@ public class Timer<T> {
         this(millis, timerAction, true, threadName);
     }
 
-    private Timer(long millis, TimerAction timerAction, boolean start, String threadName) {
-        id = UniqueIdentifierFactory.getOneStaticIdentifier();
+    public Timer(long millis, TimerAction timerAction, boolean start, String threadName) {
+        id = AlphaNumFactory.getStaticId();
         this.millis = millis;
         this.timerAction = timerAction;
         active = false;
@@ -151,7 +150,7 @@ public class Timer<T> {
         }
     }
 
-    public UniqueIdentifier getId() {
+    public String getId() {
         return id;
     }
 

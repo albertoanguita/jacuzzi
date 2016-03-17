@@ -1,7 +1,8 @@
 package jacz.util.event.notification.test;
 
-import jacz.util.event.notification.*;
-import jacz.util.identifier.UniqueIdentifier;
+import jacz.util.event.notification.NotificationEmitter;
+import jacz.util.event.notification.NotificationProcessor;
+import jacz.util.event.notification.NotificationReceiver;
 
 /**
  * Class description
@@ -29,17 +30,17 @@ public class Emitter implements NotificationEmitter {
     }
 
     @Override
-    public UniqueIdentifier subscribe(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver) throws IllegalArgumentException {
+    public String subscribe(String receiverID, NotificationReceiver notificationReceiver) throws IllegalArgumentException {
         return notificationProcessor.subscribeReceiver(receiverID, notificationReceiver);
     }
 
     @Override
-    public UniqueIdentifier subscribe(UniqueIdentifier receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit) throws IllegalArgumentException {
+    public String subscribe(String receiverID, NotificationReceiver notificationReceiver, long millis, double timeFactorAtEachEvent, int limit) throws IllegalArgumentException {
         return notificationProcessor.subscribeReceiver(receiverID, notificationReceiver, millis, timeFactorAtEachEvent, limit);
     }
 
     @Override
-    public void unsubscribe(UniqueIdentifier receiverID) {
+    public void unsubscribe(String receiverID) {
         notificationProcessor.unsubscribeReceiver(receiverID);
     }
 }

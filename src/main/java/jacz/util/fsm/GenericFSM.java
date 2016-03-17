@@ -1,14 +1,13 @@
 package jacz.util.fsm;
 
-import jacz.util.identifier.UniqueIdentifier;
-import jacz.util.identifier.UniqueIdentifierFactory;
+import jacz.util.id.AlphaNumFactory;
 
 /**
  * Generic Finite State Machine implementation. User provides the state definition and transitions. The class controls the FSM life cycle
  */
 public class GenericFSM<T, Y> {
 
-    protected UniqueIdentifier id;
+    protected String id;
 
     private String name;
 
@@ -29,14 +28,14 @@ public class GenericFSM<T, Y> {
     }
 
     private void initialize(String name, GenericFSMAction<T, Y> genericFSMAction) {
-        id = UniqueIdentifierFactory.getOneStaticIdentifier();
+        id = AlphaNumFactory.getStaticId();
         this.name = name;
         this.genericFSMAction = genericFSMAction;
         active = true;
         started = false;
     }
 
-    public UniqueIdentifier getId() {
+    public String getId() {
         return id;
     }
 

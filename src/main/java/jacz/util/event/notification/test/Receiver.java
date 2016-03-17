@@ -1,8 +1,7 @@
 package jacz.util.event.notification.test;
 
 import jacz.util.event.notification.NotificationReceiver;
-import jacz.util.identifier.UniqueIdentifier;
-import jacz.util.identifier.UniqueIdentifierFactory;
+import jacz.util.id.AlphaNumFactory;
 
 import java.util.List;
 
@@ -20,11 +19,11 @@ public class Receiver implements NotificationReceiver {
 
     public Receiver() {
         emitter = new Emitter();
-        emitter.subscribe(UniqueIdentifierFactory.getOneStaticIdentifier(), this, 2000, 0.5d, 10);
+        emitter.subscribe(AlphaNumFactory.getStaticId(), this, 2000, 0.5d, 10);
     }
 
     @Override
-    public void newEvent(UniqueIdentifier emitterID, int eventCount, List<List<Object>> nonGroupedMessages, List<Object> groupedMessages) {
+    public void newEvent(String emitterID, int eventCount, List<List<Object>> nonGroupedMessages, List<Object> groupedMessages) {
         System.out.println("Receiver: ints added" + " after " + eventCount);
         System.out.println("messages");
         System.out.println("--------");

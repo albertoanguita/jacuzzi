@@ -1,7 +1,6 @@
 package jacz.util.AI.evolve;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.numeric.range.IntegerRange;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -13,9 +12,12 @@ import java.util.Map;
  */
 public class TestEvolvingState {
 
+    private static final long BLOCK = 2000L;
+    private static final long FAST_BLOCK = 100L;
+
     private class HookEnd {
 
-        private static final long RECENT = 2000;
+        private static final long RECENT = 4000;
 
         private Map<String, Long> latestMessages;
 
@@ -59,7 +61,7 @@ public class TestEvolvingState {
     }
 
     @Test
-    public void testDiscrete() {
+    public void test() {
 
         EvolvingState.Transitions<DiscreteState, Boolean> transitions = new EvolvingState.Transitions<DiscreteState, Boolean>() {
             @Override
@@ -68,18 +70,22 @@ public class TestEvolvingState {
                     switch (state) {
 
                         case A:
+                            System.out.println("moving state from A to B");
                             controller.setState(DiscreteState.B);
                             return true;
 
                         case B:
+                            System.out.println("moving state from B to C");
                             controller.setState(DiscreteState.C);
                             return true;
 
                         case C:
+                            System.out.println("moving state from C to D");
                             controller.setState(DiscreteState.D);
                             return true;
 
                         case D:
+                            System.out.println("moving state from D to E");
                             controller.setState(DiscreteState.E);
                             return true;
 
@@ -88,10 +94,12 @@ public class TestEvolvingState {
                     switch (state) {
 
                         case D:
+                            System.out.println("moving state from D to C");
                             controller.setState(DiscreteState.C);
                             return true;
 
                         case E:
+                            System.out.println("moving state from E to D");
                             controller.setState(DiscreteState.D);
                             return true;
 
@@ -105,10 +113,26 @@ public class TestEvolvingState {
                 return true;
             }
         };
-        DiscreteEvolvingState<DiscreteState, Boolean> evolvingState = new DiscreteEvolvingState<>(DiscreteState.A, true, transitions);
-        evolvingState.setStateTimer(DiscreteState.B, 2000);
-        evolvingState.setStateTimer(DiscreteState.C, 4000);
-        evolvingState.setGeneralTimer(6000);
+        EvolvingState<DiscreteState, Boolean> evolvingState = new EvolvingState<>(DiscreteState.A, true, transitions);
+        evolvingState.setEvolveStateTimer(DiscreteState.B, BLOCK);
+        evolvingState.setEvolveStateTimer(DiscreteState.C, BLOCK * 2);
+        evolvingState.setEvolveStateTimer(new StateCondition<DiscreteState>() {
+            @Override
+            public boolean isInCondition(DiscreteState state) {
+                return true;
+            }
+
+            @Override
+            public String toString() {
+                return "general state cond";
+            }
+        }, BLOCK * 3);
+        evolvingState.setRunnableStateTimer(DiscreteState.E, BLOCK / 2, new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Check E!!!");
+            }
+        });
         HookEnd hookEnd = new HookEnd();
         evolvingState.setEnterStateHook(DiscreteState.B, new Hook(hookEnd, "enter B"));
         evolvingState.setExitStateHook(DiscreteState.B, new Hook(hookEnd, "exit B"));
@@ -118,43 +142,43 @@ public class TestEvolvingState {
 
         confirmDiscreteState(DiscreteState.A, evolvingState);
         evolvingState.evolve();
-        ThreadUtil.safeSleep(1000);
+        ThreadUtil.safeSleep(BLOCK / 2);
         confirmDiscreteState(DiscreteState.B, evolvingState);
         confirmHook(hookEnd, "enter B");
-        ThreadUtil.safeSleep(2000);
+        ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.C, evolvingState);
         confirmHook(hookEnd, "exit B");
         confirmHook(hookEnd, "enter C");
-        ThreadUtil.safeSleep(2000);
+        ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.C, evolvingState);
-        ThreadUtil.safeSleep(2000);
+        ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.D, evolvingState);
         evolvingState.evolve();
-        ThreadUtil.safeSleep(500);
+        ThreadUtil.safeSleep(FAST_BLOCK);
         confirmDiscreteState(DiscreteState.E, evolvingState);
         confirmHook(hookEnd, "exit D");
         evolvingState.setGoal(false, false);
-        ThreadUtil.safeSleep(1000);
-        confirmDiscreteState(DiscreteState.E, evolvingState);
-        ThreadUtil.safeSleep(1000);
+        ThreadUtil.safeSleep(BLOCK - FAST_BLOCK);
         confirmDiscreteState(DiscreteState.E, evolvingState);
         // this timer should not affect the general timer now running
-        evolvingState.setStateTimer(DiscreteState.A, 1000);
-        ThreadUtil.safeSleep(1000);
+        evolvingState.setEvolveStateTimer(DiscreteState.A, 1000);
+        ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.E, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmDiscreteState(DiscreteState.E, evolvingState);
-        ThreadUtil.safeSleep(1000);
+        ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.D, evolvingState);
         confirmHook(hookEnd, "exit E");
         evolvingState.evolve();
-        ThreadUtil.safeSleep(500);
+        ThreadUtil.safeSleep(FAST_BLOCK);
         confirmDiscreteState(DiscreteState.C, evolvingState);
         confirmHook(hookEnd, "exit D");
-        evolvingState.evolve();
-        ThreadUtil.safeSleep(500);
-        confirmDiscreteState(DiscreteState.C, evolvingState);
         confirmHook(hookEnd, "enter C");
+        evolvingState.evolve();
+        ThreadUtil.safeSleep(FAST_BLOCK);
+        confirmDiscreteState(DiscreteState.C, evolvingState);
+        ThreadUtil.safeSleep(BLOCK);
+        confirmDiscreteState(DiscreteState.C, evolvingState);
+        ThreadUtil.safeSleep(BLOCK);
+        confirmDiscreteState(DiscreteState.C, evolvingState);
     }
 
     private void confirmHook(HookEnd hookEnd, String message) {
@@ -162,168 +186,8 @@ public class TestEvolvingState {
     }
 
 
-    private <S> void confirmDiscreteState(S state, EvolvingState<S, Boolean, ?> evolvingState) {
+    private <S> void confirmDiscreteState(S state, EvolvingState<S, Boolean> evolvingState) {
         Assert.assertEquals(state, evolvingState.state());
         System.out.println("We are in state " + state);
-    }
-
-    private class IntegerPortion implements ContinuousEvolvingState.StatePortion<ContState> {
-
-        private final IntegerRange range;
-
-        public IntegerPortion(Integer min, Integer max) {
-            this.range = new IntegerRange(min, max);
-        }
-
-        @Override
-        public boolean isInPortion(ContState state) {
-            return range.contains(state.value());
-        }
-    }
-
-    private class ContState {
-
-        public int state;
-
-        public ContState(int state) {
-            this.state = state;
-        }
-
-        public int value() {
-            return state;
-        }
-
-        public void add(int value) {
-            state += value;
-        }
-    }
-
-    @Test
-    public void testContinuous() {
-
-        EvolvingState.Transitions<ContState, Boolean> transitions = new EvolvingState.Transitions<ContState, Boolean>() {
-            @Override
-            public boolean runTransition(ContState state, Boolean goal, EvolvingStateController<ContState, Boolean> controller) {
-                if (goal) {
-                    if (state.value() <= 3) {
-                        // low
-                        state.add(2);
-                        controller.stateHasChanged();
-                    } else if (state.value() <= 6) {
-                        // medium
-                        state.add(1);
-                        controller.stateHasChanged();
-                    } else if (state.value() <= 8) {
-                        // high
-                        state.add(1);
-                        controller.stateHasChanged();
-                    }
-                } else {
-                    if (state.value() >= 3 && state.value() <= 6) {
-                        // medium
-                        state.add(-1);
-                        controller.stateHasChanged();
-                    } else if (state.value() > 6) {
-                        // high
-                        state.add(-2);
-                        controller.stateHasChanged();
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public boolean hasReachedGoal(ContState state, Boolean goal) {
-                return true;
-            }
-        };
-
-        ContState contState = new ContState(0);
-        ContinuousEvolvingState<ContState, Boolean> evolvingState = new ContinuousEvolvingState<>(contState, true, transitions);
-        evolvingState.setStateTimer(new IntegerPortion(null, 6), 4000);
-        evolvingState.setStateTimer(new IntegerPortion(3, 6), 2000);
-        evolvingState.setGeneralTimer(6000);
-        HookEnd hookEnd = new HookEnd();
-        evolvingState.setExitStateHook(new ContinuousEvolvingState.StatePortion<ContState>() {
-            @Override
-            public boolean isInPortion(ContState state) {
-                return state.value() <= 2;
-            }
-        }, new Hook(hookEnd, "exit very low"));
-        evolvingState.setEnterStateHook(new ContinuousEvolvingState.StatePortion<ContState>() {
-            @Override
-            public boolean isInPortion(ContState state) {
-                return state.value() > 2 && state.value() <= 4;
-            }
-        }, new Hook(hookEnd, "enter low medium"));
-        evolvingState.setExitStateHook(new ContinuousEvolvingState.StatePortion<ContState>() {
-            @Override
-            public boolean isInPortion(ContState state) {
-                return state.value() >= 7;
-            }
-        }, new Hook(hookEnd, "exit high"));
-        evolvingState.setEnterStateHook(new ContinuousEvolvingState.StatePortion<ContState>() {
-            @Override
-            public boolean isInPortion(ContState state) {
-                return state.value() >= 7;
-            }
-        }, new Hook(hookEnd, "enter high"));
-
-        confirmContinuousState(0, evolvingState);
-        evolvingState.evolve();
-        ThreadUtil.safeSleep(200);
-        confirmContinuousState(2, evolvingState);
-        ThreadUtil.safeSleep(2800);
-        confirmContinuousState(2, evolvingState);
-        ThreadUtil.safeSleep(2000);
-        confirmContinuousState(4, evolvingState);
-        confirmHook(hookEnd, "exit very low");
-        confirmHook(hookEnd, "enter low medium");
-        ThreadUtil.safeSleep(500);
-        confirmContinuousState(4, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(5, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(5, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(6, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(6, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(7, evolvingState);
-        confirmHook(hookEnd, "enter high");
-        ThreadUtil.safeSleep(5000);
-        confirmContinuousState(7, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(8, evolvingState);
-        ThreadUtil.safeSleep(5000);
-        confirmContinuousState(8, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(9, evolvingState);
-        evolvingState.setGoal(false, false);
-        evolvingState.evolve();
-        ThreadUtil.safeSleep(200);
-        confirmContinuousState(7, evolvingState);
-        ThreadUtil.safeSleep(4800);
-        confirmContinuousState(7, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(5, evolvingState);
-        confirmHook(hookEnd, "exit high");
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(5, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(4, evolvingState);
-        confirmHook(hookEnd, "enter low medium");
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(4, evolvingState);
-        ThreadUtil.safeSleep(1000);
-        confirmContinuousState(3, evolvingState);
-        ThreadUtil.safeSleep(6000);
-        confirmContinuousState(2, evolvingState);
-    }
-
-    private <S> void confirmContinuousState(int value, ContinuousEvolvingState<ContState, Boolean> evolvingState) {
-        Assert.assertEquals(value, evolvingState.state().value());
-        System.out.println("We are in state " + value);
     }
 }

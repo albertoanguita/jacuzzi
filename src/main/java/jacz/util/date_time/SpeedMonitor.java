@@ -268,6 +268,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
         Double speed = getAverageSpeed();
         if (speed == null) {
             // no speed measure yet
+            // todo check this
             return;
         }
         if (above) {
@@ -276,7 +277,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
                 // above limit
                 if (!justReportedAboveSpeed) {
                     if (millisAllowedOutOfSpeedRange >= 0) {
-                        if (!reportSpeedAboveTimer.isRunning()) {
+                        if (reportSpeedAboveTimer.getState() != Timer.State.RUNNING) {
                             //reportSpeedAboveTimer = new Timer<ComplexTimerEvent>(millisAllowedOutOfSpeedRange, this, ComplexTimerEvent.SPEED_ABOVE_LIMIT);
                             reportSpeedAboveTimer.reset();
                         }
@@ -291,7 +292,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             }
             if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.CONTAINS || speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.LEFT) {
                 // we are in the OK range or upper, check if we just left the below range
-                if (reportSpeedBelowTimer != null && reportSpeedBelowTimer.isRunning()) {
+                if (reportSpeedBelowTimer != null && reportSpeedBelowTimer.getState() == Timer.State.RUNNING) {
                     reportSpeedBelowTimer.stop();
                 }
             }
@@ -299,8 +300,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.RIGHT) {
                 if (!justReportedBelowSpeed) {
                     if (millisAllowedOutOfSpeedRange >= 0) {
-                        if (!reportSpeedBelowTimer.isRunning()) {
-                            //reportSpeedBelowTimer = new Timer<ComplexTimerEvent>(millisAllowedOutOfSpeedRange, this, ComplexTimerEvent.SPEED_BELOW_LIMIT);
+                        if (reportSpeedBelowTimer.getState() != Timer.State.RUNNING) {
                             reportSpeedBelowTimer.reset();
                         }
                     } else {
@@ -314,8 +314,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             }
             if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.CONTAINS || speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.RIGHT) {
                 // we are in the OK range or lower, check if we just left the above range
-                //if (reportSpeedAboveTimer != null && reportSpeedAboveTimer.isRunning()) {
-                if (reportSpeedAboveTimer != null && reportSpeedAboveTimer.isRunning()) {
+                if (reportSpeedAboveTimer != null && reportSpeedAboveTimer.getState() == Timer.State.RUNNING) {
                     reportSpeedAboveTimer.stop();
                 }
             }

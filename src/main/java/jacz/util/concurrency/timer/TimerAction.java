@@ -18,5 +18,5 @@ public interface TimerAction {
      *         - Null: the timer will restart with the last given delay
      *         - Zero or negative value: the timer will die
      */
-    public Long wakeUp(Timer timer);
+    Long wakeUp(Timer timer);
 }

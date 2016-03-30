@@ -5,7 +5,7 @@ package jacz.util.concurrency.timer;
  */
 class WakeUpTask implements Runnable {
 
-    private Timer timer;
+    private final Timer timer;
 
     private boolean finished;
 

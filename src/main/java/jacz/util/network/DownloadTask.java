@@ -3,7 +3,7 @@ package jacz.util.network;
 import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.date_time.SpeedMonitor;
-import jacz.util.files.FileUtil;
+import jacz.util.files.FileGenerator;
 import jacz.util.notification.ProgressNotification;
 
 import java.io.*;
@@ -139,7 +139,7 @@ class DownloadTask implements Runnable, TimerAction {
             return e;
         } finally {
             try {
-                FileUtil.deleteFile(localPath);
+                FileGenerator.deleteFile(localPath);
             } catch (FileNotFoundException e) {
                 // ignore
             }

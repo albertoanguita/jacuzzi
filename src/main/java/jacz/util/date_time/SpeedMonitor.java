@@ -19,26 +19,6 @@ import java.util.List;
 public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface<Long> {
 
     /**
-     * This class describes states in which a SpeedMonitor object can be. There are three possible states: no elements
-     * have been inserted yet, one element has been inserted, and more than one elements have been inserted (rest).
-     * The initial state is no elements inserted, followed by one element inserted and finally by rest (from which
-     * the object never leaves). This state matters in different calculations, like the average speed.
-     */
-//    public enum State {
-//        NO_ELEMENTS_INSERTED,
-//        ONE_ELEMENT_INSERTED,
-//        REST;
-//
-//        State next() {
-//            if (this == NO_ELEMENTS_INSERTED) {
-//                return ONE_ELEMENT_INSERTED;
-//            } else {
-//                return REST;
-//            }
-//        }
-//    }
-
-    /**
      * Time mark when measure process was initiated
      */
     protected final long initialTimeMark;
@@ -55,7 +35,6 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
      * the oldest one. By rule, no elements older than the millisToStore value are stored (if an average speed
      * measure for longer than that is asked, it is extrapolated)
      */
-//    protected List<ProgressElement> progress;
     protected TimedQueue<Long> progress;
 
     /**
@@ -63,8 +42,6 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
      * allows a faster speed calculation
      */
     protected long storedSize;
-
-//    private final Timer oldElementsTimer;
 
     /**
      * The registered speed monitor (if any). null if no monitor is registered. This monitor will have to be invoked
@@ -103,10 +80,6 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
      */
     private boolean justReportedBelowSpeed;
 
-    /**
-     * State of this object (indicates how many elements were inserted so far: none, one, or more than one)
-     */
-//    private State state;
     public SpeedMonitor(long millisToStore) {
         this(millisToStore, null, null, -1);
     }
@@ -132,7 +105,6 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
         }
         justReportedAboveSpeed = false;
         justReportedBelowSpeed = false;
-//        state = State.NO_ELEMENTS_INSERTED;
     }
 
     public synchronized void setSpeedMonitorRange(LongRange newSpeedMonitorRange) {
@@ -142,9 +114,6 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
     }
 
     public synchronized void addProgress(long quantity) {
-//        if (state != State.REST) {
-//            state = state.next();
-//        }
         progress.addElement(quantity);
         storedSize += quantity;
         // check (if necessary) that we have not surpassed the max speed
@@ -162,7 +131,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
     public synchronized Duple<Double, Long> getAverageSpeedAndTimeLapse() {
         long currentTime = System.currentTimeMillis();
         if (outOfInitialRange) {
-                return new Duple<>(1000d * storedSize / (double) progress.getMillisToStore(), progress.getMillisToStore());
+            return new Duple<>(1000d * storedSize / (double) progress.getMillisToStore(), progress.getMillisToStore());
         } else {
             if (currentTime > initialTimeMark + progress.getMillisToStore()) {
                 outOfInitialRange = true;
@@ -173,73 +142,25 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
                     // make sure we don't get a divide by zero error
                     currentTime++;
                 }
-                    return new Duple<>(1000d * (double) storedSize / ((double) currentTime - (double) initialTimeMark), currentTime - initialTimeMark);
+                return new Duple<>(1000d * (double) storedSize / ((double) currentTime - (double) initialTimeMark), currentTime - initialTimeMark);
             }
         }
     }
-
-//    public synchronized double getAverageSpeed(long lastMillis) {
-//        Duple<Double, Long> speedAndTimeLapse = getAverageSpeedAndTimeLapse(lastMillis);
-//        if (speedAndTimeLapse != null) {
-//            return speedAndTimeLapse.element1;
-//        } else {
-//            return 0d;
-//        }
-//    }
-
-//    public synchronized Duple<Double, Long> getAverageSpeedAndTimeLapse(long lastMillis) {
-//        if (state == State.REST) {
-//            if (lastMillis < progress.getMillisToStore()) {
-//                long currentTime = System.currentTimeMillis();
-//                long oldestTimeMarkAllowed = currentTime - lastMillis;
-//                int index = progress.getIndexFrom(oldestTimeMarkAllowed);
-//                long achievedProgress = 0;
-//                for (; index < progress.size(); index++) {
-//                    achievedProgress += progress.get(index);
-//                }
-//                return new Duple<>(1000d * (double) achievedProgress / (double) lastMillis, lastMillis);
-//            } else {
-//                // extrapolate by getting the average speed on the standard time
-//                return getAverageSpeedAndTimeLapse();
-//            }
-//        } else {
-//            return null;
-//        }
-//    }
-
-//    private long eraseBias(final long currentTime, long millisForMeasure, final long storedSize, final List<ProgressElement> progress, int indexOfOldestElementUsed) {
-//        // push half of the oldest element to avoid bias and give a more realistic speed value
-//        // this helps counting with elements which were "recently" erased but that, obviously, do not count for
-//        // calculating speed. By adding an additional value of half of the oldest element, we are somehow
-//        // mitigating that effect. Explanation below:
-//        // the average case is the oldest element is X milliseconds left until erasure, and the previous element was erased also X milliseconds ago and was the same maxSize as the oldest.
-//        /*double storedSizeForSpeed = (double) storedSize;
-//        if (progress.maxSize() > 0) {
-//            storedSizeForSpeed += ((double) progress.get(0).quantity / 2.0d);
-//        }*/
-//        // todo we do not perform any bias correction. It is not clear it gives any benefits, and it complicates the
-//        // calculus of when speed goes out of range. check in the future
-//        return storedSize;
-//    }
 
     @Override
     public synchronized Long wakeUp(Timer timer) {
         if (timer == reportSpeedAboveTimer) {
             justReportedAboveSpeed = true;
-            Double speed = getAverageSpeed();
-            if (speed != null) {
-                SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, true, speed);
-                ParallelTaskExecutor.executeTask(spmTask);
-            }
+            double speed = getAverageSpeed();
+            SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, true, speed);
+            ParallelTaskExecutor.executeTask(spmTask);
             // kill the timer
             return 0L;
         } else if (timer == reportSpeedBelowTimer) {
             justReportedBelowSpeed = true;
             Double speed = getAverageSpeed();
-            if (speed != null) {
-                SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, false, speed);
-                ParallelTaskExecutor.executeTask(spmTask);
-            }
+            SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, false, speed);
+            ParallelTaskExecutor.executeTask(spmTask);
             // kill the timer
             return 0L;
         }
@@ -252,9 +173,6 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
      * reminder calls can be received after some period of time
      */
     public synchronized void stop() {
-//        if (oldElementsTimer != null) {
-//            oldElementsTimer.stop();
-//        }
         progress.stop();
         if (reportSpeedAboveTimer != null) {
             reportSpeedAboveTimer.kill();
@@ -266,11 +184,6 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
 
     private synchronized void checkSpeed(boolean above) {
         Double speed = getAverageSpeed();
-        if (speed == null) {
-            // no speed measure yet
-            // todo check this
-            return;
-        }
         if (above) {
             // speed has raised: we must check if either just entered above limit, or we escaped from below limit
             if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.LEFT) {

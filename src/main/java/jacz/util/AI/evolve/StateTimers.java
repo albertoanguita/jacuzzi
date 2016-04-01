@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by Alberto on 20/03/2016.
+ * A pool of registered timers organized in a set of states.
  */
 public class StateTimers<S> implements TimerAction {
 

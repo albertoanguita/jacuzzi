@@ -11,10 +11,10 @@ public class UtilTest {
     @Test
     public void test() {
 
-        Assert.assertTrue(Util.compare(null, null));
-        Assert.assertFalse(Util.compare(null, 5));
-        Assert.assertFalse(Util.compare("five", null));
-        Assert.assertFalse(Util.compare("five", 5));
-        Assert.assertTrue(Util.compare("five", "five"));
+        Assert.assertTrue(Util.equals(null, null));
+        Assert.assertFalse(Util.equals(null, 5));
+        Assert.assertFalse(Util.equals("five", null));
+        Assert.assertFalse(Util.equals("five", 5));
+        Assert.assertTrue(Util.equals("five", "five"));
     }
 }

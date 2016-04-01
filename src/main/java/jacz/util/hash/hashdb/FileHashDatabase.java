@@ -1,6 +1,6 @@
 package jacz.util.hash.hashdb;
 
-import jacz.util.files.FileUtil;
+import jacz.util.files.FileGenerator;
 import jacz.util.hash.HashFunction;
 import jacz.util.hash.MD5;
 import jacz.util.hash.SHA_256;
@@ -73,7 +73,7 @@ public class FileHashDatabase implements VersionedObject {
 
         @Override
         public String generateKey(AnnotatedFile value) throws IOException {
-            if (!FileUtil.isFile(value.path)) {
+            if (!FileGenerator.isFile(value.path)) {
                 throw new FileNotFoundException();
             }
             File file = new File(value.path);
@@ -95,7 +95,7 @@ public class FileHashDatabase implements VersionedObject {
 
         @Override
         public String generateKey(AnnotatedFolder value) throws IOException {
-            if (!FileUtil.isDirectory(value.path)) {
+            if (!FileGenerator.isDirectory(value.path)) {
                 throw new FileNotFoundException();
             }
             HashFunction totalHash = new SHA_256();
@@ -169,7 +169,7 @@ public class FileHashDatabase implements VersionedObject {
         Map<String, String> wrongEntries = new HashMap<>();
         for (Map.Entry<String, AnnotatedFile> entry : filesMap.entrySet()) {
             // check that the file exists in the specified path (in all cases)
-            if (!FileUtil.isFile(entry.getValue().path)) {
+            if (!FileGenerator.isFile(entry.getValue().path)) {
                 wrongEntries.put(entry.getKey(), entry.getValue().path);
                 continue;
             }
@@ -198,7 +198,7 @@ public class FileHashDatabase implements VersionedObject {
 
     public File getFile(String key) throws FileNotFoundException {
         String path = getFilePath(key);
-        if (path == null || !FileUtil.isFile(path)) {
+        if (path == null || !FileGenerator.isFile(path)) {
             throw new FileNotFoundException();
         } else {
             return new File(path);

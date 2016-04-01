@@ -51,7 +51,7 @@ public class FileHashDatabaseWithTimestamp /*extends FileHashDatabase*/ {
 //
 //        @Override
 //        public String generateKey(AnnotatedFolder value) throws IOException {
-//            if (!FileUtil.isDirectory(value.path)) {
+//            if (!FileGenerator.isDirectory(value.path)) {
 //                throw new FileNotFoundException();
 //            }
 //            HashFunction totalHash = new SHA_256();

@@ -112,20 +112,18 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
     }
 
     private long checkRemainingTime(boolean ignoreJustReportedRemainingTime) {
-        Double speed = getAverageSpeed();
-        if (speed != null) {
-            long remainingTime = (long) (1000.0d * ((double) capacity - (double) storedSize) / speed);
-            if (remainingTime <= remainingTimeToReport) {
-                if (ignoreJustReportedRemainingTime || !justReportedRemainingTime) {
-                    justReportedRemainingTime = true;
-                    RemainingTimeTask remainingTimeTask = new RemainingTimeTask(remainingTimeAction, remainingTime);
-                    ParallelTaskExecutor.executeTask(remainingTimeTask);
-                }
-            } else {
-                // return time for setting up new timer
-                justReportedRemainingTime = false;
-                return remainingTime - remainingTimeToReport + 1;
+        double speed = getAverageSpeed();
+        long remainingTime = (long) (1000.0d * ((double) capacity - (double) storedSize) / speed);
+        if (remainingTime <= remainingTimeToReport) {
+            if (ignoreJustReportedRemainingTime || !justReportedRemainingTime) {
+                justReportedRemainingTime = true;
+                RemainingTimeTask remainingTimeTask = new RemainingTimeTask(remainingTimeAction, remainingTime);
+                ParallelTaskExecutor.executeTask(remainingTimeTask);
             }
+        } else {
+            // return time for setting up new timer
+            justReportedRemainingTime = false;
+            return remainingTime - remainingTimeToReport + 1;
         }
         return 0L;
     }

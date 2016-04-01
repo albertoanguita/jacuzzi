@@ -1,6 +1,6 @@
 package jacz.util.files.test;
 
-import jacz.util.files.FileUtil;
+import jacz.util.files.FileGenerator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,7 +23,7 @@ public class FileUtilTest {
         String path2 = "d:\\peli2.avi";
 
         try {
-            FileUtil.copy(path, path2, false);
+            FileGenerator.copy(path, path2, false);
         } catch (IOException e) {
             e.printStackTrace();
         }*/
@@ -36,7 +36,7 @@ public class FileUtilTest {
             e.printStackTrace();
         }
 
-        String pathGen = FileUtil.generatePath("\\fichero.txt", "c:", "dir1", "dir2\\dir3\\");
+        String pathGen = FileGenerator.generatePath("\\fichero.txt", "c:", "dir1", "dir2\\dir3\\");
 
 
         System.out.println(absPath);
@@ -45,13 +45,13 @@ public class FileUtilTest {
         //String f = "c:\\test\\hola.txt";
         String f = "c:\\hola\\";
 
-        System.out.println(FileUtil.getFileName(f));
-        System.out.println(FileUtil.getFileDirectory(f));
+        System.out.println(FileGenerator.getFileName(f));
+        System.out.println(FileGenerator.getFileDirectory(f));
 
-        System.out.println(FileUtil.joinPaths("ccc", "jeje"));
+        System.out.println(FileGenerator.joinPaths("ccc", "jeje"));
 
         try {
-            String[] files = FileUtil.getDirectoryContents("D:\\p-medicine\\periodic reports\\1st report (Feb2011 - Jan2012)");
+            String[] files = FileGenerator.getDirectoryContents("D:\\p-medicine\\periodic reports\\1st report (Feb2011 - Jan2012)");
             for (String file : files) {
                 System.out.print(file + ", ");
             }

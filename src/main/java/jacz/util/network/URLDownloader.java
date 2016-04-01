@@ -1,7 +1,7 @@
 package jacz.util.network;
 
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.files.FileUtil;
+import jacz.util.files.FileGenerator;
 import jacz.util.notification.ProgressNotification;
 
 import java.io.BufferedInputStream;
@@ -27,6 +27,8 @@ import java.net.URLConnection;
  * <p/>
  * These methods always require the URL to download from and the disk destination path. If the given path is a
  * directory, then the method will create a file named equal to the file contained in the URL (if possible)
+ *
+ * todo can be replaced with FileUtils.copyURLtoFile
  */
 public class URLDownloader {
 
@@ -176,12 +178,12 @@ public class URLDownloader {
     }
 
     private static String generateFinalFilePath(URL url, String filePath) throws IOException {
-        if (FileUtil.isDirectory(filePath)) {
+        if (FileGenerator.isDirectory(filePath)) {
             String urlFile = getURLFile(url);
             if (urlFile == null || urlFile.length() == 0) {
                 throw new IOException("Cannot form a correct local path");
             }
-            filePath = FileUtil.generatePath(urlFile, filePath);
+            filePath = FileGenerator.generatePath(urlFile, filePath);
         }
         return filePath;
     }

@@ -1,6 +1,6 @@
 package jacz.util.hash.hashdb;
 
-import jacz.util.files.FileUtil;
+import jacz.util.files.FileGenerator;
 import jacz.util.hash.SHA_256;
 import jacz.util.io.serialization.Serializer;
 
@@ -133,7 +133,7 @@ public class FileHashDatabaseWithMaxSize {
         Map<String, String> wrongEntries = new HashMap<>();
         for (AnnotatedPath annotatedPath : data.values()) {
             // check that the file exists in the specified path (in all cases)
-            if (!FileUtil.isFile(annotatedPath.path)) {
+            if (!FileGenerator.isFile(annotatedPath.path)) {
                 wrongEntries.put(annotatedPath.key, annotatedPath.path);
                 continue;
             }
@@ -153,7 +153,7 @@ public class FileHashDatabaseWithMaxSize {
     }
 
     public boolean containsValue(String path) throws IOException {
-        if (!FileUtil.isFile(path)) {
+        if (!FileGenerator.isFile(path)) {
             throw new FileNotFoundException();
         }
         File file = new File(path);
@@ -174,7 +174,7 @@ public class FileHashDatabaseWithMaxSize {
         if (path == null) {
             return null;
         } else {
-            if (!FileUtil.isFile(path)) {
+            if (!FileGenerator.isFile(path)) {
                 throw new FileNotFoundException();
             }
             return new File(path);
@@ -190,26 +190,26 @@ public class FileHashDatabaseWithMaxSize {
     }
 
     private String put(String path, boolean deleteIfExists) throws IOException {
-        if (!FileUtil.isFile(path)) {
+        if (!FileGenerator.isFile(path)) {
             throw new FileNotFoundException();
         }
         File file = new File(path);
         String key = getHash(file);
         if (!containsKey(key)) {
-            long size = FileUtil.getFileSize(path);
+            long size = FileGenerator.getFileSize(path);
             AnnotatedPath annotatedPath = new AnnotatedPath(path, System.currentTimeMillis(), key, size);
             data.put(key, annotatedPath);
             orderedPaths.add(annotatedPath);
             currentSize += size;
         } else if (deleteIfExists) {
-            FileUtil.deleteFile(path);
+            FileGenerator.deleteFile(path);
         }
         adjustTotalSize();
         return key;
     }
 
     public void remove(String path) throws IOException {
-        if (!FileUtil.isFile(path)) {
+        if (!FileGenerator.isFile(path)) {
             throw new FileNotFoundException();
         }
         File file = new File(path);

@@ -1,9 +1,10 @@
 package jacz.util.AI.evolve;
 
-import jacz.util.concurrency.task_executor.SequentialTaskExecutor;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Alberto on 20/03/2016.
@@ -22,7 +23,7 @@ public class StateHooks<S> {
 
     private final boolean executeInParallel;
 
-    private final SequentialTaskExecutor hookExecutor;
+    private final ExecutorService hookExecutor;
 
 
     public StateHooks(S state) {
@@ -37,7 +38,7 @@ public class StateHooks<S> {
         activeExitStateHooks = new HashSet<>();
         this.executeInParallel = executeInParallel;
         if (executeInParallel) {
-            hookExecutor = new SequentialTaskExecutor();
+            hookExecutor = Executors.newSingleThreadExecutor();
         } else {
             hookExecutor = null;
         }
@@ -113,7 +114,7 @@ public class StateHooks<S> {
 
     private void runTask(Runnable runnable) {
         if (executeInParallel) {
-            hookExecutor.executeTask(runnable);
+            hookExecutor.submit(runnable);
         } else {
             runnable.run();
         }
@@ -121,7 +122,7 @@ public class StateHooks<S> {
 
     public void stop() {
         if (hookExecutor != null) {
-            hookExecutor.stopAndWaitForFinalization();
+            hookExecutor.shutdown();
         }
     }
 }

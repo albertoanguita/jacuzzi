@@ -1,12 +1,13 @@
 package jacz.util.event.notification;
 
-import jacz.util.concurrency.task_executor.SequentialTaskExecutor;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.concurrency.timer.TimerAction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * This class handles the process of notifying events emitted by an emitter to the subscribed receivers
@@ -50,7 +51,7 @@ class NotificationReceiverHandler implements TimerAction {
      * Task executor for sequentially notifying events to the observers (plus, we decouple the notification from
      * the thread that causes the event)
      */
-    private final SequentialTaskExecutor sequentialTaskExecutor;
+    private final ExecutorService sequentialExecutorService;
 
 
     NotificationReceiverHandler(NotificationReceiver notificationReceiver, String emitterID, Long millis, double timeFactorAtEachEvent, int limit, String threadName) {
@@ -67,7 +68,7 @@ class NotificationReceiverHandler implements TimerAction {
         eventCount = 0;
         nonGroupedMessages = new ArrayList<>();
         groupedMessages = new ArrayList<>();
-        sequentialTaskExecutor = new SequentialTaskExecutor();
+        sequentialExecutorService = Executors.newSingleThreadExecutor();
     }
 
     synchronized void newEvent(Object... messages) {
@@ -99,12 +100,18 @@ class NotificationReceiverHandler implements TimerAction {
     private synchronized void notifyReceiver() {
         if (eventCount > 0) {
             final int eventCountCopy = eventCount;
-            sequentialTaskExecutor.executeTask(new Runnable() {
+            sequentialExecutorService.submit(new Runnable() {
                 @Override
                 public void run() {
                     notificationReceiver.newEvent(emitterID, eventCountCopy, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
                 }
             });
+//            sequentialTaskExecutor.executeTask(new Runnable() {
+//                @Override
+//                public void run() {
+//                    notificationReceiver.newEvent(emitterID, eventCountCopy, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
+//                }
+//            });
             resetMessages();
             eventCount = 0;
         }
@@ -128,6 +135,7 @@ class NotificationReceiverHandler implements TimerAction {
         if (timer != null) {
             timer.kill();
         }
-        sequentialTaskExecutor.stopAndWaitForFinalization();
+//        sequentialTaskExecutor.stopAndWaitForFinalization();
+        sequentialExecutorService.shutdown();
     }
 }

@@ -9,8 +9,9 @@ import java.util.Queue;
 
 /**
  * Tasks are executed in a separate thread, sequentially
+ * todo replace with newSingleThreadExecutor
  */
-public class SequentialTaskExecutor implements DaemonAction {
+public class SequentialTaskExecutorRemove implements DaemonAction {
 
     private static class StopTask implements Runnable {
 
@@ -35,7 +36,7 @@ public class SequentialTaskExecutor implements DaemonAction {
 
     private boolean ignoreFutureTasks;
 
-    public SequentialTaskExecutor() {
+    public SequentialTaskExecutorRemove() {
         daemon = new Daemon(this);
         taskQueue = new ArrayDeque<>();
         alive = true;

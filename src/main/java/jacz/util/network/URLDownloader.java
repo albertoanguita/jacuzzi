@@ -1,13 +1,10 @@
 package jacz.util.network;
 
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.files.FileGenerator;
 import jacz.util.notification.ProgressNotification;
+import org.apache.commons.io.FileUtils;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -178,12 +175,12 @@ public class URLDownloader {
     }
 
     private static String generateFinalFilePath(URL url, String filePath) throws IOException {
-        if (FileGenerator.isDirectory(filePath)) {
+        if (new File(filePath).isDirectory()) {
             String urlFile = getURLFile(url);
             if (urlFile == null || urlFile.length() == 0) {
                 throw new IOException("Cannot form a correct local path");
             }
-            filePath = FileGenerator.generatePath(urlFile, filePath);
+            filePath = FileUtils.getFile(urlFile, filePath).getPath();
         }
         return filePath;
     }

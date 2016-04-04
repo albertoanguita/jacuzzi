@@ -12,6 +12,7 @@ import java.io.IOException;
  * Date: 26-may-2010
  * Time: 18:13:55
  * To change this template use File | Settings | File Templates.
+ * todo remove, make proper class test
  */
 public class FileUtilTest {
 
@@ -36,27 +37,5 @@ public class FileUtilTest {
             e.printStackTrace();
         }
 
-        String pathGen = FileGenerator.generatePath("\\fichero.txt", "c:", "dir1", "dir2\\dir3\\");
-
-
-        System.out.println(absPath);
-
-
-        //String f = "c:\\test\\hola.txt";
-        String f = "c:\\hola\\";
-
-        System.out.println(FileGenerator.getFileName(f));
-        System.out.println(FileGenerator.getFileDirectory(f));
-
-        System.out.println(FileGenerator.joinPaths("ccc", "jeje"));
-
-        try {
-            String[] files = FileGenerator.getDirectoryContents("D:\\p-medicine\\periodic reports\\1st report (Feb2011 - Jan2012)");
-            for (String file : files) {
-                System.out.print(file + ", ");
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
     }
 }

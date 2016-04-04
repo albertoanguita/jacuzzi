@@ -1,8 +1,8 @@
 package jacz.util.queues;
 
-import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.concurrency.timer.TimerAction;
+import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.concurrency.timer.Timer;
+import jacz.util.concurrency.timer.TimerAction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,21 +73,24 @@ public class TimedQueue<T> implements TimerAction {
     private final Timer removeTimer;
 
     public TimedQueue(long millisToStore, TimedQueueInterface<T> timedQueueInterface) {
-        queue = new ArrayList<QueueElement<T>>();
+        queue = new ArrayList<>();
         this.millisToStore = millisToStore;
         this.timedQueueInterface = timedQueueInterface;
         removeTimer = new Timer(millisToStore, this, false, "TimedQueueInterface");
+        ThreadExecutor.registerClient(this.getClass().getName());
     }
 
     public TimedQueue(long millisToStore, TimedQueueInterface<T> timedQueueInterface, String threadName) {
-        queue = new ArrayList<QueueElement<T>>();
+        queue = new ArrayList<>();
         this.millisToStore = millisToStore;
         this.timedQueueInterface = timedQueueInterface;
         removeTimer = new Timer(millisToStore, this, false, "TimedQueueInterface(" + threadName + ")");
+        ThreadExecutor.registerClient(this.getClass().getName());
     }
 
     public synchronized void stop() {
         removeTimer.kill();
+        ThreadExecutor.shutdownClient(this.getClass().getName());
     }
 
     public synchronized boolean isEmpty() {
@@ -131,7 +134,7 @@ public class TimedQueue<T> implements TimerAction {
         }
         if (!removedElements.isEmpty()) {
             // invoke in parallel to avoid locks
-            ParallelTaskExecutor.executeTask(new TimedQueueInterfaceTask<T>(timedQueueInterface, removedElements));
+            ThreadExecutor.submit(new TimedQueueInterfaceTask<T>(timedQueueInterface, removedElements));
         }
         if (!queue.isEmpty()) {
             // calculate time for next removal

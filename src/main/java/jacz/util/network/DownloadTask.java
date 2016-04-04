@@ -1,10 +1,10 @@
 package jacz.util.network;
 
-import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
+import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.date_time.SpeedMonitor;
-import jacz.util.files.FileGenerator;
 import jacz.util.notification.ProgressNotification;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.URL;
@@ -139,8 +139,8 @@ class DownloadTask implements Runnable, TimerAction {
             return e;
         } finally {
             try {
-                FileGenerator.deleteFile(localPath);
-            } catch (FileNotFoundException e) {
+                FileUtils.forceDelete(new File(localPath));
+            } catch (IOException e) {
                 // ignore
             }
         }

@@ -4,7 +4,9 @@ import jacz.util.files.FileReaderWriter;
 import jacz.util.files.FileGenerator;
 import jacz.util.hash.CRC;
 import jacz.util.hash.InvalidCRCException;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.Serializable;
@@ -148,7 +150,7 @@ public class VersionedObjectSerializer {
                 String newPath = backupPaths[0];
                 backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
                 int tries = deserialize(versionedObject, newPath, backupPaths);
-                FileGenerator.copy(newPath, path);
+                FileUtils.copyFile(new File(newPath), new File(path));
                 return tries + 1;
             } else {
                 throw e;

@@ -1,9 +1,9 @@
 package jacz.util.date_time;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.concurrency.timer.TimerAction;
+import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.concurrency.timer.Timer;
+import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.lists.tuple.Duple;
 import jacz.util.numeric.range.LongRange;
 import jacz.util.numeric.range.Range;
@@ -105,6 +105,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
         }
         justReportedAboveSpeed = false;
         justReportedBelowSpeed = false;
+        ThreadExecutor.registerClient(this.getClass().getName());
     }
 
     public synchronized void setSpeedMonitorRange(LongRange newSpeedMonitorRange) {
@@ -153,14 +154,14 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             justReportedAboveSpeed = true;
             double speed = getAverageSpeed();
             SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, true, speed);
-            ParallelTaskExecutor.executeTask(spmTask);
+            ThreadExecutor.submit(spmTask);
             // kill the timer
             return 0L;
         } else if (timer == reportSpeedBelowTimer) {
             justReportedBelowSpeed = true;
             Double speed = getAverageSpeed();
             SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, false, speed);
-            ParallelTaskExecutor.executeTask(spmTask);
+            ThreadExecutor.submit(spmTask);
             // kill the timer
             return 0L;
         }
@@ -180,6 +181,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
         if (reportSpeedBelowTimer != null) {
             reportSpeedBelowTimer.kill();
         }
+        ThreadExecutor.shutdownClient(this.getClass().getName());
     }
 
     private synchronized void checkSpeed(boolean above) {
@@ -197,7 +199,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
                     } else {
                         justReportedAboveSpeed = true;
                         SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, true, speed);
-                        ParallelTaskExecutor.executeTask(spmTask);
+                        ThreadExecutor.submit(spmTask);
                     }
                 }
             } else {
@@ -219,7 +221,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
                     } else {
                         justReportedBelowSpeed = true;
                         SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, false, speed);
-                        ParallelTaskExecutor.executeTask(spmTask);
+                        ThreadExecutor.submit(spmTask);
                     }
                 }
             } else {

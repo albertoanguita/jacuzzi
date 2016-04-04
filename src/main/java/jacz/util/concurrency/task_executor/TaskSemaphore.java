@@ -6,6 +6,7 @@ import java.util.concurrent.Semaphore;
 /**
  * This class indicates the finalization state of the execution of a task. It allows other threads
  * to query this state and wait until the task is finalized (not mandatory to use)
+ * todo remove
  */
 public class TaskSemaphore {
 

@@ -19,7 +19,7 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class ConcurrencyController implements DaemonAction {
 
-    public static class QueueElement implements Comparable<QueueElement> {
+    private static class QueueElement implements Comparable<QueueElement> {
 
         private final String activity;
 
@@ -63,11 +63,6 @@ public class ConcurrencyController implements DaemonAction {
      * Actions implemented by the client
      */
     private final ConcurrencyControllerAction concurrencyControllerAction;
-
-    /**
-     * List of available activities for executions (each identified by means of a String), and their respective priorities
-     */
-//    private ActivityListAndPriorities activityListAndPriorities;
 
     /**
      * Queue where requests for executing specific activities are stored. This queue allows elements with higher
@@ -192,7 +187,7 @@ public class ConcurrencyController implements DaemonAction {
      *
      * @param activity type of activity that the client pretends to execute
      */
-    public final QueueElement registerActivity(String activity) {
+    private QueueElement registerActivity(String activity) {
         QueueElement queueElement = new QueueElement(activity, getActivityPriority(activity));
         synchronized (this) {
             if (!alive && !activity.equals(STOP_ACTIVITY) && !ignoreFutureTasks) {
@@ -212,7 +207,7 @@ public class ConcurrencyController implements DaemonAction {
         }
     }
 
-    public final void beginRegisteredActivity(QueueElement queueElement) {
+    private void beginRegisteredActivity(QueueElement queueElement) {
         queueElement.waitForPermissionToContinue();
     }
 

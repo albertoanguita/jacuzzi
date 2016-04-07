@@ -59,7 +59,7 @@ public class OrderListsTest {
         //Lists.sort(list, false, relList1, relList2);
 
         // order the integer list with 2 related lists. Use 16 threads always. Use natural ordering of the ints
-        Lists.sort(list, false, 4, relList1, relList2);
+//        Lists.sort(list, false, 4, relList1, relList2);
 
         // order the integer list with 2 related lists. Use 16 threads, or the available cores in the machine if this
         // is lower. Use natural ordering of the ints

@@ -29,6 +29,6 @@ class QuickSortTask<T> implements Runnable {
     }
 
     public void run() {
-        Lists.sortAux(list, comparator, reverseOrder, numThreads, relatedLists);
+//        Lists.sortAux(list, comparator, reverseOrder, numThreads, relatedLists);
     }
 }

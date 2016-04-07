@@ -1,11 +1,7 @@
 package jacz.util.concurrency.timer;
 
 /**
- * Class description
- * <p/>
- * User: Alberto<br>
- * Date: 18-abr-2010<br>
- * Last Modified: 18-abr-2010
+ * A task associated to a timer
  */
 public interface TimerAction {
 

@@ -29,7 +29,7 @@ public class IndexList<T> {
     }
 
     private void buildIndexList() {
-        indexList = new ArrayList<Integer>(baseList.size());
+        indexList = new ArrayList<>(baseList.size());
         for (int i = 0; i < baseList.size(); i++) {
             indexList.add(i);
         }
@@ -40,6 +40,8 @@ public class IndexList<T> {
     }
 
     public void sortIndexes(Comparator<T> comparator, boolean reverseOrder, int numThreads) {
-        Lists.sort(baseList, comparator, reverseOrder, numThreads, indexList);
+//        Lists.sort(baseList, comparator, reverseOrder, numThreads, indexList);
+        // todo
+        throw new RuntimeException();
     }
 }

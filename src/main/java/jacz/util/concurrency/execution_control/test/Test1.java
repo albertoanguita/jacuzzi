@@ -2,6 +2,7 @@ package jacz.util.concurrency.execution_control.test;
 
 import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
+import jacz.util.concurrency.task_executor.ThreadExecutor;
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,8 +16,8 @@ public class Test1 {
     public static void main(String args[]) {
 
         TrafficControl trafficControl = new TrafficControl();
-        ParallelTaskExecutor.executeTask(new Pauser(trafficControl));
-        ParallelTaskExecutor.executeTask(new Accessor1(trafficControl));
-        ParallelTaskExecutor.executeTask(new Accessor2(trafficControl));
+        ThreadExecutor.submit(new Pauser(trafficControl));
+        ThreadExecutor.submit(new Accessor1(trafficControl));
+        ThreadExecutor.submit(new Accessor2(trafficControl));
     }
 }

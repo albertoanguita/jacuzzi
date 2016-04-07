@@ -1,6 +1,6 @@
 package jacz.util.network;
 
-import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
+import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.notification.ProgressNotification;
 import org.apache.commons.io.FileUtils;
 
@@ -170,7 +170,7 @@ public class URLDownloader {
         }
         DownloadTask downloadTask = new DownloadTask(url, filePath, progressNotification, timerMillis);
         DownloadPart downloadPart = new DownloadPart(downloadTask);
-        ParallelTaskExecutor.executeTask(downloadTask);
+        ThreadExecutor.submit(downloadTask);
         return downloadPart;
     }
 

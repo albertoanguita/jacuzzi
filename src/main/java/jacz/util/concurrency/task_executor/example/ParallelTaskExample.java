@@ -1,7 +1,9 @@
 package jacz.util.concurrency.task_executor.example;
 
-import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.concurrency.task_executor.TaskSemaphore;
+import jacz.util.concurrency.task_executor.ThreadExecutor;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Example of use of ParallelTaskExecutor
@@ -14,17 +16,17 @@ import jacz.util.concurrency.task_executor.TaskSemaphore;
  */
 public class ParallelTaskExample {
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws ExecutionException, InterruptedException {
         // the two tasks are launched concurrently
         CountToMillionTask ctm1 = new CountToMillionTask();
         CountToMillionTask ctm2 = new CountToMillionTask();
-        TaskSemaphore tfi1 = ParallelTaskExecutor.executeTask(ctm1);
-        TaskSemaphore tfi2 = ParallelTaskExecutor.executeTask(ctm2);
+        Future tfi1 = ThreadExecutor.submit(ctm1);
+        Future tfi2 = ThreadExecutor.submit(ctm2);
 
         // wait until the tasks are complete
         System.out.println("waiting...");
-        tfi1.waitForFinalization();
-        tfi2.waitForFinalization();
+        tfi1.get();
+        tfi2.get();
 
         // retrieve result
         System.out.println("Result of the task: " + ctm1.result() + "/" + ctm2.result());

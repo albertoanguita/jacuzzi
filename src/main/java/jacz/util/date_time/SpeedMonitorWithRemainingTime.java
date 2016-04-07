@@ -1,7 +1,7 @@
 package jacz.util.date_time;
 
 import jacz.util.concurrency.ThreadUtil;
-import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
+import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.numeric.range.LongRange;
 
@@ -73,6 +73,7 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
         this.remainingTimeToReport = remainingTimeToReport;
         remainingTimeTimer = new Timer(1, this, false, threadName);
         justReportedRemainingTime = false;
+        ThreadExecutor.registerClient(this.getClass().getName());
     }
 
     @Override
@@ -118,7 +119,7 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
             if (ignoreJustReportedRemainingTime || !justReportedRemainingTime) {
                 justReportedRemainingTime = true;
                 RemainingTimeTask remainingTimeTask = new RemainingTimeTask(remainingTimeAction, remainingTime);
-                ParallelTaskExecutor.executeTask(remainingTimeTask);
+                ThreadExecutor.submit(remainingTimeTask);
             }
         } else {
             // return time for setting up new timer
@@ -132,5 +133,6 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
     public synchronized void stop() {
         super.stop();
         remainingTimeTimer.kill();
+        ThreadExecutor.shutdownClient(this.getClass().getName());
     }
 }

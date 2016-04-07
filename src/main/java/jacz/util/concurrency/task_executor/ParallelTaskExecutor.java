@@ -1,8 +1,5 @@
 package jacz.util.concurrency.task_executor;
 
-import jacz.util.concurrency.ThreadUtil;
-import jacz.util.concurrency.concurrency_controller.ConcurrencyController;
-
 /**
  * This class allows to launch tasks in parallel. It receives implementations of the Runnable interface, and
  * creates threads for executing those tasks in parallel

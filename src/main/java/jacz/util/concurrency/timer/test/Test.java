@@ -1,5 +1,6 @@
 package jacz.util.concurrency.timer.test;
 
+import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 
@@ -15,14 +16,18 @@ public class Test implements TimerAction {
     public void func() {
         Timer timer = new Timer(3000, this);
 
+        ThreadUtil.safeSleep(500);
+
         //timer.goOff();
         //timer.goOff();
 
         //timer.stop();
         //timer.reset(0.1);
         System.out.println(timer.remainingTime());
+
+//        timer.kill();
         //ResettableTimer__REMOVE timer = new ResettableTimer__REMOVE(1000, this);
-        //timer.stop();
+        timer.stop();
     }
 
     public static void main(String args[]) {
@@ -34,8 +39,7 @@ public class Test implements TimerAction {
     @Override
     public Long wakeUp(Timer timer) {
         System.out.println("WAKE UP!!!");
-        //return 500L;
-        return null;
+        return 500L;
     }
 
 }

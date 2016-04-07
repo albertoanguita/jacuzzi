@@ -50,10 +50,12 @@ public class ThreadExecutor {
 
         @Override
         public V call() throws Exception {
-            start();
-            V result = task.call();
-            end();
-            return result;
+            try {
+                start();
+                return task.call();
+            } finally {
+                end();
+            }
         }
     }
 
@@ -68,9 +70,12 @@ public class ThreadExecutor {
 
         @Override
         public void run() {
-            start();
-            task.run();
-            end();
+            try {
+                start();
+                task.run();
+            } finally {
+                end();
+            }
         }
     }
 

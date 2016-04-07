@@ -8,7 +8,7 @@ public interface DaemonAction {
     /**
      * Performs an action to solve the state
      *
-     * @return true if the state is now in the desired point, false otherwise
+     * @return true if the state is now in the desired point, false otherwise. No exceptions must be raised.
      */
     boolean solveState();
 }

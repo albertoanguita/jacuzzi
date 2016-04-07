@@ -31,7 +31,7 @@ class MessageReaderHandlerThread extends Thread {
                 messageProcessor.accessReaderPausableElement();
             } catch (Exception e) {
                 // user should not let any exceptions to reach this level -> error exposed in console
-                // todo, handle better?
+                // todo, handle better
                 e.printStackTrace();
                 finished = true;
             }

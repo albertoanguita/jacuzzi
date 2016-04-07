@@ -1,9 +1,10 @@
 package jacz.util.concurrency.daemon;
 
 import jacz.util.concurrency.execution_control.TrafficControl;
-import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
-import jacz.util.concurrency.task_executor.TaskSemaphore;
+import jacz.util.concurrency.task_executor.ThreadExecutor;
+import jacz.util.log.ErrorLog;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -45,9 +46,9 @@ public class Daemon {
     private final DaemonAction daemonAction;
 
     /**
-     * TaskSemaphore for the currently running thread (or null if no thread is running)
+     * Future object for the currently running thread (or null if no thread is running)
      */
-    private TaskSemaphore taskSemaphore;
+    private Future future;
 
     /**
      * Flag indicating if the state has changed (true = there is a change that must be solved)
@@ -69,11 +70,12 @@ public class Daemon {
 
     public Daemon(DaemonAction daemonAction) {
         this.daemonAction = daemonAction;
-        taskSemaphore = null;
+        future = null;
         stateChangeFlag = new AtomicBoolean(false);
         daemonThreadFlag = new AtomicBoolean(false);
         blockUntilStateSolve = new TrafficControl();
         alive = new AtomicBoolean(true);
+        ThreadExecutor.registerClient(this.getClass().getName());
     }
 
     /**
@@ -86,16 +88,7 @@ public class Daemon {
         if (!daemonThreadFlag.get()) {
             daemonThreadFlag.set(true);
             stateChangeFlag.set(false);
-            taskSemaphore = ParallelTaskExecutor.executeTask(new DaemonTask(this));
-        }
-    }
-
-    /**
-     * Interrupts the daemon thread (if any thread running)
-     */
-    public synchronized void interrupt() {
-        if (taskSemaphore != null) {
-            taskSemaphore.interrupt();
+            future = ThreadExecutor.submit(new DaemonTask(this));
         }
     }
 
@@ -109,7 +102,14 @@ public class Daemon {
 
     public void stop() {
         alive.set(false);
-        interrupt();
+        if (future != null) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                // ignore exceptions
+            }
+        }
+        ThreadExecutor.shutdownClient(this.getClass().getName());
     }
 
     /**
@@ -123,7 +123,7 @@ public class Daemon {
             // there are no registered state changes, the thread can finish ok
             // or the daemon has been stopped
             daemonThreadFlag.set(false);
-            taskSemaphore = null;
+            future = null;
             blockUntilStateSolve.resume();
             return true;
         } else {
@@ -134,6 +134,13 @@ public class Daemon {
     }
 
     private boolean executeAction() {
-        return daemonAction.solveState();
+        try {
+            return daemonAction.solveState();
+        } catch (Exception e) {
+            //unexpected exception obtained. Print error and terminate
+            ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in daemon implementation", e);
+            stop();
+            return true;
+        }
     }
 }

@@ -5,13 +5,12 @@ import org.javalite.activejdbc.Base;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  * A local storage implementation backed by SQLite 3 databases. Data access is performed via the ActiveJDBC orm
+ * <p/>
+ * A write-through cache is maintained for all written data, so accessions do not go to the database.
  */
 public class LocalStorage {
 
@@ -57,8 +56,35 @@ public class LocalStorage {
      */
     private final String path;
 
+    private final Map<String, String> stringItems;
+
+    private final Map<String, Boolean> booleanItems;
+
+    private final Map<String, Byte> byteItems;
+
+    private final Map<String, Short> shortItems;
+
+    private final Map<String, Integer> integerItems;
+
+    private final Map<String, Long> longItems;
+
+    private final Map<String, Float> floatItems;
+
+    private final Map<String, Double> doubleItems;
+
+    private final Map<String, Date> dateItems;
+
     public LocalStorage(String path) throws IOException {
         this.path = path;
+        stringItems = new HashMap<>();
+        booleanItems = new HashMap<>();
+        byteItems = new HashMap<>();
+        shortItems = new HashMap<>();
+        integerItems = new HashMap<>();
+        longItems = new HashMap<>();
+        floatItems = new HashMap<>();
+        doubleItems = new HashMap<>();
+        dateItems = new HashMap<>();
     }
 
     public static LocalStorage createNew(String path) throws IOException {
@@ -156,21 +182,244 @@ public class LocalStorage {
         }
     }
 
+    private <E> E loadCache(Map<String, E> cache, String name, E value) {
+        cache.put(name, value);
+        return value;
+    }
+
     public String getString(String name) {
+        if (stringItems.containsKey(name)) {
+            return stringItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                return loadCache(stringItems, name, item != null ? item.getString(STRING_ITEM.name) : null);
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setString(String name, String value) {
+        loadCache(stringItems, name, value);
         ActiveJDBCController.connect(path);
         try {
-            Item item = getItem(name, false);
-            return item != null ? item.getString(STRING_ITEM.name) : null;
+            Item item = getItem(name, true);
+            item.setString(STRING_ITEM.name, value);
+            saveItem(item);
         } finally {
             ActiveJDBCController.disconnect(path);
         }
     }
 
-    public void setString(String name, String value) {
+    public Boolean getBoolean(String name) {
+        if (booleanItems.containsKey(name)) {
+            return booleanItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                return loadCache(booleanItems, name, item != null ? item.getBoolean(INTEGER_ITEM.name) : null);
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setBoolean(String name, Boolean value) {
+        loadCache(booleanItems, name, value);
         ActiveJDBCController.connect(path);
         try {
             Item item = getItem(name, true);
-            item.setString(STRING_ITEM.name, value);
+            item.setBoolean(INTEGER_ITEM.name, value);
+            saveItem(item);
+        } finally {
+            ActiveJDBCController.disconnect(path);
+        }
+    }
+
+    public Byte getByte(String name) {
+        if (byteItems.containsKey(name)) {
+            return byteItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                return loadCache(byteItems, name, item != null ? item.getInteger(INTEGER_ITEM.name).byteValue() : null);
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setByte(String name, Byte value) {
+        loadCache(byteItems, name, value);
+        ActiveJDBCController.connect(path);
+        try {
+            Item item = getItem(name, true);
+            item.setInteger(INTEGER_ITEM.name, value);
+            saveItem(item);
+        } finally {
+            ActiveJDBCController.disconnect(path);
+        }
+    }
+
+    public Short getShort(String name) {
+        if (shortItems.containsKey(name)) {
+            return shortItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                return loadCache(shortItems, name, item != null ? item.getShort(INTEGER_ITEM.name) : null);
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setShort(String name, Short value) {
+        loadCache(shortItems, name, value);
+        ActiveJDBCController.connect(path);
+        try {
+            Item item = getItem(name, true);
+            item.setShort(INTEGER_ITEM.name, value);
+            saveItem(item);
+        } finally {
+            ActiveJDBCController.disconnect(path);
+        }
+    }
+
+    public Integer getInteger(String name) {
+        if (integerItems.containsKey(name)) {
+            return integerItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                return loadCache(integerItems, name, item != null ? item.getInteger(INTEGER_ITEM.name) : null);
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setInteger(String name, Integer value) {
+        loadCache(integerItems, name, value);
+        ActiveJDBCController.connect(path);
+        try {
+            Item item = getItem(name, true);
+            item.setInteger(INTEGER_ITEM.name, value);
+            saveItem(item);
+        } finally {
+            ActiveJDBCController.disconnect(path);
+        }
+    }
+
+    public Long getLong(String name) {
+        if (longItems.containsKey(name)) {
+            return longItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                return loadCache(longItems, name, item != null ? item.getLong(INTEGER_ITEM.name) : null);
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setLong(String name, Long value) {
+        loadCache(longItems, name, value);
+        ActiveJDBCController.connect(path);
+        try {
+            Item item = getItem(name, true);
+            item.setLong(INTEGER_ITEM.name, value);
+            saveItem(item);
+        } finally {
+            ActiveJDBCController.disconnect(path);
+        }
+    }
+
+    public Float getFloat(String name) {
+        if (floatItems.containsKey(name)) {
+            return floatItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                return loadCache(floatItems, name, item != null ? item.getFloat(REAL_ITEM.name) : null);
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setFloat(String name, Float value) {
+        loadCache(floatItems, name, value);
+        ActiveJDBCController.connect(path);
+        try {
+            Item item = getItem(name, true);
+            item.setFloat(REAL_ITEM.name, value);
+            saveItem(item);
+        } finally {
+            ActiveJDBCController.disconnect(path);
+        }
+    }
+
+    public Double getDouble(String name) {
+        if (doubleItems.containsKey(name)) {
+            return doubleItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                return loadCache(doubleItems, name, item != null ? item.getDouble(REAL_ITEM.name) : null);
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setDouble(String name, Double value) {
+        loadCache(doubleItems, name, value);
+        ActiveJDBCController.connect(path);
+        try {
+            Item item = getItem(name, true);
+            item.setDouble(REAL_ITEM.name, value);
+            saveItem(item);
+        } finally {
+            ActiveJDBCController.disconnect(path);
+        }
+    }
+
+    public Date getDate(String name) {
+        if (dateItems.containsKey(name)) {
+            return dateItems.get(name);
+        } else {
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, false);
+                if (item != null) {
+                    Long date = item.getLong(INTEGER_ITEM.name);
+                    return loadCache(dateItems, name, date != null ? new Date(date) : null);
+                } else {
+                    return null;
+                }
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        }
+    }
+
+    public void setDate(String name, Date value) {
+        loadCache(dateItems, name, value);
+        ActiveJDBCController.connect(path);
+        try {
+            Item item = getItem(name, true);
+            item.setLong(INTEGER_ITEM.name, value);
             saveItem(item);
         } finally {
             ActiveJDBCController.disconnect(path);
@@ -203,179 +452,6 @@ public class LocalStorage {
             saveItem(item);
         } catch (Exception e) {
             throw new IOException("Cannot set enum for " + enum_);
-        } finally{
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public Boolean getBoolean(String name) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, false);
-            return item != null ? item.getBoolean(INTEGER_ITEM.name) : null;
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public void setBoolean(String name, Boolean value) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setBoolean(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public Byte getByte(String name) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, false);
-            return item != null ? item.getInteger(INTEGER_ITEM.name).byteValue() : null;
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public void setByte(String name, Byte value) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setInteger(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public Short getShort(String name) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, false);
-            return item != null ? item.getShort(INTEGER_ITEM.name) : null;
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public void setShort(String name, Short value) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setShort(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public Integer getInteger(String name) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, false);
-            return item != null ? item.getInteger(INTEGER_ITEM.name) : null;
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public void setInteger(String name, Integer value) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setInteger(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public Long getLong(String name) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, false);
-            return item != null ? item.getLong(INTEGER_ITEM.name) : null;
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public void setLong(String name, Long value) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setLong(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public Float getFloat(String name) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, false);
-            return item != null ? item.getFloat(REAL_ITEM.name) : null;
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public void setFloat(String name, Float value) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setFloat(REAL_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public Double getDouble(String name) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, false);
-            return item != null ? item.getDouble(REAL_ITEM.name) : null;
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public void setDouble(String name, Double value) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setDouble(REAL_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public Date getDate(String name) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, false);
-            if (item != null) {
-                Long date = item.getLong(INTEGER_ITEM.name);
-                return date != null ? new Date(date) : null;
-            } else {
-                return null;
-            }
-        } finally {
-            ActiveJDBCController.disconnect(path);
-        }
-    }
-
-    public void setDate(String name, Date value) {
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setLong(INTEGER_ITEM.name, value);
-            saveItem(item);
         } finally {
             ActiveJDBCController.disconnect(path);
         }

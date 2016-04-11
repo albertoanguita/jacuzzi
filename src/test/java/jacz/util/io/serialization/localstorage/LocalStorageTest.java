@@ -68,6 +68,10 @@ public class LocalStorageTest {
 
         LocalStorage ls = LocalStorage.createNew("localStorage.db");
 
+        Assert.assertEquals(LocalStorage.CURRENT_VERSION, ls.getVersion());
+        Assert.assertTrue((new Date().getTime() - ls.getCreationDate().getTime()) < 250);
+
+
         ls.setString("string", "hello");
         ls.setString("stringNull", null);
         ls.setEnum("enum", Letter.class, Letter.A);
@@ -114,6 +118,7 @@ public class LocalStorageTest {
 
         Assert.assertEquals("hello", ls.getString("string"));
         Assert.assertEquals(null, ls.getString("stringNull"));
+        Assert.assertEquals(Letter.A, ls.getEnum("enum", Letter.class));
         Assert.assertEquals(true, ls.getBoolean("bool"));
         Assert.assertEquals(new Byte((byte) 3), ls.getByte("byte"));
         Assert.assertEquals(new Short((short) 7), ls.getShort("short"));

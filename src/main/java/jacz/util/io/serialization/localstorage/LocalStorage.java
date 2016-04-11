@@ -1,6 +1,7 @@
 package jacz.util.io.serialization.localstorage;
 
 import jacz.storage.ActiveJDBCController;
+import jacz.util.objects.Util;
 import org.javalite.activejdbc.Base;
 
 import java.io.IOException;
@@ -201,15 +202,21 @@ public class LocalStorage {
         }
     }
 
-    public void setString(String name, String value) {
-        loadCache(stringItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setString(STRING_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setString(String name, String value) {
+        String storedValue = getString(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(stringItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setString(STRING_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -227,15 +234,21 @@ public class LocalStorage {
         }
     }
 
-    public void setBoolean(String name, Boolean value) {
-        loadCache(booleanItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setBoolean(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setBoolean(String name, Boolean value) {
+        Boolean storedValue = getBoolean(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(booleanItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setBoolean(INTEGER_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -253,15 +266,21 @@ public class LocalStorage {
         }
     }
 
-    public void setByte(String name, Byte value) {
-        loadCache(byteItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setInteger(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setByte(String name, Byte value) {
+        Byte storedValue = getByte(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(byteItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setInteger(INTEGER_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -279,15 +298,21 @@ public class LocalStorage {
         }
     }
 
-    public void setShort(String name, Short value) {
-        loadCache(shortItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setShort(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setShort(String name, Short value) {
+        Short storedValue = getShort(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(shortItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setShort(INTEGER_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -305,15 +330,21 @@ public class LocalStorage {
         }
     }
 
-    public void setInteger(String name, Integer value) {
-        loadCache(integerItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setInteger(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setInteger(String name, Integer value) {
+        Integer storedValue = getInteger(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(integerItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setInteger(INTEGER_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -331,15 +362,21 @@ public class LocalStorage {
         }
     }
 
-    public void setLong(String name, Long value) {
-        loadCache(longItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setLong(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setLong(String name, Long value) {
+        Long storedValue = getLong(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(longItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setLong(INTEGER_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -357,15 +394,21 @@ public class LocalStorage {
         }
     }
 
-    public void setFloat(String name, Float value) {
-        loadCache(floatItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setFloat(REAL_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setFloat(String name, Float value) {
+        Float storedValue = getFloat(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(floatItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setFloat(REAL_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -383,15 +426,21 @@ public class LocalStorage {
         }
     }
 
-    public void setDouble(String name, Double value) {
-        loadCache(doubleItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setDouble(REAL_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setDouble(String name, Double value) {
+        Double storedValue = getDouble(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(doubleItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setDouble(REAL_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
@@ -414,20 +463,25 @@ public class LocalStorage {
         }
     }
 
-    public void setDate(String name, Date value) {
-        loadCache(dateItems, name, value);
-        ActiveJDBCController.connect(path);
-        try {
-            Item item = getItem(name, true);
-            item.setLong(INTEGER_ITEM.name, value);
-            saveItem(item);
-        } finally {
-            ActiveJDBCController.disconnect(path);
+    public boolean setDate(String name, Date value) {
+        Date storedValue = getDate(name);
+        if (value == null || !Util.equals(value, storedValue)) {
+            loadCache(dateItems, name, value);
+            ActiveJDBCController.connect(path);
+            try {
+                Item item = getItem(name, true);
+                item.setLong(INTEGER_ITEM.name, value);
+                saveItem(item);
+                return true;
+            } finally {
+                ActiveJDBCController.disconnect(path);
+            }
+        } else {
+            return false;
         }
     }
 
     public <E> E getEnum(String name, Class<E> enum_) throws IOException {
-        ActiveJDBCController.connect(path);
         try {
             String str = getString(name);
             if (str != null) {
@@ -438,22 +492,15 @@ public class LocalStorage {
             }
         } catch (Exception e) {
             throw new IOException("Cannot retrieve enum for " + enum_);
-        } finally {
-            ActiveJDBCController.disconnect(path);
         }
     }
 
-    public <E> void setEnum(String name, Class<E> enum_, E value) throws IOException {
-        ActiveJDBCController.connect(path);
+    public <E> boolean setEnum(String name, Class<E> enum_, E value) throws IOException {
         try {
-            Item item = getItem(name, true);
             Method getName = enum_.getMethod("name");
-            item.setString(STRING_ITEM.name, getName.invoke(value));
-            saveItem(item);
+            return setString(name, (String) getName.invoke(value));
         } catch (Exception e) {
             throw new IOException("Cannot set enum for " + enum_);
-        } finally {
-            ActiveJDBCController.disconnect(path);
         }
     }
 

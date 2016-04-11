@@ -97,6 +97,7 @@ public class LocalStorageTest {
         Assert.assertEquals(21, ls.itemCount());
         Assert.assertTrue(ls.containsItem("string"));
         Assert.assertTrue(ls.containsItem("stringNull"));
+        Assert.assertTrue(ls.containsItem("enum"));
         Assert.assertTrue(ls.containsItem("bool"));
         Assert.assertTrue(ls.containsItem("byte"));
         Assert.assertTrue(ls.containsItem("short"));

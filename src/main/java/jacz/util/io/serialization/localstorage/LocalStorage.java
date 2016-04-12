@@ -34,7 +34,7 @@ public class LocalStorage {
 
     private static final TableField ID = new TableField("id", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT");
 
-    private static final TableField VERSION = new TableField("version", "TEXT");
+    private static final TableField LS_VERSION = new TableField("ls_version", "TEXT");
 
     private static final TableField CREATION_DATE = new TableField("creation_date", "INTEGER");
 
@@ -95,7 +95,7 @@ public class LocalStorage {
 
         StringBuilder create = new StringBuilder("CREATE TABLE ").append(METADATA_TABLE).append("(");
         appendField(create, ID, false);
-        appendField(create, VERSION, false);
+        appendField(create, LS_VERSION, false);
         appendField(create, CREATION_DATE, true);
         Base.exec(create.toString());
 
@@ -107,7 +107,7 @@ public class LocalStorage {
         Base.exec(create.toString());
 
         Metadata Metadata = new Metadata();
-        Metadata.setString(VERSION.name, CURRENT_VERSION);
+        Metadata.setString(LS_VERSION.name, CURRENT_VERSION);
         Metadata.setLong(CREATION_DATE.name, new Date().getTime());
         Metadata.saveIt();
 
@@ -148,8 +148,8 @@ public class LocalStorage {
         }
     }
 
-    public String getVersion() {
-        return getMetadata().getString(VERSION.name);
+    public String getLocalStorageVersion() {
+        return getMetadata().getString(LS_VERSION.name);
     }
 
     public Date getCreationDate() {

@@ -1,11 +1,11 @@
 package jacz.util.io.serialization.localstorage;
 
 import org.javalite.activejdbc.Model;
-import org.javalite.activejdbc.annotations.Table;
+import org.javalite.activejdbc.annotations.DbName;
 
 /**
  * The table for user-made items handled by the local storage
  */
-//@Table("items")
+@DbName(LocalStorage.DATABASE)
 public class Item extends Model {
 }

@@ -21,9 +21,12 @@ public class ThreadExecutor {
 
         protected final String concurrentActivity;
 
-        public Task(ConcurrencyController concurrencyController, String concurrentActivity) {
+        protected final String threadName;
+
+        public Task(ConcurrencyController concurrencyController, String concurrentActivity, String threadName) {
             this.concurrencyController = concurrencyController;
             this.concurrentActivity = concurrentActivity;
+            this.threadName = threadName;
         }
 
         protected void start() {
@@ -43,14 +46,15 @@ public class ThreadExecutor {
 
         private final Callable<V> task;
 
-        public InnerCallable(Callable<V> task, ConcurrencyController concurrencyController, String concurrentActivity) {
-            super(concurrencyController, concurrentActivity);
+        public InnerCallable(Callable<V> task, ConcurrencyController concurrencyController, String concurrentActivity, String threadName) {
+            super(concurrencyController, concurrentActivity, threadName);
             this.task = task;
         }
 
         @Override
         public V call() throws Exception {
             try {
+                Thread.currentThread().setName(threadName);
                 start();
                 return task.call();
             } finally {
@@ -63,14 +67,15 @@ public class ThreadExecutor {
 
         private final Runnable task;
 
-        public InnerRunnable(Runnable task, ConcurrencyController concurrencyController, String concurrentActivity) {
-            super(concurrencyController, concurrentActivity);
+        public InnerRunnable(Runnable task, ConcurrencyController concurrencyController, String concurrentActivity, String threadName) {
+            super(concurrencyController, concurrentActivity, threadName);
             this.task = task;
         }
 
         @Override
         public void run() {
             try {
+                Thread.currentThread().setName(threadName);
                 start();
                 task.run();
             } finally {
@@ -79,44 +84,7 @@ public class ThreadExecutor {
         }
     }
 
-
-    /**
-     * The default thread factory
-     */
-    private static class InnerThreadFactory implements ThreadFactory {
-
-        private final ThreadGroup group;
-
-        private String nextName;
-
-        InnerThreadFactory() {
-            SecurityManager s = System.getSecurityManager();
-            group = (s != null) ? s.getThreadGroup() :
-                    Thread.currentThread().getThreadGroup();
-            nextName = "unknown";
-        }
-
-        private void setNextName(String name) {
-            nextName = name;
-        }
-
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(
-                    group,
-                    r,
-                    nextName,
-                    0);
-            if (t.isDaemon())
-                t.setDaemon(false);
-            if (t.getPriority() != Thread.NORM_PRIORITY)
-                t.setPriority(Thread.NORM_PRIORITY);
-            return t;
-        }
-    }
-
-    private static final InnerThreadFactory innerThreadFactory = new InnerThreadFactory();
-
-    private static final ExecutorService executorService = Executors.newCachedThreadPool(innerThreadFactory);
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private static final ObjectCount<String> registeredClients = new ObjectCount<>();
 
@@ -288,8 +256,8 @@ public class ThreadExecutor {
             String threadName,
             ConcurrencyController concurrencyController,
             String concurrentActivity) {
-        innerThreadFactory.setNextName(threadName);
-        return executorService.submit(new InnerCallable<>(task, concurrencyController, concurrentActivity));
+//        innerThreadFactory.setNextName(threadName);
+        return executorService.submit(new InnerCallable<>(task, concurrencyController, concurrentActivity, threadName));
     }
 
     /**
@@ -309,8 +277,8 @@ public class ThreadExecutor {
             String threadName,
             ConcurrencyController concurrencyController,
             String concurrentActivity) {
-        innerThreadFactory.setNextName(threadName);
-        return executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity));
+//        innerThreadFactory.setNextName(threadName);
+        return executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName));
     }
 
     /**
@@ -331,7 +299,7 @@ public class ThreadExecutor {
             String threadName,
             ConcurrencyController concurrencyController,
             String concurrentActivity) {
-        innerThreadFactory.setNextName(threadName);
-        return executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity), result);
+//        innerThreadFactory.setNextName(threadName);
+        return executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName), result);
     }
 }

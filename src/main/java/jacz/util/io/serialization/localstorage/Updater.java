@@ -5,5 +5,5 @@ package jacz.util.io.serialization.localstorage;
  */
 public interface Updater {
 
-    public String update(VersionedLocalStorage versionedLocalStorage, String storedVersion);
+    String update(VersionedLocalStorage versionedLocalStorage, String storedVersion);
 }

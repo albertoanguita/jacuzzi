@@ -6,6 +6,7 @@ import jacz.util.id.AlphaNumFactory;
 import jacz.util.log.ErrorLog;
 import jacz.util.objects.Util;
 
+import java.util.Arrays;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -130,7 +131,7 @@ public class Timer {
                 timerActionResult = timerAction.wakeUp(this);
             } catch (Exception e) {
                 //unexpected exception obtained. Print error and terminate
-                ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in timer action implementation", e);
+                ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in timer action implementation", e, Arrays.toString(e.getStackTrace()));
                 kill();
             }
             synchronized (this) {

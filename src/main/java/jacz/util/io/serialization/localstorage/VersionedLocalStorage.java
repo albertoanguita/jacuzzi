@@ -24,7 +24,8 @@ public class VersionedLocalStorage extends LocalStorage {
     }
 
     public static VersionedLocalStorage createNew(String path, String version) throws IOException {
-        VersionedLocalStorage vls = (VersionedLocalStorage) LocalStorage.createNew(path);
+        LocalStorage.createNew(path);
+        VersionedLocalStorage vls = new VersionedLocalStorage(path);
         vls.updateVersion(version);
         return vls;
     }

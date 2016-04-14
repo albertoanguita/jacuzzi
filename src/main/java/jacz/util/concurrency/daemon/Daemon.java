@@ -4,6 +4,7 @@ import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.log.ErrorLog;
 
+import java.util.Arrays;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -138,7 +139,7 @@ public class Daemon {
             return daemonAction.solveState();
         } catch (Exception e) {
             //unexpected exception obtained. Print error and terminate
-            ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in daemon implementation", e);
+            ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in daemon implementation", e, Arrays.toString(e.getStackTrace()));
             stop();
             return true;
         }

@@ -21,7 +21,7 @@ public class ThreadExecutor {
 
         protected final String concurrentActivity;
 
-        protected final String threadName;
+        private final String threadName;
 
         public Task(ConcurrencyController concurrencyController, String concurrentActivity, String threadName) {
             this.concurrencyController = concurrencyController;
@@ -30,6 +30,7 @@ public class ThreadExecutor {
         }
 
         protected void start() {
+            Thread.currentThread().setName(threadName);
             if (concurrencyController != null) {
                 concurrencyController.beginActivity(concurrentActivity);
             }
@@ -54,7 +55,6 @@ public class ThreadExecutor {
         @Override
         public V call() throws Exception {
             try {
-                Thread.currentThread().setName(threadName);
                 start();
                 return task.call();
             } finally {
@@ -75,7 +75,6 @@ public class ThreadExecutor {
         @Override
         public void run() {
             try {
-                Thread.currentThread().setName(threadName);
                 start();
                 task.run();
             } finally {
@@ -256,7 +255,6 @@ public class ThreadExecutor {
             String threadName,
             ConcurrencyController concurrencyController,
             String concurrentActivity) {
-//        innerThreadFactory.setNextName(threadName);
         return executorService.submit(new InnerCallable<>(task, concurrencyController, concurrentActivity, threadName));
     }
 
@@ -277,7 +275,6 @@ public class ThreadExecutor {
             String threadName,
             ConcurrencyController concurrencyController,
             String concurrentActivity) {
-//        innerThreadFactory.setNextName(threadName);
         return executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName));
     }
 

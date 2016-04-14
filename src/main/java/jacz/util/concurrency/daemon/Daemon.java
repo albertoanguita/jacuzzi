@@ -1,5 +1,6 @@
 package jacz.util.concurrency.daemon;
 
+import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.log.ErrorLog;
@@ -68,14 +69,21 @@ public class Daemon {
 
     private final AtomicBoolean alive;
 
+    private final String threadName;
+
 
     public Daemon(DaemonAction daemonAction) {
+        this(daemonAction, ThreadUtil.invokerName(1));
+    }
+
+    public Daemon(DaemonAction daemonAction, String threadName) {
         this.daemonAction = daemonAction;
         future = null;
         stateChangeFlag = new AtomicBoolean(false);
         daemonThreadFlag = new AtomicBoolean(false);
         blockUntilStateSolve = new TrafficControl();
         alive = new AtomicBoolean(true);
+        this.threadName = threadName;
         ThreadExecutor.registerClient(this.getClass().getName());
     }
 
@@ -89,7 +97,7 @@ public class Daemon {
         if (!daemonThreadFlag.get()) {
             daemonThreadFlag.set(true);
             stateChangeFlag.set(false);
-            future = ThreadExecutor.submit(new DaemonTask(this));
+            future = ThreadExecutor.submit(new DaemonTask(this), threadName + "/Daemon");
         }
     }
 

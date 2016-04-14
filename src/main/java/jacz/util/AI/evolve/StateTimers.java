@@ -1,5 +1,6 @@
 package jacz.util.AI.evolve;
 
+import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.concurrency.timer.TimerAction;
 
@@ -38,9 +39,13 @@ public class StateTimers<S> implements TimerAction {
     private final AtomicBoolean alive;
 
     public StateTimers(S state) {
+        this(state, ThreadUtil.invokerName(1));
+    }
+
+    public StateTimers(S state, String threadName) {
         this.state = state;
         registeredStateTimers = new HashMap<>();
-        timer = new Timer(0, this, false, this.getClass().toString());
+        timer = new Timer(0, this, false, threadName);
         timerSource = null;
         alive = new AtomicBoolean(true);
     }

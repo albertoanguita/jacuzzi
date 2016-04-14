@@ -42,19 +42,23 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
     private final AtomicBoolean alive;
 
     public EvolvingState(S state, G initialGoal, Transitions<S, G> transitions) {
+        this(state, initialGoal, transitions, ThreadUtil.invokerName(1));
+    }
+
+    public EvolvingState(S state, G initialGoal, Transitions<S, G> transitions, String threadName) {
         this.state = state;
         this.goal = initialGoal;
         this.transitions = transitions;
-        daemon = new Daemon(this);
-        runnableStateTimers = new StateTimers<>(state);
-        evolveStateTimers = new StateTimers<>(state);
+        daemon = new Daemon(this, threadName + "/EvolvingState");
+        runnableStateTimers = new StateTimers<>(state, threadName + "/EvolvingState/RunnableStateTimers");
+        evolveStateTimers = new StateTimers<>(state, threadName + "/EvolvingState/EvolveStateTimers");
         evolveTask = new Runnable() {
             @Override
             public void run() {
                 evolve();
             }
         };
-        stateHooks = new StateHooks<S>(state);
+        stateHooks = new StateHooks<S>(state, threadName + "/EvolvingState/StateHooks");
         alive = new AtomicBoolean(true);
     }
 

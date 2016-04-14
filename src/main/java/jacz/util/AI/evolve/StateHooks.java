@@ -1,5 +1,6 @@
 package jacz.util.AI.evolve;
 
+import jacz.util.concurrency.ThreadUtil;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
@@ -25,12 +26,22 @@ public class StateHooks<S> {
 
     private final ExecutorService hookExecutor;
 
+    private final String threadName;
+
 
     public StateHooks(S state) {
         this(state, true);
     }
 
+    public StateHooks(S state, String threadName) {
+        this(state, true, threadName);
+    }
+
     public StateHooks(S state, boolean executeInParallel) {
+        this(state, executeInParallel, ThreadUtil.invokerName(1));
+    }
+
+    public StateHooks(S state, boolean executeInParallel, String threadName) {
         this.state = state;
         registeredEnterStateHooks = new HashMap<>();
         activeEnterStateHooks = new HashSet<>();
@@ -42,6 +53,7 @@ public class StateHooks<S> {
         } else {
             hookExecutor = null;
         }
+        this.threadName = threadName;
     }
 
     public synchronized void stateHasChanged() {
@@ -114,7 +126,7 @@ public class StateHooks<S> {
 
     private void runTask(Runnable runnable) {
         if (executeInParallel) {
-            hookExecutor.submit(runnable);
+            hookExecutor.submit(runnable, threadName);
         } else {
             runnable.run();
         }

@@ -14,7 +14,7 @@ import jacz.util.concurrency.timer.Timer;
 public class Test implements TimerAction {
 
     public void func() {
-        Timer timer = new Timer(3000, this);
+        Timer timer = new Timer(3000, this, "HELLO");
 
         ThreadUtil.safeSleep(500);
 
@@ -27,7 +27,7 @@ public class Test implements TimerAction {
 
 //        timer.kill();
         //ResettableTimer__REMOVE timer = new ResettableTimer__REMOVE(1000, this);
-        timer.stop();
+//        timer.stop();
     }
 
     public static void main(String args[]) {
@@ -39,6 +39,7 @@ public class Test implements TimerAction {
     @Override
     public Long wakeUp(Timer timer) {
         System.out.println("WAKE UP!!!");
+        System.out.println(Thread.currentThread().getName());
         return 500L;
     }
 

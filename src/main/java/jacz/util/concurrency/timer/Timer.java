@@ -225,8 +225,8 @@ public class Timer {
      */
     public synchronized void stop() {
         if (active.get()) {
-            active.set(false);
             remainingTimeWhenStopped = remainingTime();
+            active.set(false);
             future.cancel(true);
         }
     }

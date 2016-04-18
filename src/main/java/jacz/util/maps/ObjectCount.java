@@ -99,4 +99,14 @@ public class ObjectCount<E> {
     public int getTotalCount() {
         return totalCount;
     }
+
+    @Override
+    public String toString() {
+        return "ObjectCount{" +
+                "objectCount=" + objectCount +
+                ", allowNegative=" + allowNegative +
+                ", allowNewObjects=" + allowNewObjects +
+                ", totalCount=" + totalCount +
+                '}';
+    }
 }

@@ -3,7 +3,7 @@ package jacz.util.lists.tuple;
 /**
  * Created by Alberto on 11/12/2015.
  */
-public class FiveTuple<X, Y, Z, U, V> extends Four_Tuple<X, Y, Z, U> {
+public class FiveTuple<X, Y, Z, U, V> extends FourTuple<X, Y, Z, U> {
 
     public final V element5;
 

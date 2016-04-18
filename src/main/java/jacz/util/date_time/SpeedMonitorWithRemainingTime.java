@@ -73,7 +73,6 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
         this.remainingTimeToReport = remainingTimeToReport;
         remainingTimeTimer = new Timer(1, this, false, threadName);
         justReportedRemainingTime = false;
-        ThreadExecutor.registerClient(this.getClass().getName());
     }
 
     @Override
@@ -133,6 +132,5 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
     public synchronized void stop() {
         super.stop();
         remainingTimeTimer.kill();
-        ThreadExecutor.shutdownClient(this.getClass().getName());
     }
 }

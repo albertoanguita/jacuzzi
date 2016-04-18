@@ -97,7 +97,8 @@ public class Timer {
         active = new AtomicBoolean(false);
         alive = new AtomicBoolean(true);
         remainingTimeWhenStopped = 0;
-        this.threadName = threadName;
+        this.threadName = threadName + "/Timer";
+        ThreadExecutor.registerClient(this.getClass().getName());
         if (start) {
             start();
         }
@@ -108,11 +109,10 @@ public class Timer {
     }
 
     private void start() {
-        if (alive.get()) {
+        if (alive.get() && !active.get()) {
             active.set(true);
-            ThreadExecutor.registerClient(this.getClass().getName());
             wakeUpTask = new WakeUpTask(this);
-            future = ThreadExecutor.submit(wakeUpTask, threadName + "/Timer");
+            future = ThreadExecutor.submit(wakeUpTask, threadName);
             setActivationTime();
             remainingTimeWhenStopped = 0;
         }
@@ -160,7 +160,6 @@ public class Timer {
                         stop();
                         return false;
                     }
-//                    return active.get();
                 }
             }
         } else {
@@ -226,9 +225,8 @@ public class Timer {
      */
     public synchronized void stop() {
         if (active.get()) {
-            remainingTimeWhenStopped = remainingTime();
             active.set(false);
-            ThreadExecutor.shutdownClient(this.getClass().getName());
+            remainingTimeWhenStopped = remainingTime();
             future.cancel(true);
         }
     }
@@ -243,8 +241,11 @@ public class Timer {
      * The timer is stopped, and cannot be resumed/reset again
      */
     public synchronized void kill() {
-        alive.set(false);
-        stop();
+        if (alive.get()) {
+            alive.set(false);
+            stop();
+            ThreadExecutor.shutdownClient(this.getClass().getName());
+        }
     }
 
 

@@ -110,15 +110,17 @@ public class Daemon {
     }
 
     public void stop() {
-        alive.set(false);
-        if (future != null) {
-            try {
-                future.get();
-            } catch (Exception e) {
-                // ignore exceptions
+        if (alive.get()) {
+            alive.set(false);
+            if (future != null) {
+                try {
+                    future.get();
+                } catch (Exception e) {
+                    // ignore exceptions
+                }
             }
+            ThreadExecutor.shutdownClient(this.getClass().getName());
         }
-        ThreadExecutor.shutdownClient(this.getClass().getName());
     }
 
     /**

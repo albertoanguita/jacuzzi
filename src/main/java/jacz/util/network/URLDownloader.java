@@ -180,7 +180,7 @@ public class URLDownloader {
             if (urlFile == null || urlFile.length() == 0) {
                 throw new IOException("Cannot form a correct local path");
             }
-            filePath = FileUtils.getFile(urlFile, filePath).getPath();
+            filePath = FileUtils.getFile(filePath, urlFile).getPath();
         }
         return filePath;
     }

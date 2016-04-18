@@ -43,6 +43,7 @@ public class ErrorLog {
     private void reportError(String message, Object... data) {
         printStream.println("ERROR THROWN");
         printStream.println("------------");
+        printStream.println("Thread: " + Thread.currentThread().getName());
         printStream.println(new SimpleDateFormat("YYY/MM/dd-HH:mm:ss:SSS").format(new Date()));
         printStream.println();
         printError(printStream, message, data);
@@ -58,6 +59,7 @@ public class ErrorLog {
         int i = 0;
         for (Object o : data) {
             printStream.println("Data " + i + ": " + o.toString());
+            i++;
         }
     }
 }

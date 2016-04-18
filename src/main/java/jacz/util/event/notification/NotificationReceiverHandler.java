@@ -135,7 +135,6 @@ class NotificationReceiverHandler implements TimerAction {
         if (timer != null) {
             timer.kill();
         }
-//        sequentialTaskExecutor.stopAndWaitForFinalization();
         sequentialExecutorService.shutdown();
     }
 }

@@ -1,5 +1,6 @@
 package jacz.util.queues;
 
+import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.concurrency.timer.Timer;
 import jacz.util.concurrency.timer.TimerAction;
@@ -7,6 +8,7 @@ import jacz.util.concurrency.timer.TimerAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A queue where elements die after a period of time, and are automatically removed from the queue
@@ -72,25 +74,27 @@ public class TimedQueue<T> implements TimerAction {
 
     private final Timer removeTimer;
 
+    private final AtomicBoolean alive;
+
     public TimedQueue(long millisToStore, TimedQueueInterface<T> timedQueueInterface) {
-        queue = new ArrayList<>();
-        this.millisToStore = millisToStore;
-        this.timedQueueInterface = timedQueueInterface;
-        removeTimer = new Timer(millisToStore, this, false, "TimedQueueInterface");
-        ThreadExecutor.registerClient(this.getClass().getName());
+        this(millisToStore, timedQueueInterface, ThreadUtil.invokerName(1));
     }
 
     public TimedQueue(long millisToStore, TimedQueueInterface<T> timedQueueInterface, String threadName) {
         queue = new ArrayList<>();
         this.millisToStore = millisToStore;
         this.timedQueueInterface = timedQueueInterface;
-        removeTimer = new Timer(millisToStore, this, false, "TimedQueueInterface(" + threadName + ")");
+        removeTimer = new Timer(millisToStore, this, false, threadName + "/TimedQueue");
+        alive = new AtomicBoolean(true);
         ThreadExecutor.registerClient(this.getClass().getName());
     }
 
     public synchronized void stop() {
-        removeTimer.kill();
-        ThreadExecutor.shutdownClient(this.getClass().getName());
+        if (alive.get()) {
+            alive.set(false);
+            removeTimer.kill();
+            ThreadExecutor.shutdownClient(this.getClass().getName());
+        }
     }
 
     public synchronized boolean isEmpty() {

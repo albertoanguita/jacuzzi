@@ -3,11 +3,11 @@ package jacz.util.lists.tuple;
 /**
  * A 4-tuple of four generic elements
  */
-public class Four_Tuple<X, Y, Z, U> extends Triple<X, Y, Z> {
+public class FourTuple<X, Y, Z, U> extends Triple<X, Y, Z> {
 
     public final U element4;
 
-    public Four_Tuple(X element1, Y element2, Z element3, U element4) {
+    public FourTuple(X element1, Y element2, Z element3, U element4) {
         super(element1, element2, element3);
         this.element4 = element4;
     }
@@ -23,7 +23,7 @@ public class Four_Tuple<X, Y, Z, U> extends Triple<X, Y, Z> {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
-        Four_Tuple<?, ?, ?, ?> that = (Four_Tuple<?, ?, ?, ?>) o;
+        FourTuple<?, ?, ?, ?> that = (FourTuple<?, ?, ?, ?>) o;
 
         return element4.equals(that.element4);
 

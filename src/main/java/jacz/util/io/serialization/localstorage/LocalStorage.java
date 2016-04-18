@@ -78,15 +78,15 @@ public class LocalStorage {
 
     public LocalStorage(String path) throws IOException {
         this.path = path;
-        stringItems = new HashMap<>();
-        booleanItems = new HashMap<>();
-        byteItems = new HashMap<>();
-        shortItems = new HashMap<>();
-        integerItems = new HashMap<>();
-        longItems = new HashMap<>();
-        floatItems = new HashMap<>();
-        doubleItems = new HashMap<>();
-        dateItems = new HashMap<>();
+        stringItems = Collections.synchronizedMap(new HashMap<String, String>());
+        booleanItems = Collections.synchronizedMap(new HashMap<String, Boolean>());
+        byteItems = Collections.synchronizedMap(new HashMap<String, Byte>());
+        shortItems = Collections.synchronizedMap(new HashMap<String, Short>());
+        integerItems = Collections.synchronizedMap(new HashMap<String, Integer>());
+        longItems = Collections.synchronizedMap(new HashMap<String, Long>());
+        floatItems = Collections.synchronizedMap(new HashMap<String, Float>());
+        doubleItems = Collections.synchronizedMap(new HashMap<String, Double>());
+        dateItems = Collections.synchronizedMap(new HashMap<String, Date>());
     }
 
     public static LocalStorage createNew(String path) throws IOException {
@@ -482,7 +482,7 @@ public class LocalStorage {
         }
     }
 
-    public <E> E getEnum(String name, Class<E> enum_) throws IOException {
+    public <E> E getEnum(String name, Class<E> enum_) {
         try {
             String str = getString(name);
             if (str != null) {
@@ -492,16 +492,20 @@ public class LocalStorage {
                 return null;
             }
         } catch (Exception e) {
-            throw new IOException("Cannot retrieve enum for " + enum_);
+            // cannot happen
+            // todo fatal error
+            return null;
         }
     }
 
-    public <E> boolean setEnum(String name, Class<E> enum_, E value) throws IOException {
+    public <E> boolean setEnum(String name, Class<E> enum_, E value) {
         try {
             Method getName = enum_.getMethod("name");
             return setString(name, (String) getName.invoke(value));
         } catch (Exception e) {
-            throw new IOException("Cannot set enum for " + enum_);
+            // cannot happen
+            // todo fatal error
+            return false;
         }
     }
 
@@ -694,7 +698,7 @@ public class LocalStorage {
         setLongList(name, longList);
     }
 
-    public <E> List<E> getEnumList(String name, Class<E> enum_) throws IOException {
+    public <E> List<E> getEnumList(String name, Class<E> enum_) {
         ActiveJDBCController.connect(DATABASE, path);
         try {
             Item item = getItem(name, false);
@@ -709,13 +713,15 @@ public class LocalStorage {
                 return null;
             }
         } catch (Exception e) {
-            throw new IOException("Cannot retrieve enum list for " + enum_);
+            // cannot happen
+            // todo fatal error
+            return null;
         } finally {
             ActiveJDBCController.disconnect();
         }
     }
 
-    public <E> void setEnumList(String name, Class<E> enum_, List<E> list) throws IOException {
+    public <E> void setEnumList(String name, Class<E> enum_, List<E> list) {
         ActiveJDBCController.connect(DATABASE, path);
         try {
             Item item = getItem(name, true);
@@ -727,7 +733,8 @@ public class LocalStorage {
             setString(name, serializeList(strList));
             saveItem(item);
         } catch (Exception e) {
-            throw new IOException("Cannot set enum list for " + enum_);
+            // cannot happen
+            // todo fatal error
         } finally {
             ActiveJDBCController.disconnect();
         }

@@ -10,6 +10,7 @@ import jacz.util.numeric.range.Range;
 import jacz.util.queues.TimedQueue;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class contains logic and methods that allow measuring the speed of a process. The progress of a process is
@@ -80,6 +81,8 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
      */
     private boolean justReportedBelowSpeed;
 
+    private final AtomicBoolean alive;
+
     public SpeedMonitor(long millisToStore) {
         this(millisToStore, null, null, -1);
     }
@@ -105,6 +108,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
         }
         justReportedAboveSpeed = false;
         justReportedBelowSpeed = false;
+        alive = new AtomicBoolean(true);
         ThreadExecutor.registerClient(this.getClass().getName());
     }
 
@@ -174,14 +178,17 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
      * reminder calls can be received after some period of time
      */
     public synchronized void stop() {
-        progress.stop();
-        if (reportSpeedAboveTimer != null) {
-            reportSpeedAboveTimer.kill();
+        if (alive.get()) {
+            alive.set(false);
+            progress.stop();
+            if (reportSpeedAboveTimer != null) {
+                reportSpeedAboveTimer.kill();
+            }
+            if (reportSpeedBelowTimer != null) {
+                reportSpeedBelowTimer.kill();
+            }
+            ThreadExecutor.shutdownClient(this.getClass().getName());
         }
-        if (reportSpeedBelowTimer != null) {
-            reportSpeedBelowTimer.kill();
-        }
-        ThreadExecutor.shutdownClient(this.getClass().getName());
     }
 
     private synchronized void checkSpeed(boolean above) {

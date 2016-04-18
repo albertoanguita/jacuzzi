@@ -298,9 +298,9 @@ public class FileGenerator {
         while (true) {
             File dirPath;
             if (index == -1) {
-                dirPath = FileUtils.getFile(baseDirName, containerDir);
+                dirPath = FileUtils.getFile(containerDir, baseDirName);
             } else {
-                dirPath = FileUtils.getFile(baseDirName + preIndex + index + postIndex, containerDir);
+                dirPath = FileUtils.getFile(containerDir, baseDirName + preIndex + index + postIndex);
             }
             if (!dirPath.isDirectory()) {
                 FileUtils.forceMkdir(dirPath);
@@ -348,9 +348,9 @@ public class FileGenerator {
                 for (int i = 0; i < baseFileNameList.size(); i++) {
                     File filePath;
                     if (index == -1) {
-                        filePath = FileUtils.getFile(baseFileNameList.get(i) + FILE_EXTENSION_SEPARATOR + extensionList.get(i), dir);
+                        filePath = FileUtils.getFile(dir, baseFileNameList.get(i) + FILE_EXTENSION_SEPARATOR + extensionList.get(i));
                     } else {
-                        filePath = FileUtils.getFile(baseFileNameList.get(i) + preIndex + index + postIndex + FILE_EXTENSION_SEPARATOR + extensionList.get(i), dir);
+                        filePath = FileUtils.getFile(dir, baseFileNameList.get(i) + preIndex + index + postIndex + FILE_EXTENSION_SEPARATOR + extensionList.get(i));
                     }
                     generatedPaths.add(new Duple<>(filePath.toString(), FilenameUtils.getName(filePath.toString())));
                     if (filePath.isFile()) {

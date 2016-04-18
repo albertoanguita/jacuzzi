@@ -15,6 +15,7 @@ public class ErrorFactory {
         PrintStream ps = new PrintStream(baos);
         ps.println("ERROR THROWN");
         ps.println("------------");
+        ps.println("Thread: " + Thread.currentThread().getName());
         ps.println(new SimpleDateFormat("YYY/MM/dd-HH:mm:ss:SSS").format(new Date()));
         ps.println();
         printError(ps, message, data);
@@ -31,6 +32,7 @@ public class ErrorFactory {
         int i = 0;
         for (Object o : data) {
             ps.println("Data " + i + ": " + o.toString());
+            i++;
         }
     }
 

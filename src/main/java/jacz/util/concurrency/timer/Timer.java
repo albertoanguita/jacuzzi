@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * This class offers a timer which activates after a specified time, invoking a given method. The timer will keep
  * activating itself periodically, until the given method tells it to stop.
- * <p/>
+ * <p>
  * Note that if you have activated a timer and then you assign your Timer object a null value or any other Timer,
  * the first timer will still activate itself. You must stop it first!!!
  */
@@ -60,6 +60,14 @@ public class Timer {
      * The last timeout set for this timer
      */
     private long millis;
+
+    /**
+     * The time that the current timer run will have to wait (if reset, it will be similar to millis. If resumed,
+     * it will be the remaining time).
+     * <p>
+     * This is the actual time that the wake up task will query for
+     */
+    private long millisForThisRun;
 
     /**
      * The time at which this timer was last activated
@@ -152,11 +160,11 @@ public class Timer {
                         setActivationTime();
                         return true;
                     }
-                    if (timerActionResult == null || timerActionResult > 0) {
+                    if (timerActionResult == null) {
                         setActivationTime();
                         return true;
                     } else {
-                        // stop the timer
+                        // 0 or negative value -> stop the timer
                         stop();
                         return false;
                     }
@@ -176,8 +184,12 @@ public class Timer {
         }
     }
 
-    synchronized long getMillis() {
+    public synchronized long getMillis() {
         return millis;
+    }
+
+    synchronized long getMillisForThisRun() {
+        return millisForThisRun;
     }
 
     public synchronized long remainingTime() {
@@ -215,8 +227,13 @@ public class Timer {
     }
 
     public synchronized void reset(long millis) {
-        stop();
         this.millis = millis;
+        runTimer(millis);
+    }
+
+    private void runTimer(long millisForThisRun) {
+        stop();
+        this.millisForThisRun = millisForThisRun;
         start();
     }
 
@@ -233,7 +250,7 @@ public class Timer {
 
     public synchronized void resume() {
         if (!active.get() && remainingTimeWhenStopped > 0) {
-            reset(remainingTimeWhenStopped);
+            runTimer(remainingTimeWhenStopped);
         }
     }
 

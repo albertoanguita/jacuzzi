@@ -89,9 +89,11 @@ public class StateTimers<S> implements TimerAction {
     private void checkStateTimers() {
         timer.stop();
         Long minTime = null;
+        boolean minTimeIsForCurrentTimer = false;
         if (timerSource != null && timerSource.isInCondition(state)) {
             // there is an active timer and it is still valid, put it as candidate with its remaining time
             minTime = timer.remainingTime();
+            minTimeIsForCurrentTimer = true;
         }
         for (Map.Entry<StateCondition<S>, TimerAction> timers : registeredStateTimers.entrySet()) {
             if (timers.getKey().isInCondition(state)) {
@@ -99,13 +101,18 @@ public class StateTimers<S> implements TimerAction {
                 if (minTime == null || timers.getValue().millis < minTime) {
                     timerSource = timers.getKey();
                     minTime = timers.getValue().millis;
+                    minTimeIsForCurrentTimer = false;
                 }
             }
         }
         // we found a compatible timer -> start it
         if (minTime != null) {
             // the timer must be set
-            timer.reset(minTime);
+            if (minTimeIsForCurrentTimer) {
+                timer.resume();
+            } else {
+                timer.reset(minTime);
+            }
         } else {
             // no compatible timers
             timerSource = null;

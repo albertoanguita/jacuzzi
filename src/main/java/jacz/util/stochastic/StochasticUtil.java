@@ -3,7 +3,7 @@ package jacz.util.stochastic;
 import java.util.Random;
 
 /**
- *
+ * todo check this class... not very useful
  */
 public class StochasticUtil {
 

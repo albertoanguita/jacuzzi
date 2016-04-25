@@ -190,4 +190,51 @@ public class TestEvolvingState {
         Assert.assertEquals(state, evolvingState.state());
         System.out.println("We are in state " + state);
     }
+
+
+    private static class State2 {
+        int state;
+
+        public State2() {
+            this.state = 0;
+        }
+
+        @Override
+        public String toString() {
+            return "State2{" + state + '}';
+        }
+    }
+
+    @Test
+    public void test2() {
+        EvolvingState.Transitions<State2, Boolean> transitions = new EvolvingState.Transitions<State2, Boolean>() {
+            @Override
+            public boolean runTransition(State2 state, Boolean goal, EvolvingStateController<State2, Boolean> controller) {
+                System.out.println("Evolve: " + state);
+                if (goal) {
+                    if (state.state == 0) {
+                        state.state = 1;
+                        controller.stateHasChanged();
+                        return false;
+                    } else {
+                        state.state = 0;
+                        ThreadUtil.safeSleep(500);
+                        controller.stateHasChanged();
+                        return true;
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean hasReachedGoal(State2 state, Boolean goal) {
+                return true;
+            }
+        };
+        EvolvingState<State2, Boolean> evolvingState = new EvolvingState<>(new State2(), true, transitions);
+        evolvingState.setEvolveStateTimer(state -> true, 5000L);
+
+        System.out.println("start");
+        ThreadUtil.safeSleep(41000L);
+    }
 }

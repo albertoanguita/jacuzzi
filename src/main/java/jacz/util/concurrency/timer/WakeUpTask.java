@@ -17,7 +17,7 @@ class WakeUpTask implements Runnable {
     public void run() {
         while (!finished) {
             try {
-                Thread.sleep(timer.getMillis());
+                Thread.sleep(timer.getMillisForThisRun());
             } catch (InterruptedException e) {
                 // the timer interrupted this wake up task because it was stopped -> break
                 break;

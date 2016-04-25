@@ -149,6 +149,10 @@ public class LocalStorage {
         }
     }
 
+    public String getPath() {
+        return path;
+    }
+
     public String getLocalStorageVersion() {
         return getMetadata().getString(LS_VERSION.name);
     }

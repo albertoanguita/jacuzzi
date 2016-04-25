@@ -94,7 +94,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
     public SpeedMonitor(long millisToStore, SpeedMonitorAction speedMonitorAction, LongRange speedMonitorRange, int millisAllowedOutOfSpeedRange, String threadName) {
         initialTimeMark = System.currentTimeMillis();
         outOfInitialRange = false;
-        progress = new TimedQueue<>(millisToStore, this, threadName);
+        progress = new TimedQueue<>(millisToStore, this, true, threadName);
         storedSize = 0;
         this.speedMonitorAction = speedMonitorAction;
         this.speedMonitorRange = speedMonitorRange;

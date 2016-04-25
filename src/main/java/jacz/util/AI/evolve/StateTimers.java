@@ -60,23 +60,25 @@ public class StateTimers<S> implements TimerAction {
     }
 
     public synchronized void setStateTimer(S state, long millis, Runnable runnable) {
-        // remove any previous clashing simple state conditions
-        removeStateTimer(state);
-        registeredStateTimers.put(new SimpleStateCondition<>(state), new TimerAction(millis, runnable));
-        checkStateTimers();
+        setStateTimer(new SimpleStateCondition<>(state), millis, runnable);
     }
 
     public synchronized void setStateTimer(StateCondition<S> stateCondition, long millis, Runnable runnable) {
+        // remove any previous clashing simple state conditions
+        removeStateTimer(stateCondition);
         registeredStateTimers.put(stateCondition, new TimerAction(millis, runnable));
         checkStateTimers();
     }
 
     public synchronized void removeStateTimer(S state) {
-        registeredStateTimers.remove(new SimpleStateCondition<>(state));
-        checkStateTimers();
+        removeStateTimer(new SimpleStateCondition<>(state));
     }
 
     public synchronized void removeStateTimer(StateCondition<S> stateCondition) {
+        if (stateCondition.equals(timerSource)) {
+            // we are removing the currently running timer
+            timerSource = null;
+        }
         registeredStateTimers.remove(stateCondition);
         checkStateTimers();
     }

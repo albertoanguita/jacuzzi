@@ -237,4 +237,54 @@ public class TestEvolvingState {
         System.out.println("start");
         ThreadUtil.safeSleep(41000L);
     }
+
+    @Test
+    public void increasingTimeTest() {
+        EvolvingState.Transitions<Boolean, Boolean> transitions = new EvolvingState.Transitions<Boolean, Boolean>() {
+            @Override
+            public boolean runTransition(Boolean state, Boolean goal, EvolvingStateController<Boolean, Boolean> controller) {
+                System.out.println("Evolve: " + state);
+                updateRetryTime();
+                return true;
+            }
+
+            @Override
+            public boolean hasReachedGoal(Boolean state, Boolean goal) {
+                return true;
+            }
+        };
+        dynamicState = new EvolvingState<>(true, true, transitions);
+        setRetryTime(MAX_RETRY);
+
+        System.out.println("start");
+        checkDisconnections();
+        ThreadUtil.safeSleep(35000L);
+    }
+
+    private static final long MIN_RETRY = 1000L;
+
+    private static final long MAX_RETRY = 90000L;
+
+    private long currentRetry;
+
+    private EvolvingState<Boolean, Boolean> dynamicState;
+
+    private static final StateCondition<Boolean> trueStateCondition = state -> true;
+
+    private void updateRetryTime() {
+        setRetryTime(Math.min(currentRetry * 2, MAX_RETRY));
+    }
+
+    private void setRetryTime(long time) {
+        // replace previously set time with new one
+        System.out.println("set retry time: " + time);
+        dynamicState.setEvolveStateTimer(trueStateCondition, time);
+        currentRetry = time;
+    }
+
+    public void checkDisconnections() {
+        setRetryTime(MIN_RETRY);
+    }
+
+
 }

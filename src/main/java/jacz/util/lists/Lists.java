@@ -11,6 +11,8 @@ import java.util.concurrent.Future;
  * This class contains utility methods for lists. These methods include efficient ordering with or without threading.
  *
  * todo re-think the sort algorithm, might not be necessary. Same with filter
+ *
+ * todo check what methods of this class are useful after java8
  */
 public class Lists {
 //

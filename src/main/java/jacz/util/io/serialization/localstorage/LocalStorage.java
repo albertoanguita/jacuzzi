@@ -27,11 +27,12 @@ public class LocalStorage {
         }
     }
 
-    static final String DATABASE = "localStorage";
+    // todo update name to match api name
+    static final String DATABASE = "jacuzzi_localStorage";
 
-    private static final String METADATA_TABLE = "metadata";
+    static final String METADATA_TABLE = DATABASE + "_metadata";
 
-    private static final String ITEMS_TABLE = "items";
+    static final String ITEMS_TABLE = DATABASE + "_items";
 
     private static final TableField ID = new TableField("id", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT");
 

@@ -9,5 +9,5 @@ package jacz.util.lists;
  */
 public interface Filterable {
 
-    public boolean filter(Object filter);
+    boolean filter(Object filter);
 }

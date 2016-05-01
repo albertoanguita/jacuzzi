@@ -3,7 +3,7 @@ package jacz.util.sets;
 import java.util.*;
 
 /**
- * A set implementation that takes is able to store duplicate elements. The class is backed by a HashMap that stores
+ * A set implementation that is able to store duplicate elements. The class is backed by a HashMap that stores
  * the element count for each item stored
  */
 public class DuplicateHashSet<E> implements Set<E> {

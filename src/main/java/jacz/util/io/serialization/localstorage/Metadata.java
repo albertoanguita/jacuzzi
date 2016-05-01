@@ -8,6 +8,6 @@ import org.javalite.activejdbc.annotations.Table;
  * Metadata table
  */
 @DbName(LocalStorage.DATABASE)
-@Table("metadata")
+@Table(LocalStorage.METADATA_TABLE)
 public class Metadata extends Model {
 }

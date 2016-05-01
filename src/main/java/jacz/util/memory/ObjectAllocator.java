@@ -6,6 +6,8 @@ import java.util.*;
  * A generic object pool, for facilitating the reusing of objects so the garbage collector does not have so much work
  * <p/>
  * The ObjectAllocator must be used with objects that are never equal to each other. Otherwise, they will be merged when freed
+ *
+ * todo remove, its benefit is not clear
  */
 public class ObjectAllocator {
 
@@ -16,7 +18,7 @@ public class ObjectAllocator {
     private final Map<Class<?>, Set<Object>> objectPool;
 
     public ObjectAllocator() {
-        objectPool = new HashMap<Class<?>, Set<Object>>();
+        objectPool = new HashMap<>();
     }
 
     /**
@@ -31,7 +33,7 @@ public class ObjectAllocator {
      */
     public synchronized <T> T request(Class<T> class_) throws IllegalAccessException, InstantiationException {
         if (!objectPool.containsKey(class_)) {
-            objectPool.put(class_, new HashSet<Object>());
+            objectPool.put(class_, new HashSet<>());
         }
         Set<?> objectSet = objectPool.get(class_);
         if (objectSet.isEmpty()) {
@@ -51,7 +53,7 @@ public class ObjectAllocator {
      */
     public synchronized void free(Object o) {
         if (!objectPool.containsKey(o.getClass())) {
-            objectPool.put(o.getClass(), new HashSet<Object>());
+            objectPool.put(o.getClass(), new HashSet<>());
         }
         objectPool.get(o.getClass()).add(o);
     }

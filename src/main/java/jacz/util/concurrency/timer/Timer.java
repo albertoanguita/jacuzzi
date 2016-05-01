@@ -101,6 +101,7 @@ public class Timer {
     public Timer(long millis, TimerAction timerAction, boolean start, String threadName) {
         id = AlphaNumFactory.getStaticId();
         this.millis = millis;
+        this.millisForThisRun = millis;
         this.timerAction = timerAction;
         active = new AtomicBoolean(false);
         alive = new AtomicBoolean(true);

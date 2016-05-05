@@ -29,7 +29,7 @@ public class ManuallyRemovedElementBag {
     }
 
     private ManuallyRemovedElementBag() {
-        elementCount = new ObjectCount<>(new HashSet<String>(), true, true);
+        elementCount = new ObjectCount<>(new HashSet<>(), true, true);
     }
 
     public synchronized void createElement(String name) {

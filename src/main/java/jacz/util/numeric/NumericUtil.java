@@ -429,7 +429,7 @@ public class NumericUtil {
             return a;
         } else {
             int[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
-            return min(Math.max(a, rest[0]), newRest);
+            return max(Math.max(a, rest[0]), newRest);
         }
     }
 
@@ -438,7 +438,7 @@ public class NumericUtil {
             return a;
         } else {
             float[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
-            return min(Math.max(a, rest[0]), newRest);
+            return max(Math.max(a, rest[0]), newRest);
         }
     }
 
@@ -447,7 +447,7 @@ public class NumericUtil {
             return a;
         } else {
             double[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
-            return min(Math.max(a, rest[0]), newRest);
+            return max(Math.max(a, rest[0]), newRest);
         }
     }
 
@@ -456,7 +456,7 @@ public class NumericUtil {
             return a;
         } else {
             long[] newRest = Arrays.copyOfRange(rest, 1, rest.length);
-            return min(Math.max(a, rest[0]), newRest);
+            return max(Math.max(a, rest[0]), newRest);
         }
     }
 }

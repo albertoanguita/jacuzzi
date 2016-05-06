@@ -156,12 +156,20 @@ public class TimedQueue<T> implements TimerAction {
         return index;
     }
 
+    public synchronized List<T> pop() {
+        return pop(1);
+    }
+
     public synchronized List<T> pop(int maxCount) {
         List<T> elements = new ArrayList<>();
         while (!queue.isEmpty() && elements.size() < maxCount) {
             elements.add(queue.remove(0).element);
         }
         return elements;
+    }
+
+    public synchronized List<TimedQueueElement<T>> popTimed() {
+        return popTimed(1);
     }
 
     public synchronized List<TimedQueueElement<T>> popTimed(int maxCount) {
@@ -172,6 +180,10 @@ public class TimedQueue<T> implements TimerAction {
         return elements;
     }
 
+    public synchronized List<T> peek() {
+        return peek(1);
+    }
+
     public synchronized List<T> peek(int maxCount) {
         List<T> elements = new ArrayList<>();
         int i = 0;
@@ -180,6 +192,10 @@ public class TimedQueue<T> implements TimerAction {
             i++;
         }
         return elements;
+    }
+
+    public synchronized List<TimedQueueElement<T>> peekTimed() {
+        return peekTimed(1);
     }
 
     public synchronized List<TimedQueueElement<T>> peekTimed(int maxCount) {

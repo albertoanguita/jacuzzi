@@ -158,6 +158,7 @@ public class Timer {
                     // recalculate active
                     if (timerActionResult != null && timerActionResult > 0) {
                         millis = timerActionResult;
+                        millisForThisRun = timerActionResult;
                         setActivationTime();
                         return true;
                     }

@@ -233,6 +233,7 @@ public class TimedQueue<T> implements TimerAction {
         if (!removedElements.isEmpty() && timedQueueInterface != null) {
             // invoke in parallel to avoid locks
             sequentialTaskExecutor.submit(new TimedQueueInterfaceTask<T>(timedQueueInterface, removedElements));
+//            timedQueueInterface.elementsRemoved(removedElements);
         }
         if (!queue.isEmpty()) {
             // calculate time for next removal

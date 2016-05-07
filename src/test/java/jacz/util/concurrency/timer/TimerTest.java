@@ -8,18 +8,24 @@ import org.junit.Test;
  */
 public class TimerTest implements TimerAction {
 
+    private long waitTime = 2000L;
+
     @Test
     public void test() {
 
-        Timer timer = new Timer(2000L, this);
+        Timer timer = new Timer(waitTime, this);
 
-        ThreadUtil.safeSleep(8000L);
+        ThreadUtil.safeSleep(12000L);
         timer.kill();
     }
 
     @Override
     public Long wakeUp(Timer timer) {
-        System.out.println("now");
-        return null;
+        System.out.println("now: " + System.currentTimeMillis());
+        waitTime -= 200L;
+        if (waitTime < 200L) {
+            waitTime = 200L;
+        }
+        return waitTime;
     }
 }

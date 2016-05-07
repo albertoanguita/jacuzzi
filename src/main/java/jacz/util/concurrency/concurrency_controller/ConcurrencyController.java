@@ -269,4 +269,15 @@ public class ConcurrencyController implements DaemonAction {
         beginActivity(STOP_ACTIVITY);
         endActivity(STOP_ACTIVITY);
     }
+
+    @Override
+    public String toString() {
+        return "ConcurrencyController{" +
+                ", activityRequestsQueue=" + activityRequestsQueue +
+                ", numberOfExecutionsOfActivities=" + numberOfExecutionsOfActivities +
+                ", maxNumberOfExecutionsAllowed=" + maxNumberOfExecutionsAllowed +
+                ", alive=" + alive +
+                ", ignoreFutureTasks=" + ignoreFutureTasks +
+                '}';
+    }
 }

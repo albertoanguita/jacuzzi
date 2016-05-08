@@ -100,26 +100,17 @@ class NotificationReceiverHandler implements TimerAction {
     private synchronized void notifyReceiver() {
         if (eventCount > 0) {
             final int eventCountCopy = eventCount;
-            sequentialExecutorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    notificationReceiver.newEvent(emitterID, eventCountCopy, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
-                }
-            });
-//            sequentialTaskExecutor.executeTask(new Runnable() {
-//                @Override
-//                public void run() {
-//                    notificationReceiver.newEvent(emitterID, eventCountCopy, new ArrayList<>(nonGroupedMessages), new ArrayList<>(groupedMessages));
-//                }
-//            });
-            resetMessages();
-            eventCount = 0;
+            List<List<Object>> nonGroupedMessagesCopy = new ArrayList<>(nonGroupedMessages);
+            List<Object> groupedMessagesCopy = new ArrayList<>(groupedMessages);
+            sequentialExecutorService.submit(() -> notificationReceiver.newEvent(emitterID, eventCountCopy, nonGroupedMessagesCopy, groupedMessagesCopy));
+            reset();
         }
     }
 
-    private void resetMessages() {
+    private void reset() {
         groupedMessages.clear();
         nonGroupedMessages.clear();
+        eventCount = 0;
     }
 
     @Override

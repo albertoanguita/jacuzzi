@@ -1,7 +1,6 @@
 package jacz.util.concurrency.execution_control.test;
 
 import jacz.util.concurrency.execution_control.TrafficControl;
-import jacz.util.concurrency.task_executor.ParallelTaskExecutor;
 import jacz.util.concurrency.task_executor.ThreadExecutor;
 
 /**

@@ -16,7 +16,7 @@ import java.util.StringTokenizer;
  * <p/>
  * todo remove unnecessary methods that are available in apache commons
  * <p/>
- * todo move package to io
+ * todo move package to nio
  */
 public class FileGenerator {
 

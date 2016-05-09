@@ -2,15 +2,17 @@ package jacz.util.io.xml;
 
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import jacz.util.hash.CRCMismatchException;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
+import jacz.util.lists.tuple.Duple;
 
 import javax.xml.stream.*;
 import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * A simple XML-Dom API. It does not recognize the initial XML code with encoding information or XML version, nor PCData elements
@@ -19,7 +21,7 @@ public class XMLDom {
 
     private static final String CRC_ELEMENT = "crc-element";
 
-    public static Element parse(String path, String... backupPaths) throws FileNotFoundException, XMLStreamException {
+    public static Element parse(String path, String... backupPaths) throws IOException, XMLStreamException {
         try {
             return parse(new File(path));
         } catch (Exception e) {
@@ -33,7 +35,24 @@ public class XMLDom {
         }
     }
 
-    public static Element parseWithCRC(String path, String... backupPaths) throws FileNotFoundException, XMLStreamException, CRCMismatchException {
+    public static Duple<Element, List<String>> parseAndRepairBroken(String path, String... backupPaths) throws IOException, XMLStreamException {
+        try {
+            return new Duple<>(parse(new File(path)), new ArrayList<>());
+        } catch (Exception e) {
+            if (backupPaths.length > 0) {
+                String newPath = backupPaths[0];
+                backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
+                Duple<Element, List<String>> elementAndRepairedFiles = parseAndRepairBroken(newPath, backupPaths);
+                Files.copy(Paths.get(newPath), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+                elementAndRepairedFiles.element2.add(path);
+                return elementAndRepairedFiles;
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public static Element parseWithCRC(String path, String... backupPaths) throws IOException, XMLStreamException, CRCMismatchException {
         try {
             return parseWithCRC(new File(path));
         } catch (Exception e) {
@@ -41,6 +60,23 @@ public class XMLDom {
                 String newPath = backupPaths[0];
                 backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
                 return parseWithCRC(newPath, backupPaths);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public static Duple<Element, List<String>> parseWithCRCAndRepairBroken(String path, String... backupPaths) throws IOException, XMLStreamException, CRCMismatchException {
+        try {
+            return new Duple<>(parseWithCRC(new File(path)), new ArrayList<>());
+        } catch (Exception e) {
+            if (backupPaths.length > 0) {
+                String newPath = backupPaths[0];
+                backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
+                Duple<Element, List<String>> elementAndRepairedFiles = parseWithCRCAndRepairBroken(newPath, backupPaths);
+                Files.copy(Paths.get(newPath), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+                elementAndRepairedFiles.element2.add(path);
+                return elementAndRepairedFiles;
             } else {
                 throw e;
             }

@@ -4,11 +4,8 @@ import jacz.util.hash.CRCMismatchException;
 import jacz.util.lists.tuple.Duple;
 
 import javax.xml.stream.XMLStreamException;
-import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Created by Alberto on 20/09/2015.
@@ -17,20 +14,51 @@ public class XMLReader {
 
     private Element current;
 
+    private final List<String> repairedFiles;
+
     private final Stack<List<Element>> stack;
 
-    public XMLReader(String path, String... backupPaths) throws FileNotFoundException, XMLStreamException {
-        current = XMLDom.parse(path, backupPaths);
+    public XMLReader(String path, String... backupPaths) throws IOException, XMLStreamException {
+        this(path, false, backupPaths);
+    }
+
+    public XMLReader(String path, boolean repairIfBroken, String... backupPaths) throws IOException, XMLStreamException {
+        if (repairIfBroken) {
+            Duple<Element, List<String>> elementAndRepairedFiles = XMLDom.parseAndRepairBroken(path, backupPaths);
+            current = elementAndRepairedFiles.element1;
+            repairedFiles = elementAndRepairedFiles.element2;
+        } else {
+            current = XMLDom.parse(path, backupPaths);
+            repairedFiles = new ArrayList<>();
+        }
         stack = new Stack<>();
     }
 
-    public XMLReader(String path, boolean withCRC, String... backupPaths) throws FileNotFoundException, XMLStreamException, CRCMismatchException {
+    public XMLReader(String path, boolean repairIfBroken, boolean withCRC, String... backupPaths) throws IOException, XMLStreamException, CRCMismatchException {
         if (withCRC) {
-            current = XMLDom.parseWithCRC(path, backupPaths);
+            if (repairIfBroken) {
+                Duple<Element, List<String>> elementAndRepairedFiles = XMLDom.parseWithCRCAndRepairBroken(path, backupPaths);
+                current = elementAndRepairedFiles.element1;
+                repairedFiles = elementAndRepairedFiles.element2;
+            } else {
+                current = XMLDom.parseWithCRC(path, backupPaths);
+                repairedFiles = new ArrayList<>();
+            }
         } else {
-            current = XMLDom.parse(path, backupPaths);
+            if (repairIfBroken) {
+                Duple<Element, List<String>> elementAndRepairedFiles = XMLDom.parseAndRepairBroken(path, backupPaths);
+                current = elementAndRepairedFiles.element1;
+                repairedFiles = elementAndRepairedFiles.element2;
+            } else {
+                current = XMLDom.parse(path, backupPaths);
+                repairedFiles = new ArrayList<>();
+            }
         }
         stack = new Stack<>();
+    }
+
+    public List<String> getRepairedFiles() {
+        return repairedFiles;
     }
 
     public String getFieldValue(String name) {

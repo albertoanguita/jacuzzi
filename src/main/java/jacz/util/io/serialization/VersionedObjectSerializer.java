@@ -1,9 +1,8 @@
 package jacz.util.io.serialization;
 
 import jacz.util.files.FileReaderWriter;
-import jacz.util.files.FileGenerator;
 import jacz.util.hash.CRC;
-import jacz.util.hash.InvalidCRCException;
+import jacz.util.hash.CRCMismatchException;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -139,19 +138,26 @@ public class VersionedObjectSerializer {
         return CRC.addCRC(data.generateArray(), CRCBytes, true);
     }
 
-    public static int deserialize(VersionedObject versionedObject, String path, String... backupPaths) throws VersionedSerializationException, IOException {
+    public static void deserialize(VersionedObject versionedObject, String path, String... backupPaths) throws VersionedSerializationException, IOException {
+        deserialize(versionedObject, path, false, backupPaths);
+    }
+
+    public static List<String> deserialize(VersionedObject versionedObject, String path, boolean repairIfBroken, String... backupPaths) throws VersionedSerializationException, IOException {
         try {
             byte[] data = FileReaderWriter.readBytes(path);
             deserialize(versionedObject, data);
-            return 0;
+            return new ArrayList<>();
         } catch (VersionedSerializationException | IOException e) {
             // try with backup
             if (backupPaths.length > 0) {
                 String newPath = backupPaths[0];
                 backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
-                int tries = deserialize(versionedObject, newPath, backupPaths);
-                FileUtils.copyFile(new File(newPath), new File(path));
-                return tries + 1;
+                List<String> repairedFiles = deserialize(versionedObject, newPath, repairIfBroken, backupPaths);
+                if (repairIfBroken) {
+                    FileUtils.copyFile(new File(newPath), new File(path));
+                    repairedFiles.add(path);
+                }
+                return repairedFiles;
             } else {
                 throw e;
             }
@@ -235,7 +241,7 @@ public class VersionedObjectSerializer {
             throw new VersionedSerializationException(versionStack, attributes, VersionedSerializationException.Reason.UNRECOGNIZED_VERSION);
         } catch (ClassNotFoundException e) {
             throw new VersionedSerializationException(versionStack, attributes, VersionedSerializationException.Reason.CLASS_NOT_FOUND);
-        } catch (InvalidCRCException e) {
+        } catch (CRCMismatchException e) {
             throw new VersionedSerializationException(null, attributes, VersionedSerializationException.Reason.CRC_MISMATCH);
         }
     }

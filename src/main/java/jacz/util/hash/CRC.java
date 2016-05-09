@@ -43,7 +43,7 @@ public class CRC {
      * @param data the data with CRC. It must have the CRC header
      * @return the original data, properly validated
      */
-    public static byte[] extractDataWithCRC(byte[] data) throws InvalidCRCException {
+    public static byte[] extractDataWithCRC(byte[] data) throws CRCMismatchException {
         return extractDataWithCRC(data, new MutableOffset());
     }
 
@@ -52,9 +52,9 @@ public class CRC {
      *
      * @param data the data with CRC. It must have the CRC header
      * @return the original data, if the CRC validation is ok
-     * @throws InvalidCRCException if the CRC validation failed
+     * @throws CRCMismatchException if the CRC validation failed
      */
-    public static byte[] extractDataWithCRC(byte[] data, MutableOffset mutableOffset) throws InvalidCRCException {
+    public static byte[] extractDataWithCRC(byte[] data, MutableOffset mutableOffset) throws CRCMismatchException {
         int dataLength = Serializer.deserializeIntValue(data, mutableOffset);
         int CRCLength = Serializer.deserializeIntValue(data, mutableOffset);
         byte[] originalData = Arrays.copyOfRange(data, mutableOffset.value(), mutableOffset.value() + dataLength);
@@ -64,7 +64,7 @@ public class CRC {
         if (Arrays.equals(existingCRC, calculateCRC(originalData, CRCLength))) {
             return originalData;
         } else {
-            throw new InvalidCRCException();
+            throw new CRCMismatchException();
         }
     }
 }

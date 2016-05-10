@@ -459,4 +459,44 @@ public class NumericUtil {
             return max(Math.max(a, rest[0]), newRest);
         }
     }
+
+    public static int limitInRange(int value, Integer min, Integer max) {
+        if (min != null && value < min) {
+            value = min;
+        }
+        if (max != null && value > max) {
+            value = max;
+        }
+        return value;
+    }
+
+    public static long limitInRange(long value, Long min, Long max) {
+        if (min != null && value < min) {
+            value = min;
+        }
+        if (max != null && value > max) {
+            value = max;
+        }
+        return value;
+    }
+
+    public static float limitInRange(float value, Float min, Float max) {
+        if (min != null && value < min) {
+            value = min;
+        }
+        if (max != null && value > max) {
+            value = max;
+        }
+        return value;
+    }
+
+    public static double limitInRange(double value, Double min, Double max) {
+        if (min != null && value < min) {
+            value = min;
+        }
+        if (max != null && value > max) {
+            value = max;
+        }
+        return value;
+    }
 }

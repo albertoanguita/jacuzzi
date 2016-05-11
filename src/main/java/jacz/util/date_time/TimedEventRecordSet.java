@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * Registers a collection of TimedEventRecords, indexed by a generic element
  */
-public class TimedEventMapRecord<E> {
+public class TimedEventRecordSet<E> {
 
     /**
      * For each peer, stores the last time that we synched the shared library with him
@@ -18,7 +18,7 @@ public class TimedEventMapRecord<E> {
      */
     private final long recentlyThreshold;
 
-    public TimedEventMapRecord(long threshold) {
+    public TimedEventRecordSet(long threshold) {
         eventMap = new HashMap<>();
         this.recentlyThreshold = threshold;
     }

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
+import java.util.stream.Collectors;
 
 /**
  * A local storage implementation backed by SQLite 3 databases. Data access is performed via the ActiveJDBC orm
@@ -170,7 +171,15 @@ public class LocalStorage {
         } finally {
             ActiveJDBCController.disconnect();
         }
+    }
 
+    public List<String> keys() {
+        ActiveJDBCController.connect(DATABASE, path);
+        try {
+            return Item.findAll().stream().map(model -> model.getString(NAME.name)).collect(Collectors.toList());
+        } finally {
+            ActiveJDBCController.disconnect();
+        }
     }
 
     public boolean containsItem(String name) {

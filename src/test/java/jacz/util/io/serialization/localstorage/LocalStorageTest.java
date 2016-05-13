@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -94,7 +95,10 @@ public class LocalStorageTest {
         ls.setDoubleList("doubleList", doubleList);
         ls.setDateList("dateList", dateList);
 
+
         Assert.assertEquals(21, ls.itemCount());
+        List<String> keys = Arrays.asList("string", "stringNull", "enum", "bool", "byte", "short", "int", "long", "float", "double", "date", "stringList", "enumList", "booleanList", "byteList", "shortList", "integerList", "longList", "floatList", "doubleList", "dateList");
+        Assert.assertEquals(keys, ls.keys());
         Assert.assertTrue(ls.containsItem("string"));
         Assert.assertTrue(ls.containsItem("stringNull"));
         Assert.assertTrue(ls.containsItem("enum"));
@@ -141,6 +145,8 @@ public class LocalStorageTest {
 
         ls.removeItem("stringNull");
         Assert.assertEquals(20, ls.itemCount());
+        keys = Arrays.asList("string", "enum", "bool", "byte", "short", "int", "long", "float", "double", "date", "stringList", "enumList", "booleanList", "byteList", "shortList", "integerList", "longList", "floatList", "doubleList", "dateList");
+        Assert.assertEquals(keys, ls.keys());
         Assert.assertFalse(ls.containsItem("stringNull"));
     }
 }

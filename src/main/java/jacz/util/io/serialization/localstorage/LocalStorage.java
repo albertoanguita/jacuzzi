@@ -203,6 +203,15 @@ public class LocalStorage {
         }
     }
 
+    public void clear() {
+        ActiveJDBCController.connect(DATABASE, path);
+        try {
+            Item.deleteAll();
+        } finally {
+            ActiveJDBCController.disconnect();
+        }
+    }
+
     private <E> E loadCache(Map<String, E> cache, String name, E value) {
         cache.put(name, value);
         return value;

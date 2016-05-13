@@ -1,6 +1,5 @@
 package jacz.util.hash.hashdb;
 
-import jacz.util.files.FileGenerator;
 import jacz.util.hash.SHA_256;
 import jacz.util.io.serialization.Serializer;
 import org.apache.commons.io.FileUtils;
@@ -14,11 +13,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 /**
- * Created with IntelliJ IDEA.
- * User: Alberto
- * Date: 19/08/14
- * Time: 11:17
- * To change this template use File | Settings | File Templates.
+ * todo remove, no use
  */
 public class FileHashDatabaseWithMaxSize {
 

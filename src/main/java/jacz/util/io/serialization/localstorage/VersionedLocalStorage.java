@@ -8,7 +8,7 @@ import java.io.IOException;
  */
 public class VersionedLocalStorage extends LocalStorage {
 
-    private static final String VERSION = "@@@version@@@";
+    public static final String VERSION_KEY = "@@@version@@@";
 
     public VersionedLocalStorage(String path) throws IOException {
         super(path);
@@ -31,10 +31,18 @@ public class VersionedLocalStorage extends LocalStorage {
     }
 
     public String getVersion() {
-        return getString(VERSION);
+        return getString(VERSION_KEY);
     }
 
     public void updateVersion(String version) {
-        setString(VERSION, version);
+        setString(VERSION_KEY, version);
+    }
+
+    @Override
+    public void clear() {
+        String version = getVersion();
+        super.clear();
+        // reset the version
+        updateVersion(version);
     }
 }

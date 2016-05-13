@@ -53,9 +53,9 @@ public class MouseToRandom {
      *
      * @param x random x coordinate
      * @param y random y coordinate
-     * @return the percentage of completion
+     * @return the progress of completion (from 0 to 1)
      */
-    public int mouseCoords(int x, int y) {
+    public double mouseCoords(int x, int y) {
         if (!lastCoordinateStack.isEmpty()) {
             newRandomCoords(x, y);
             // store the new coordinate in the coordinate stack
@@ -70,14 +70,15 @@ public class MouseToRandom {
         }
     }
 
-    private int progress() {
-        int progress = new Double((double) (100 * pos) / (double) totalLength).intValue();
-        if (progress == 100 && pos < totalLength) {
-            progress = 99;
+    private double progress() {
+        double progress = (double) (pos) / (double) totalLength;
+        if (progress == 0) {
+            return 0d;
         } else if (pos == totalLength) {
-            progress = 100;
+            return 1d;
+        } else {
+            return (double) (pos) / (double) totalLength;
         }
-        return progress;
     }
 
     private void newRandomCoords(int x, int y) {

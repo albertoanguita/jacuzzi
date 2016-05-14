@@ -182,6 +182,15 @@ public class LocalStorage {
         }
     }
 
+    public List<String> keys(String category) {
+        ActiveJDBCController.connect(DATABASE, path);
+        try {
+            return Item.where(ID.name + " LIKE ?", category + "%").stream().map(model -> model.getString(NAME.name)).map(categoryAndName -> extractName(category, categoryAndName)).collect(Collectors.toList());
+        } finally {
+            ActiveJDBCController.disconnect();
+        }
+    }
+
     public boolean containsItem(String name) {
         connect(name);
         try {
@@ -189,6 +198,10 @@ public class LocalStorage {
         } finally {
             disconnect(name);
         }
+    }
+
+    public boolean containsItem(String category, String name) {
+        return containsItem(generateName(category, name));
     }
 
     public void removeItem(String name) {
@@ -203,10 +216,23 @@ public class LocalStorage {
         }
     }
 
+    public void removeItem(String category, String name) {
+        removeItem(generateName(category, name));
+    }
+
     public void clear() {
         ActiveJDBCController.connect(DATABASE, path);
         try {
             Item.deleteAll();
+            stringItems.clear();
+            booleanItems.clear();
+            byteItems.clear();
+            shortItems.clear();
+            integerItems.clear();
+            longItems.clear();
+            floatItems.clear();
+            doubleItems.clear();
+            dateItems.clear();
         } finally {
             ActiveJDBCController.disconnect();
         }
@@ -245,6 +271,10 @@ public class LocalStorage {
         }
     }
 
+    public String getString(String category, String name) {
+        return getString(generateName(category, name));
+    }
+
     public boolean setString(String name, String value) {
         String storedValue = getString(name);
         if (value == null || !Util.equals(value, storedValue)) {
@@ -263,6 +293,10 @@ public class LocalStorage {
         }
     }
 
+    public boolean setString(String category, String name, String value) {
+        return setString(generateName(category, name), value);
+    }
+
     public Boolean getBoolean(String name) {
         if (booleanItems.containsKey(name)) {
             return booleanItems.get(name);
@@ -275,6 +309,10 @@ public class LocalStorage {
                 disconnect(name);
             }
         }
+    }
+
+    public Boolean getBoolean(String category, String name) {
+        return getBoolean(generateName(category, name));
     }
 
     public boolean setBoolean(String name, Boolean value) {
@@ -295,6 +333,10 @@ public class LocalStorage {
         }
     }
 
+    public boolean setBoolean(String category, String name, Boolean value) {
+        return setBoolean(generateName(category, name), value);
+    }
+
     public Byte getByte(String name) {
         if (byteItems.containsKey(name)) {
             return byteItems.get(name);
@@ -307,6 +349,10 @@ public class LocalStorage {
                 disconnect(name);
             }
         }
+    }
+
+    public Byte getByte(String category, String name) {
+        return getByte(generateName(category, name));
     }
 
     public boolean setByte(String name, Byte value) {
@@ -327,6 +373,10 @@ public class LocalStorage {
         }
     }
 
+    public boolean setByte(String category, String name, Byte value) {
+        return setByte(generateName(category, name), value);
+    }
+
     public Short getShort(String name) {
         if (shortItems.containsKey(name)) {
             return shortItems.get(name);
@@ -339,6 +389,10 @@ public class LocalStorage {
                 disconnect(name);
             }
         }
+    }
+
+    public Short getShort(String category, String name) {
+        return getShort(generateName(category, name));
     }
 
     public boolean setShort(String name, Short value) {
@@ -359,6 +413,10 @@ public class LocalStorage {
         }
     }
 
+    public boolean setShort(String category, String name, Short value) {
+        return setShort(generateName(category, name), value);
+    }
+
     public Integer getInteger(String name) {
         if (integerItems.containsKey(name)) {
             return integerItems.get(name);
@@ -371,6 +429,10 @@ public class LocalStorage {
                 disconnect(name);
             }
         }
+    }
+
+    public Integer getInteger(String category, String name) {
+        return getInteger(generateName(category, name));
     }
 
     public boolean setInteger(String name, Integer value) {
@@ -391,6 +453,10 @@ public class LocalStorage {
         }
     }
 
+    public boolean setInteger(String category, String name, Integer value) {
+        return setInteger(generateName(category, name), value);
+    }
+
     public Long getLong(String name) {
         if (longItems.containsKey(name)) {
             return longItems.get(name);
@@ -403,6 +469,10 @@ public class LocalStorage {
                 disconnect(name);
             }
         }
+    }
+
+    public Long getLong(String category, String name) {
+        return getLong(generateName(category, name));
     }
 
     public boolean setLong(String name, Long value) {
@@ -423,6 +493,10 @@ public class LocalStorage {
         }
     }
 
+    public boolean setLong(String category, String name, Long value) {
+        return setLong(generateName(category, name), value);
+    }
+
     public Float getFloat(String name) {
         if (floatItems.containsKey(name)) {
             return floatItems.get(name);
@@ -435,6 +509,10 @@ public class LocalStorage {
                 disconnect(name);
             }
         }
+    }
+
+    public Float getFloat(String category, String name) {
+        return getFloat(generateName(category, name));
     }
 
     public boolean setFloat(String name, Float value) {
@@ -455,6 +533,10 @@ public class LocalStorage {
         }
     }
 
+    public boolean setFloat(String category, String name, Float value) {
+        return setFloat(generateName(category, name), value);
+    }
+
     public Double getDouble(String name) {
         if (doubleItems.containsKey(name)) {
             return doubleItems.get(name);
@@ -467,6 +549,10 @@ public class LocalStorage {
                 disconnect(name);
             }
         }
+    }
+
+    public Double getDouble(String category, String name) {
+        return getDouble(generateName(category, name));
     }
 
     public boolean setDouble(String name, Double value) {
@@ -485,6 +571,10 @@ public class LocalStorage {
         } else {
             return false;
         }
+    }
+
+    public boolean setDouble(String category, String name, String value) {
+        return setString(generateName(category, name), value);
     }
 
     public Date getDate(String name) {
@@ -506,6 +596,10 @@ public class LocalStorage {
         }
     }
 
+    public Date getDate(String category, String name) {
+        return getDate(generateName(category, name));
+    }
+
     public boolean setDate(String name, Date value) {
         Date storedValue = getDate(name);
         if (value == null || !Util.equals(value, storedValue)) {
@@ -524,6 +618,10 @@ public class LocalStorage {
         }
     }
 
+    public boolean setDate(String category, String name, Date value) {
+        return setDate(generateName(category, name), value);
+    }
+
     public <E> E getEnum(String name, Class<E> enum_) {
         try {
             String str = getString(name);
@@ -540,6 +638,10 @@ public class LocalStorage {
         }
     }
 
+    public <E> E getEnum(String category, String name, Class<E> enum_) {
+        return getEnum(generateName(category, name), enum_);
+    }
+
     public <E> boolean setEnum(String name, Class<E> enum_, E value) {
         try {
             Method getName = enum_.getMethod("name");
@@ -549,6 +651,10 @@ public class LocalStorage {
             // todo fatal error
             return false;
         }
+    }
+
+    public <E> boolean setEnum(String category, String name, Class<E> enum_, E value) {
+        return setEnum(generateName(category, name), enum_, value);
     }
 
     public List<String> getStringList(String name) {
@@ -561,8 +667,16 @@ public class LocalStorage {
         }
     }
 
+    public List<String> getStringList(String category, String name) {
+        return getStringList(generateName(category, name));
+    }
+
     public void setStringList(String name, List<String> list) {
         setList(name, list);
+    }
+
+    public void setStringList(String category, String name, List<String> value) {
+        setStringList(generateName(category, name), value);
     }
 
     public List<Boolean> getBooleanList(String name) {
@@ -583,8 +697,16 @@ public class LocalStorage {
         }
     }
 
+    public List<Boolean> getBooleanList(String category, String name) {
+        return getBooleanList(generateName(category, name));
+    }
+
     public void setBooleanList(String name, List<Boolean> list) {
         setList(name, list);
+    }
+
+    public void setBooleanList(String category, String name, List<Boolean> value) {
+        setBooleanList(generateName(category, name), value);
     }
 
     public List<Byte> getByteList(String name) {
@@ -605,8 +727,16 @@ public class LocalStorage {
         }
     }
 
+    public List<Byte> getByteList(String category, String name) {
+        return getByteList(generateName(category, name));
+    }
+
     public void setByteList(String name, List<Byte> list) {
         setList(name, list);
+    }
+
+    public void setByteList(String category, String name, List<Byte> value) {
+        setByteList(generateName(category, name), value);
     }
 
     public List<Short> getShortList(String name) {
@@ -627,8 +757,16 @@ public class LocalStorage {
         }
     }
 
+    public List<Short> getShortList(String category, String name) {
+        return getShortList(generateName(category, name));
+    }
+
     public void setShortList(String name, List<Short> list) {
         setList(name, list);
+    }
+
+    public void setShortList(String category, String name, List<Short> value) {
+        setShortList(generateName(category, name), value);
     }
 
     public List<Integer> getIntegerList(String name) {
@@ -649,8 +787,16 @@ public class LocalStorage {
         }
     }
 
+    public List<Integer> getIntegerList(String category, String name) {
+        return getIntegerList(generateName(category, name));
+    }
+
     public void setIntegerList(String name, List<Integer> list) {
         setList(name, list);
+    }
+
+    public void setIntegerList(String category, String name, List<Integer> value) {
+        setIntegerList(generateName(category, name), value);
     }
 
     public List<Long> getLongList(String name) {
@@ -671,8 +817,16 @@ public class LocalStorage {
         }
     }
 
+    public List<Long> getLongList(String category, String name) {
+        return getLongList(generateName(category, name));
+    }
+
     public void setLongList(String name, List<Long> list) {
         setList(name, list);
+    }
+
+    public void setLongList(String category, String name, List<Long> value) {
+        setLongList(generateName(category, name), value);
     }
 
     public List<Float> getFloatList(String name) {
@@ -693,8 +847,16 @@ public class LocalStorage {
         }
     }
 
+    public List<Float> getFloatList(String category, String name) {
+        return getFloatList(generateName(category, name));
+    }
+
     public void setFloatList(String name, List<Float> list) {
         setList(name, list);
+    }
+
+    public void setFloatList(String category, String name, List<Float> value) {
+        setFloatList(generateName(category, name), value);
     }
 
     public List<Double> getDoubleList(String name) {
@@ -715,8 +877,16 @@ public class LocalStorage {
         }
     }
 
+    public List<Double> getDoubleList(String category, String name) {
+        return getDoubleList(generateName(category, name));
+    }
+
     public void setDoubleList(String name, List<Double> list) {
         setList(name, list);
+    }
+
+    public void setDoubleList(String category, String name, List<Double> value) {
+        setDoubleList(generateName(category, name), value);
     }
 
     public List<Date> getDateList(String name) {
@@ -732,12 +902,20 @@ public class LocalStorage {
         }
     }
 
+    public List<Date> getDateList(String category, String name) {
+        return getDateList(generateName(category, name));
+    }
+
     public void setDateList(String name, List<Date> list) {
         List<Long> longList = new ArrayList<>();
         for (Date date : list) {
             longList.add(date.getTime());
         }
         setLongList(name, longList);
+    }
+
+    public void setDateList(String category, String name, List<Date> value) {
+        setDateList(generateName(category, name), value);
     }
 
     public <E> List<E> getEnumList(String name, Class<E> enum_) {
@@ -763,6 +941,10 @@ public class LocalStorage {
         }
     }
 
+    public <E> List<E> getEnumList(String category, String name, Class<E> enum_) {
+        return getEnumList(generateName(category, name), enum_);
+    }
+
     public <E> void setEnumList(String name, Class<E> enum_, List<E> list) {
         connect(name);
         try {
@@ -780,6 +962,10 @@ public class LocalStorage {
         } finally {
             disconnect(name);
         }
+    }
+
+    public <E> void setEnumList(String category, String name, Class<E> enum_, List<E> value) {
+        setEnumList(generateName(category, name), enum_, value);
     }
 
     private void saveItem(Item item) {
@@ -817,5 +1003,13 @@ public class LocalStorage {
             list.add(tokenizer.nextToken());
         }
         return list;
+    }
+
+    private static String generateName(String category, String name) {
+        return category + name;
+    }
+
+    private static String extractName(String category, String categoryAndName) {
+        return categoryAndName.substring(category.length());
     }
 }

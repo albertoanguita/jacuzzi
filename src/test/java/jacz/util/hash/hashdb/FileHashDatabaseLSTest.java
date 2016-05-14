@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Created by Alberto on 14/05/2016.
  */
-public class FileHashDatabaseTest {
+public class FileHashDatabaseLSTest {
 
     private static final String dir = "./etc/test-files/";
 
@@ -32,7 +32,7 @@ public class FileHashDatabaseTest {
             pathAndHash.add(new Duple<>(path(i), FileHashDatabase.getHash(new File(path(i)))));
         }
 
-        FileHashDatabase fhd = new FileHashDatabase(true);
+        FileHashDatabaseLS fhd = new FileHashDatabaseLS(dir + "fhd.bd", true);
         Assert.assertEquals(new ArrayList<>(), fhd.getRepairedFiles());
         for (int i = 0; i < 5; i++) {
             fhd.put(path((i)));
@@ -62,12 +62,8 @@ public class FileHashDatabaseTest {
         }
 
 
-        VersionedObjectSerializer.serialize(fhd, dir + "fhd.vso", dir + "fhd.bak");
-        FileUtils.forceDelete(new File(dir + "fhd.vso"));
-        fhd = new FileHashDatabase(dir + "fhd.vso", true, dir + "fhd.bak");
-        ArrayList<String> repairedFiles = new ArrayList<>();
-        repairedFiles.add(dir + "fhd.vso");
-        Assert.assertEquals(repairedFiles, fhd.getRepairedFiles());
+        fhd = new FileHashDatabaseLS(dir + "fhd.bd", true);
+        Assert.assertEquals(new ArrayList<>(), fhd.getRepairedFiles());
         Assert.assertEquals(3, fhd.size());
         Assert.assertFalse(fhd.containsKey(pathAndHash.get(0).element2));
         Assert.assertFalse(fhd.containsValue(pathAndHash.get(0).element1));

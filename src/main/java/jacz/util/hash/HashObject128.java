@@ -7,7 +7,7 @@ package jacz.util.hash;
  * Time: 17:27:16
  * To change this template use File | Settings | File Templates.
  */
-public abstract interface HashObject128 extends HashObject {
+public interface HashObject128 extends HashObject {
 
-    public HashCode128 hash();
+    HashCode128 hash();
 }

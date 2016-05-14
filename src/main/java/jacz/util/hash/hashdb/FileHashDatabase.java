@@ -2,7 +2,6 @@ package jacz.util.hash.hashdb;
 
 import jacz.util.hash.HashFunction;
 import jacz.util.hash.MD5;
-import jacz.util.hash.SHA_256;
 import jacz.util.io.serialization.*;
 import jacz.util.maps.AutoKeyMap;
 
@@ -25,8 +24,6 @@ import java.util.Map;
  * <p>
  * The class can also be configured with a maximum size. This way, oldest accessed files are erased if the total size of the managed files
  * exceeds a certain value.
- * <p>
- * todo add repairedFiles info
  */
 public class FileHashDatabase implements VersionedObject {
 
@@ -46,17 +43,17 @@ public class FileHashDatabase implements VersionedObject {
         }
     }
 
-    protected static class AnnotatedFolder implements Serializable {
-
-        final String path;
-
-        final List<String> fileNames;
-
-        protected AnnotatedFolder(String path, List<String> fileNames, boolean storeAbsolutePaths) {
-            this.path = storeAbsolutePaths ? new File(path).getAbsolutePath() : path;
-            this.fileNames = fileNames;
-        }
-    }
+//    protected static class AnnotatedFolder implements Serializable {
+//
+//        final String path;
+//
+//        final List<String> fileNames;
+//
+//        protected AnnotatedFolder(String path, List<String> fileNames, boolean storeAbsolutePaths) {
+//            this.path = storeAbsolutePaths ? new File(path).getAbsolutePath() : path;
+//            this.fileNames = fileNames;
+//        }
+//    }
 
     protected static class FileKeyGenerator implements AutoKeyMap.KeyGenerator<String, AnnotatedFile, IOException>, Serializable {
 
@@ -80,35 +77,35 @@ public class FileHashDatabase implements VersionedObject {
         }
     }
 
-    protected static class FolderKeyGenerator implements AutoKeyMap.KeyGenerator<String, AnnotatedFolder, IOException>, Serializable {
-
-        private transient HashFunction hashFunction;
-
-        public FolderKeyGenerator(HashFunction hashFunction) {
-            this.hashFunction = hashFunction;
-        }
-
-        public void setHashFunction(HashFunction hashFunction) {
-            this.hashFunction = hashFunction;
-        }
-
-        @Override
-        public String generateKey(AnnotatedFolder value) throws IOException {
-            if (!new File(value.path).isDirectory()) {
-                throw new FileNotFoundException();
-            }
-            HashFunction totalHash = new SHA_256();
-            for (String fileName : value.fileNames) {
-                File file = new File(value.path, fileName);
-                if (!file.isFile()) {
-                    throw new FileNotFoundException();
-                }
-                String fileHash = hashFunction.digestAsHex(file);
-                totalHash.update(fileHash);
-            }
-            return totalHash.digestAsHex();
-        }
-    }
+//    protected static class FolderKeyGenerator implements AutoKeyMap.KeyGenerator<String, AnnotatedFolder, IOException>, Serializable {
+//
+//        private transient HashFunction hashFunction;
+//
+//        public FolderKeyGenerator(HashFunction hashFunction) {
+//            this.hashFunction = hashFunction;
+//        }
+//
+//        public void setHashFunction(HashFunction hashFunction) {
+//            this.hashFunction = hashFunction;
+//        }
+//
+//        @Override
+//        public String generateKey(AnnotatedFolder value) throws IOException {
+//            if (!new File(value.path).isDirectory()) {
+//                throw new FileNotFoundException();
+//            }
+//            HashFunction totalHash = new SHA_256();
+//            for (String fileName : value.fileNames) {
+//                File file = new File(value.path, fileName);
+//                if (!file.isFile()) {
+//                    throw new FileNotFoundException();
+//                }
+//                String fileHash = hashFunction.digestAsHex(file);
+//                totalHash.update(fileHash);
+//            }
+//            return totalHash.digestAsHex();
+//        }
+//    }
 
     private static final String VERSION_0_1 = "VERSION_0.1";
 
@@ -168,6 +165,10 @@ public class FileHashDatabase implements VersionedObject {
     public void clear() {
         filesMap.clear();
 //        foldersMap.clear();
+    }
+
+    public int size() {
+        return filesMap.size();
     }
 
     public boolean containsKey(String key) {

@@ -15,7 +15,7 @@ abstract class HashDatabase<T extends HashCode, Y extends HashObject> implements
     protected Map<T, Y> data;
 
     public HashDatabase() {
-        data = new HashMap<T, Y>();
+        data = new HashMap<>();
     }
 
     public boolean containsKey(T key) {

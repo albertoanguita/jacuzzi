@@ -36,6 +36,9 @@ public class VersionedLocalStorageTest implements Updater {
         vls = new VersionedLocalStorage(path, this, "3");
         Assert.assertEquals("one", vls.getString("1"));
         Assert.assertEquals("two", vls.getString("2"));
+
+        vls.clear();
+        Assert.assertEquals("3", vls.getVersion());
     }
 
     @Override

@@ -83,6 +83,11 @@ public class DoubleMap<K, V> implements Serializable {
         return size() == 0;
     }
 
+    public void clear() {
+        directMap.clear();
+        reverseMap.clear();
+    }
+
     public int size() {
         return directMap.size();
     }

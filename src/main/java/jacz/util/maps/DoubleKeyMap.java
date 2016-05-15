@@ -74,6 +74,11 @@ public class DoubleKeyMap<K, S, V> implements Serializable {
         return size() == 0;
     }
 
+    public void clear() {
+        mainMap.clear();
+        secondaryMap.clear();
+    }
+
     public int size() {
         return mainMap.size();
     }

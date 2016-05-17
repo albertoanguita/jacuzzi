@@ -1,7 +1,7 @@
 package jacz.util.io.serialization.localstorage;
 
-import jacz.storage.ActiveJDBCController;
 import jacz.util.concurrency.LockMap;
+import jacz.util.io.serialization.activejdbcsupport.ActiveJDBCController;
 import jacz.util.objects.Util;
 import org.javalite.activejdbc.DB;
 

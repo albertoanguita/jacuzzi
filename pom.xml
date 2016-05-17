@@ -125,10 +125,15 @@
         <artifactId>activejdbc</artifactId>
         <version>1.4.11</version>
     </dependency>
+    <!--<dependency>-->
+        <!--<groupId>jacz.storage</groupId>-->
+        <!--<artifactId>activejdbc-controller</artifactId>-->
+        <!--<version>0.1a</version>-->
+    <!--</dependency>-->
     <dependency>
-        <groupId>jacz.storage</groupId>
-        <artifactId>activejdbc-controller</artifactId>
-        <version>0.1a</version>
+    	<groupId>org.xerial</groupId>
+    	<artifactId>sqlite-jdbc</artifactId>
+    	<version>3.8.11.1</version>
     </dependency>
 
     <dependency>

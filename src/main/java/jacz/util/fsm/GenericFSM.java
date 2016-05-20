@@ -2,6 +2,8 @@ package jacz.util.fsm;
 
 import jacz.util.id.AlphaNumFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Generic Finite State Machine implementation. User provides the state definition and transitions. The class controls the FSM life cycle
  */
@@ -15,9 +17,9 @@ public class GenericFSM<T, Y> {
 
     protected T currentState;
 
-    protected boolean active;
+    protected AtomicBoolean active;
 
-    protected boolean started;
+    protected AtomicBoolean started;
 
     public GenericFSM(GenericFSMAction<T, Y> genericFSMAction) {
         initialize("unnamedFSM", genericFSMAction);
@@ -31,8 +33,8 @@ public class GenericFSM<T, Y> {
         id = AlphaNumFactory.getStaticId();
         this.name = name;
         this.genericFSMAction = genericFSMAction;
-        active = true;
-        started = false;
+        active = new AtomicBoolean(true);
+        started = new AtomicBoolean(false);
     }
 
     public String getId() {
@@ -48,24 +50,24 @@ public class GenericFSM<T, Y> {
     }
 
     public boolean isActive() {
-        return active;
+        return active.get();
     }
 
     public boolean start() {
         currentState = genericFSMAction.init();
         checkFinalState();
-        started = true;
+        started.set(true);
         return isActive();
     }
 
     private void checkFinalState() {
         if (genericFSMAction.isFinalState(currentState)) {
-            active = false;
+            active.set(false);
         }
     }
 
     public boolean newInput(Y input) {
-        if (!started) {
+        if (!started.get()) {
             start();
         }
         if (!isActive()) {
@@ -74,7 +76,7 @@ public class GenericFSM<T, Y> {
         try {
             currentState = genericFSMAction.processInput(currentState, input);
         } catch (IllegalArgumentException e) {
-            active = false;
+            active.set(false);
             return false;
         }
         checkFinalState();
@@ -82,9 +84,8 @@ public class GenericFSM<T, Y> {
     }
 
     public void stop() {
-        if (active) {
+        if (active.getAndSet(false)) {
             genericFSMAction.stopped();
-            active = false;
         }
     }
 
@@ -100,6 +101,6 @@ public class GenericFSM<T, Y> {
 
     @Override
     public String toString() {
-        return name + "{id: " + id.toString() + "}";
+        return name + "{id: " + id + "}";
     }
 }

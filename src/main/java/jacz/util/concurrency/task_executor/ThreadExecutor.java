@@ -83,18 +83,23 @@ public class ThreadExecutor {
         }
     }
 
-    private static final ExecutorService executorService = Executors.newCachedThreadPool();
+    private static ExecutorService executorService;
 
     private static final ObjectCount<String> registeredClients = new ObjectCount<>();
 
-    public static void registerClient(String clientName) {
+    public static synchronized void registerClient(String clientName) {
         registeredClients.addObject(clientName);
+        if (registeredClients.getTotalCount() == 1) {
+            // we must activate the executor service now
+            executorService = Executors.newCachedThreadPool();
+        }
     }
 
-    public static void shutdownClient(String clientName) throws IllegalArgumentException {
+    public static synchronized void shutdownClient(String clientName) throws IllegalArgumentException {
         try {
             registeredClients.subtractObject(clientName);
             if (registeredClients.getTotalCount() == 0) {
+                // no registered clients at this moment -> shutdown the service
                 executorService.shutdown();
             }
         } catch (RuntimeException e) {

@@ -19,6 +19,21 @@ public class TimerTest implements TimerAction {
         timer.kill();
     }
 
+    @Test
+    public void test2() {
+
+        Timer timer = new Timer(waitTime, this, false, "name");
+        Timer timer2 = new Timer(waitTime, this, false, "name2");
+
+        ThreadUtil.safeSleep(500L);
+        timer.reset();
+        timer2.reset();
+
+        ThreadUtil.safeSleep(6000L);
+        timer.kill();
+        timer2.kill();
+    }
+
     @Override
     public Long wakeUp(Timer timer) {
         System.out.println("now: " + System.currentTimeMillis());

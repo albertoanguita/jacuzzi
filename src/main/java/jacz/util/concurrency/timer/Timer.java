@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * Note that if you have activated a timer and then you assign your Timer object a null value or any other Timer,
  * the first timer will still activate itself. You must stop it first!!!
+ * todo make it so the thread executor is only registered when needed, and unregistered when timer stops
  */
 public class Timer {
 
@@ -260,8 +261,7 @@ public class Timer {
      * The timer is stopped, and cannot be resumed/reset again
      */
     public synchronized void kill() {
-        if (alive.get()) {
-            alive.set(false);
+        if (alive.getAndSet(false)) {
             stop();
             ThreadExecutor.shutdownClient(this.getClass().getName());
         }

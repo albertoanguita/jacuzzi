@@ -3,6 +3,8 @@ package jacz.util.fsm;
 import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.concurrency.timer.Timer;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * FSM with timeout capability
  */
@@ -12,7 +14,7 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
 
     private final Timer timer;
 
-    private boolean timedOut;
+    private AtomicBoolean timedOut;
 
     public TimedFSM(TimedFSMAction<T, Y> timedFSMAction, long timeoutMillis) {
         this("unnamedTimedFSM", timedFSMAction, timeoutMillis);
@@ -21,7 +23,7 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
     public TimedFSM(String name, TimedFSMAction<T, Y> timedFSMAction, long timeoutMillis) {
         super(name, timedFSMAction);
         this.timedFSMAction = timedFSMAction;
-        timedOut = false;
+        timedOut = new AtomicBoolean(false);
         timer = new Timer(timeoutMillis, this, false, name);
     }
 
@@ -35,7 +37,7 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
 
     @Override
     public synchronized boolean newInput(Y input) {
-        if (!timedOut) {
+        if (!timedOut.get()) {
             // we stop the timer during the new input invocation so we don't get timeouts if the method takes long to complete
             stopTimer();
             boolean active = super.newInput(input);
@@ -68,7 +70,7 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
     public void kill() {
         timer.kill();
         synchronized (this) {
-            timedOut = true;
+            timedOut.set(true);
         }
     }
 
@@ -76,8 +78,8 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
     public synchronized Long wakeUp(Timer timer) {
         // the timer has jumped -> no activity reached this FSM during the specified time, the FSM finishes
         // we first check that the FSM is still active
-        if (active) {
-            timedOut = true;
+        if (active.get()) {
+            timedOut.set(true);
             timedFSMAction.timedOut(currentState);
         }
         // the timer dies

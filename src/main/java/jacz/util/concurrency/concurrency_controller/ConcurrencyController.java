@@ -44,7 +44,7 @@ public class ConcurrencyController implements DaemonAction {
          * @param o other QueueElement object to compare with
          * @return result of comparison
          */
-        public int compareTo(@NotNull QueueElement o) {
+        public int compareTo(@NonNull QueueElement o) {
             return o.priority - priority;
         }
 

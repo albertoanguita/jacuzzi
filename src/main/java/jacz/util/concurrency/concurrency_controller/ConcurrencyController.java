@@ -4,8 +4,8 @@ import jacz.util.concurrency.daemon.Daemon;
 import jacz.util.concurrency.daemon.DaemonAction;
 import jacz.util.concurrency.execution_control.TrafficControl;
 import jacz.util.maps.ObjectCount;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.concurrent.PriorityBlockingQueue;
 
@@ -44,7 +44,7 @@ public class ConcurrencyController implements DaemonAction {
          * @param o other QueueElement object to compare with
          * @return result of comparison
          */
-        public int compareTo(@Nonnull QueueElement o) {
+        public int compareTo(@NotNull QueueElement o) {
             return o.priority - priority;
         }
 

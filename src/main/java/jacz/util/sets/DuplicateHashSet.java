@@ -1,5 +1,7 @@
 package jacz.util.sets;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 
 /**
@@ -70,7 +72,7 @@ public class DuplicateHashSet<E> implements Set<E> {
     private int size;
 
     public DuplicateHashSet() {
-        this.map = new HashMap<E, Integer>();
+        this.map = new HashMap<>();
         size = 0;
     }
 
@@ -92,7 +94,7 @@ public class DuplicateHashSet<E> implements Set<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return new PrivateIterator<E>(this);
+        return new PrivateIterator<>(this);
     }
 
     @Override
@@ -147,7 +149,7 @@ public class DuplicateHashSet<E> implements Set<E> {
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public boolean containsAll(@NotNull Collection<?> c) {
         for (Object o : c) {
             if (!contains(o)) {
                 return false;
@@ -157,7 +159,7 @@ public class DuplicateHashSet<E> implements Set<E> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
+    public boolean addAll(@NotNull Collection<? extends E> c) {
         boolean ret = false;
         for (E e : c) {
             ret = ret || add(e);
@@ -166,9 +168,9 @@ public class DuplicateHashSet<E> implements Set<E> {
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(@NotNull Collection<?> c) {
         boolean ret = false;
-        Set<E> keySet = new HashSet<E>(map.keySet());
+        Set<E> keySet = new HashSet<>(map.keySet());
         for (E e : keySet) {
             if (!c.contains(e)) {
                 map.remove(e);
@@ -179,7 +181,7 @@ public class DuplicateHashSet<E> implements Set<E> {
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(@NotNull Collection<?> c) {
         boolean ret = false;
         for (Object e : c) {
             ret = ret || remove(e);

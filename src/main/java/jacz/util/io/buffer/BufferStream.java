@@ -7,7 +7,7 @@ import java.io.IOException;
  */
 public interface BufferStream {
 
-    public boolean hasMoreBytes();
+    boolean hasMoreBytes();
 
-    public byte[] readNextBytes() throws IOException;
+    byte[] readNextBytes() throws IOException;
 }

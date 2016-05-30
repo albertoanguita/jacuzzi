@@ -69,7 +69,7 @@ public class TimedQueue<T> implements TimerAction {
         }
     }
 
-    public static interface TimedQueueInterface<T> {
+    public interface TimedQueueInterface<T> {
 
         void elementsRemoved(List<T> elements);
     }
@@ -209,7 +209,7 @@ public class TimedQueue<T> implements TimerAction {
     }
 
     public synchronized void addElement(T element) {
-        queue.add(new TimedQueueElement<T>(element));
+        queue.add(new TimedQueueElement<>(element));
         if (queue.size() == 1 && removeTimer != null) {
             removeTimer.reset(millisToStore);
         }
@@ -226,13 +226,13 @@ public class TimedQueue<T> implements TimerAction {
     private synchronized long removeOldElements() {
         long currentTime = System.currentTimeMillis();
         long oldestTimeMarkAllowed = currentTime - millisToStore;
-        List<T> removedElements = new ArrayList<T>();
+        List<T> removedElements = new ArrayList<>();
         while (queue.size() > 0 && queue.get(0).timeStamp <= oldestTimeMarkAllowed) {
             removedElements.add(queue.remove(0).element);
         }
         if (!removedElements.isEmpty() && timedQueueInterface != null) {
             // invoke in parallel to avoid locks
-            sequentialTaskExecutor.submit(new TimedQueueInterfaceTask<T>(timedQueueInterface, removedElements));
+            sequentialTaskExecutor.submit(new TimedQueueInterfaceTask<>(timedQueueInterface, removedElements));
 //            timedQueueInterface.elementsRemoved(removedElements);
         }
         if (!queue.isEmpty()) {

@@ -14,7 +14,7 @@ public class TestTimed {
 
     public static void main(String args[]) {
 
-        TimedFSM<String, Integer> timedFSM = new TimedFSM<String, Integer>(new TimedTestAction(), 5000);
+        TimedFSM<String, Integer> timedFSM = new TimedFSM<>(new TimedTestAction(), 5000);
 
         IOUtil.pauseEnter();
         boolean active = true;

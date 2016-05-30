@@ -9,5 +9,5 @@ package jacz.util.stochastic;
  */
 public interface DensityFunction {
 
-    public double get(double value) throws IllegalArgumentException;
+    double get(double value) throws IllegalArgumentException;
 }

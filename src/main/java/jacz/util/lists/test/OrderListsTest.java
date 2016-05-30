@@ -11,7 +11,7 @@ import java.util.List;
 public class OrderListsTest {
 
     public static void main(String args[]) {
-        List<Integer> list = new ArrayList<Integer>();
+        List<Integer> list = new ArrayList<>();
         list.add(5);
         list.add(2);
         list.add(7);
@@ -23,7 +23,7 @@ public class OrderListsTest {
         list.add(6);
         list.add(9);
 
-        List<Integer> relList1 = new ArrayList<Integer>();
+        List<Integer> relList1 = new ArrayList<>();
         relList1.add(5);
         relList1.add(2);
         relList1.add(7);
@@ -35,7 +35,7 @@ public class OrderListsTest {
         relList1.add(6);
         relList1.add(9);
 
-        List<Double> relList2 = new ArrayList<Double>();
+        List<Double> relList2 = new ArrayList<>();
         relList2.add(5.0);
         relList2.add(2.0);
         relList2.add(7.0);

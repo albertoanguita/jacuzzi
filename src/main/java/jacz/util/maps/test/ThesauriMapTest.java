@@ -22,7 +22,7 @@ public class ThesauriMapTest {
 
     private static void test1() {
 
-        ThesauriStringMap<Integer> m = new ThesauriStringMap<Integer>(false, 1000);
+        ThesauriStringMap<Integer> m = new ThesauriStringMap<>(false, 1000);
 
         m.put("", 0);
         m.put("aaa", 1);
@@ -65,7 +65,7 @@ public class ThesauriMapTest {
         char to = 'z';
 
         //HashMap<String, Integer> m = new HashMap<String, Integer>();
-        ThesauriStringMap<Integer> m = new ThesauriStringMap<Integer>(false, 250000);
+        ThesauriStringMap<Integer> m = new ThesauriStringMap<>(false, 250000);
 
         StringBuilder str = new StringBuilder("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 

@@ -16,7 +16,7 @@ public interface MessageReader {
      *
      * @return the next message to process, or a StopReadingMessages if the execution of the reader must finish
      */
-    public Object readMessage();
+    Object readMessage();
 
     /**
      * This method is invoked when the message reader receives a StopReadingMessages message (either intentionally or
@@ -26,5 +26,5 @@ public interface MessageReader {
      * client handles the messages himself, he must be ready to handle this StopReadingMessages message
      * handling messages,
      */
-    public void stopped();
+    void stopped();
 }

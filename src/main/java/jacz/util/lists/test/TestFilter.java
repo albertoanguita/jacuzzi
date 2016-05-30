@@ -16,7 +16,7 @@ public class TestFilter {
 
     public static void main(String args[]) {
 
-        List<FiltInt> list = new ArrayList<FiltInt>();
+        List<FiltInt> list = new ArrayList<>();
         list.add(new FiltInt(0));
         list.add(new FiltInt(1));
         list.add(new FiltInt(2));

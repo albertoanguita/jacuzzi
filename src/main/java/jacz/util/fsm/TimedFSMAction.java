@@ -9,5 +9,5 @@ package jacz.util.fsm;
  */
 public interface TimedFSMAction<T, Y> extends GenericFSMAction<T, Y> {
 
-    public void timedOut(T currentState);
+    void timedOut(T currentState);
 }

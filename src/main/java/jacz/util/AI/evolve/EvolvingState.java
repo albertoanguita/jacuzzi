@@ -52,13 +52,8 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         daemon = new Daemon(this, threadName + "/EvolvingState");
         runnableStateTimers = new StateTimers<>(state, threadName + "/EvolvingState/RunnableStateTimers");
         evolveStateTimers = new StateTimers<>(state, threadName + "/EvolvingState/EvolveStateTimers");
-        evolveTask = new Runnable() {
-            @Override
-            public void run() {
-                evolve();
-            }
-        };
-        stateHooks = new StateHooks<S>(state, threadName + "/EvolvingState/StateHooks");
+        evolveTask = this::evolve;
+        stateHooks = new StateHooks<>(state, threadName + "/EvolvingState/StateHooks");
         alive = new AtomicBoolean(true);
     }
 

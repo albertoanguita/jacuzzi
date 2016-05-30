@@ -45,7 +45,7 @@ public class ThreadUtil {
     }
 
     private static Set<String> buildSystemThreadsNames() {
-        Set<String> systemThreadsNames = new HashSet<String>();
+        Set<String> systemThreadsNames = new HashSet<>();
         systemThreadsNames.add("Attach Listener");
         systemThreadsNames.add("Monitor Ctrl-Break");
         systemThreadsNames.add("Finalizer");

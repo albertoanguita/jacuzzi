@@ -127,12 +127,7 @@ public class TestEvolvingState {
                 return "general state cond";
             }
         }, BLOCK * 3);
-        evolvingState.setRunnableStateTimer(DiscreteState.E, BLOCK / 2, new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Check E!!!");
-            }
-        });
+        evolvingState.setRunnableStateTimer(DiscreteState.E, BLOCK / 2, () -> System.out.println("Check E!!!"));
         HookEnd hookEnd = new HookEnd();
         evolvingState.setEnterStateHook(DiscreteState.B, new Hook(hookEnd, "enter B"));
         evolvingState.setExitStateHook(DiscreteState.B, new Hook(hookEnd, "exit B"));

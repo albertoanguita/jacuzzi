@@ -20,7 +20,7 @@ public class ObjectListWrapper implements Serializable {
      * Class constructor. Builds an isEmpty list of objects
      */
     public ObjectListWrapper() {
-        objects = new ArrayList<Object>();
+        objects = new ArrayList<>();
     }
 
     /**
@@ -29,7 +29,7 @@ public class ObjectListWrapper implements Serializable {
      * @param objects the objects to initially store in this ObjectListWrapper
      */
     public ObjectListWrapper(Object... objects) {
-        this.objects = new ArrayList<Object>(Arrays.asList(objects));
+        this.objects = new ArrayList<>(Arrays.asList(objects));
     }
 
     /**

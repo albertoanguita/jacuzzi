@@ -29,7 +29,7 @@ public class DaemonQueue<T> implements DaemonAction {
     }
 
     public DaemonQueue(DaemonQueueAction<T> daemonQueueAction, int queueCapacity) {
-        eventQueue = new ArrayBlockingQueue<T>(queueCapacity, MESSAGE_FAIRNESS);
+        eventQueue = new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
         daemon = new Daemon(this);
         this.daemonQueueAction = daemonQueueAction;
     }

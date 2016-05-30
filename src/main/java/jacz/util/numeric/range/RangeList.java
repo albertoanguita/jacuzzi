@@ -209,9 +209,7 @@ public class RangeList<T extends Range<Y>, Y extends Number & Comparable<Y>> imp
     }
 
     public void add(RangeList<T, Y> anotherRangeList) {
-        for (T range : anotherRangeList.getRangesAsList()) {
-            add(range);
-        }
+        anotherRangeList.getRangesAsList().forEach(this::add);
     }
 
     public void remove(T range) {
@@ -230,14 +228,14 @@ public class RangeList<T extends Range<Y>, Y extends Number & Comparable<Y>> imp
                 ranges.remove(secIndex);
             }
             if (secIndex < ranges.size() &&
-                    (range.compareTo((T) ranges.get(secIndex)) == Range.RangeComparison.LEFT_OVERLAP)) {
+                    (range.compareTo(ranges.get(secIndex)) == Range.RangeComparison.LEFT_OVERLAP)) {
                 Y min = range.next(range.getMax());
                 Y max = ranges.get(secIndex).getMax();
                 ranges.set(secIndex, (T) range.buildInstance(min, max));
             }
 
             // now deal with the range at index. It might have to be deleted, partially deleted, or even split in two
-            switch (range.compareTo((T) ranges.get(index))) {
+            switch (range.compareTo(ranges.get(index))) {
 
                 case LEFT_OVERLAP:
                     Y min = range.next(range.getMax());
@@ -275,9 +273,7 @@ public class RangeList<T extends Range<Y>, Y extends Number & Comparable<Y>> imp
     }
 
     public void remove(List<T> ranges) {
-        for (T range : ranges) {
-            remove(range);
-        }
+        ranges.forEach(this::remove);
     }
 
     @SuppressWarnings("unchecked")
@@ -286,9 +282,7 @@ public class RangeList<T extends Range<Y>, Y extends Number & Comparable<Y>> imp
     }
 
     public void remove(RangeList<T, Y> anotherRangeList) {
-        for (T range : anotherRangeList.getRangesAsList()) {
-            remove(range);
-        }
+        anotherRangeList.getRangesAsList().forEach(this::remove);
     }
 
     /**

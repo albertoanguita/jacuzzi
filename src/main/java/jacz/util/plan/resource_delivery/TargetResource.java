@@ -26,7 +26,7 @@ class TargetResource<T, Y extends Resource> implements Comparable<TargetResource
         this.target = target;
         this.priority = (double) priority;
         updateRatio(initialRatio);
-        resourceQueue = new ArrayDeque<Y>();
+        resourceQueue = new ArrayDeque<>();
     }
 
     synchronized boolean empty() {
@@ -53,7 +53,7 @@ class TargetResource<T, Y extends Resource> implements Comparable<TargetResource
         if (resource != null) {
             resourcesSent += (double) resource.size();
             calculateRatio();
-            return new TargetAndResource<T, Y>(target, resource);
+            return new TargetAndResource<>(target, resource);
         } else {
             return null;
         }

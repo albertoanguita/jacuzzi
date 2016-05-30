@@ -82,7 +82,7 @@ public class Matrix<T> {
         } else {
             if (elements == null) {
                 // create new
-                elements = new ArrayList<MatrixElement<T>>(sizes[0]);
+                elements = new ArrayList<>(sizes[0]);
                 for (int i = 0; i < sizes[0]; i++) {
                     elements.add(generateElement(0));
                 }
@@ -112,14 +112,14 @@ public class Matrix<T> {
 
     private MatrixElement<T> generateElement(int dimCount) {
         if (dimCount == dimensions - 1) {
-            return new MatrixElement<T>(defaultValue);
+            return new MatrixElement<>(defaultValue);
         } else {
             dimCount++;
-            ArrayList<MatrixElement<T>> elementList = new ArrayList<MatrixElement<T>>(dimCount);
+            ArrayList<MatrixElement<T>> elementList = new ArrayList<>(dimCount);
             for (int i = 0; i < sizes[dimCount]; i++) {
                 elementList.add(generateElement(dimCount));
             }
-            return new MatrixElement<T>(elementList);
+            return new MatrixElement<>(elementList);
         }
     }
 

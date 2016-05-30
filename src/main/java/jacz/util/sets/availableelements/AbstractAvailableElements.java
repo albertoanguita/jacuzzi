@@ -25,7 +25,7 @@ abstract class AbstractAvailableElements<T> implements ElementHandler<T> {
         this.maxElement = maxElement;
         init = calculateInit(init, maxElement);
         size = initSize();
-        availableElements = new AvailableElements<T>(init, this, occupiedElements);
+        availableElements = new AvailableElements<>(init, this, occupiedElements);
     }
 
     protected abstract T calculateInit(T init, T maxElement);

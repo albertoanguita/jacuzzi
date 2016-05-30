@@ -18,12 +18,12 @@ public class IndexList<T> {
     private List<Integer> indexList;
 
     public IndexList(List<T> baseList) {
-        this.baseList = new ArrayList<T>(baseList);
+        this.baseList = new ArrayList<>(baseList);
         buildIndexList();
     }
 
     public IndexList(List<T> baseList, Comparator<T> comparator, boolean reverseOrder, int numThreads) {
-        this.baseList = new ArrayList<T>(baseList);
+        this.baseList = new ArrayList<>(baseList);
         buildIndexList();
         sortIndexes(comparator, reverseOrder, numThreads);
     }

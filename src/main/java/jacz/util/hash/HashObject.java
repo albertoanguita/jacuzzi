@@ -9,5 +9,5 @@ package jacz.util.hash;
  */
 public interface HashObject {
 
-    public HashCode hash();
+    HashCode hash();
 }

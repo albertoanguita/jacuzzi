@@ -17,7 +17,7 @@ class AvailableElements<T> {
     private T nextElement;
 
     public AvailableElements(T initialElement, ElementHandler<T> elementHandler, T... occupiedElements) {
-        this.occupiedElements = new HashSet<T>();
+        this.occupiedElements = new HashSet<>();
         nextElement = initialElement;
         this.elementHandler = elementHandler;
         this.occupiedElements.addAll(Arrays.asList(occupiedElements));

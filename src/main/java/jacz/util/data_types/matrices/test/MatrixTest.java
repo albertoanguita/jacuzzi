@@ -14,7 +14,7 @@ public class MatrixTest {
 
     public static void main(String args[]) {
 
-        Matrix<Integer> m = new Matrix<Integer>(2, 0);
+        Matrix<Integer> m = new Matrix<>(2, 0);
 
         m.setDimensionSizes(2, 2);
         m.set(1, 0, 0);

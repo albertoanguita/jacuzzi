@@ -302,7 +302,7 @@ public class Lists {
 
 
     private static <T> List<T> removeLessElements(List<T> list, List<Boolean> leftRightMask) {
-        List<T> lessList = new ArrayList<T>();
+        List<T> lessList = new ArrayList<>();
         int listCont = 0;
         int maskCont = 0;
         while (listCont < list.size()) {
@@ -317,7 +317,7 @@ public class Lists {
     }
 
     public static <T> List<T> cloneList(List<T> list) {
-        return new ArrayList<T>(list);
+        return new ArrayList<>(list);
     }
 
     public static <T extends Filterable> List<Boolean> filterElements(List<T> list, Object filter) {

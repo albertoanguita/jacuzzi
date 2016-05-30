@@ -9,5 +9,5 @@ package jacz.util.date_time;
  */
 public interface RemainingTimeAction extends SpeedMonitorAction {
 
-    public void remainingTime(long millis);
+    void remainingTime(long millis);
 }

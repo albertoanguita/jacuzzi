@@ -31,6 +31,8 @@ public class ThreadExecutorTest {
         ThreadExecutor.submit(new RunnableTask("runnable1"), "runnable1");
         ThreadExecutor.submit(new RunnableTask("runnable2"), "runnable2");
 
+        ThreadExecutor.submit(() -> System.out.println("hello"));
+
         ThreadUtil.safeSleep(5000);
     }
 }

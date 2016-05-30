@@ -16,18 +16,8 @@ public class StateTimersTest {
 
         StateTimers<Integer> stateTimers = new StateTimers<>(1);
 
-        stateTimers.setStateTimer(1, WAIT, new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("state 1");
-            }
-        });
-        stateTimers.setStateTimer(2, WAIT / 2, new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("state 2");
-            }
-        });
+        stateTimers.setStateTimer(1, WAIT, () -> System.out.println("state 1"));
+        stateTimers.setStateTimer(2, WAIT / 2, () -> System.out.println("state 2"));
 
         ThreadUtil.safeSleep(WAIT2);
         stateTimers.setState(2);

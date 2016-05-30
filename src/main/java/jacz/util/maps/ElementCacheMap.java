@@ -51,13 +51,13 @@ public class ElementCacheMap<T, S> {
 
 
     public ElementCacheMap(int maxSize) {
-        map = new HashMap<T, AnnotatedValue<T, S>>();
-        orderedValues = new PriorityQueue<AnnotatedValue<T, S>>();
+        map = new HashMap<>();
+        orderedValues = new PriorityQueue<>();
         this.maxSize = maxSize;
     }
 
     public void put(T key, S value) {
-        map.put(key, new AnnotatedValue<T, S>(value, System.currentTimeMillis(), key));
+        map.put(key, new AnnotatedValue<>(value, System.currentTimeMillis(), key));
         adjustSize();
     }
 
@@ -95,7 +95,7 @@ public class ElementCacheMap<T, S> {
     }
 
     public Collection<S> values() {
-        Collection<S> values = new HashSet<S>();
+        Collection<S> values = new HashSet<>();
         for (AnnotatedValue<T, S> annotatedValues : map.values()) {
             values.add(annotatedValues.value);
         }

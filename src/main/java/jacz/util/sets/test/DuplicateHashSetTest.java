@@ -16,7 +16,7 @@ public class DuplicateHashSetTest {
 
     public static void main(String args[]) {
 
-        Set<String> s = new DuplicateHashSet<String>();
+        Set<String> s = new DuplicateHashSet<>();
 
         s.add("hola");
         s.add("hola");

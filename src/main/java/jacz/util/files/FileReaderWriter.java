@@ -25,7 +25,7 @@ public class FileReaderWriter {
     public static ArrayList<String> readTextFileAsList(String path) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(path));
 
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         String line = reader.readLine();
         while (line != null) {
             result.add(line);

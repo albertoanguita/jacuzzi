@@ -15,23 +15,23 @@ public class DoubleElementArrayList<T, Y> implements Cloneable, Serializable {
 
 
     public DoubleElementArrayList() {
-        tList = new ArrayList<T>();
-        yList = new ArrayList<Y>();
+        tList = new ArrayList<>();
+        yList = new ArrayList<>();
     }
 
     public DoubleElementArrayList(Collection<? extends T> tList, Collection<? extends Y> yList) {
-        this.tList = new ArrayList<T>(tList);
-        this.yList = new ArrayList<Y>(yList);
+        this.tList = new ArrayList<>(tList);
+        this.yList = new ArrayList<>(yList);
     }
 
     public DoubleElementArrayList(DoubleElementArrayList<? extends T, ? extends Y> doubleList) {
-        tList = new ArrayList<T>(doubleList.tList);
-        yList = new ArrayList<Y>(doubleList.yList);
+        tList = new ArrayList<>(doubleList.tList);
+        yList = new ArrayList<>(doubleList.yList);
     }
 
     public DoubleElementArrayList(int initialCapacity) {
-        tList = new ArrayList<T>(initialCapacity);
-        yList = new ArrayList<Y>(initialCapacity);
+        tList = new ArrayList<>(initialCapacity);
+        yList = new ArrayList<>(initialCapacity);
     }
 
     public void add(T t, Y y) {
@@ -71,7 +71,7 @@ public class DoubleElementArrayList<T, Y> implements Cloneable, Serializable {
 
     public Object clone() throws CloneNotSupportedException {
         try {
-            DoubleElementArrayList<T, Y> newList = (DoubleElementArrayList) super.clone();
+            DoubleElementArrayList<T, Y> newList = (DoubleElementArrayList<T, Y>) super.clone();
             newList.tList = (ArrayList<T>) tList.clone();
             newList.yList = (ArrayList<Y>) yList.clone();
             return newList;
@@ -149,7 +149,7 @@ public class DoubleElementArrayList<T, Y> implements Cloneable, Serializable {
     ArrayList<Object> remove(int index) throws IndexOutOfBoundsException {
         T t = tList.remove(index);
         Y y = yList.remove(index);
-        ArrayList<Object> result = new ArrayList<Object>(2);
+        ArrayList<Object> result = new ArrayList<>(2);
         result.add(t);
         result.add(y);
         return result;

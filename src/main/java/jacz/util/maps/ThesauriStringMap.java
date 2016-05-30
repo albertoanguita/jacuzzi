@@ -33,7 +33,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
             this.key = key;
             this.isLeaf = false;
             this.value = null;
-            children = new ArrayList<Node<E>>();
+            children = new ArrayList<>();
             childrenSize = 0;
         }
 
@@ -42,7 +42,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
             this.key = key;
             isLeaf = true;
             this.value = value;
-            children = new ArrayList<Node<E>>();
+            children = new ArrayList<>();
             childrenSize = 0;
         }
 
@@ -86,7 +86,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
         private ThesauriStringMapIterator(ThesauriStringMap<E> map) {
             currentNode = map.rootNode;
             currentKey = new StringBuilder(EMPTY_STRING);
-            path = new ArrayList<Integer>();
+            path = new ArrayList<>();
             if (!currentNode.isLeaf) {
                 nextLeafNode();
             }
@@ -281,7 +281,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
 
     // avoid creating these fields for each search, use only one that never is destroyed
     @SuppressWarnings({"FieldCanBeLocal"})
-    private Node<E> searchInListTempNode = new Node<E>(null, EMPTY_STRING);
+    private Node<E> searchInListTempNode = new Node<>(null, EMPTY_STRING);
 
     @SuppressWarnings({"FieldCanBeLocal"})
     private int searchInListIndex;
@@ -301,7 +301,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
     private int searchSimilarityL2;
 
 
-    private PathResult<E> tempPathResult = new PathResult<E>(0, null, 0, new StringBuilder(EMPTY_STRING));
+    private PathResult<E> tempPathResult = new PathResult<>(0, null, 0, new StringBuilder(EMPTY_STRING));
 
 
     private static final String EMPTY_STRING = "";
@@ -311,10 +311,10 @@ public class ThesauriStringMap<E> implements Map<String, E> {
     }
 
     public ThesauriStringMap(boolean useSets, int operationsToGc) {
-        rootNode = new Node<E>(null, EMPTY_STRING);
-        nodeSet = new HashSet<String>();
-        valueSet = new DuplicateHashSet<E>();
-        entrySet = new HashSet<Entry<String, E>>();
+        rootNode = new Node<>(null, EMPTY_STRING);
+        nodeSet = new HashSet<>();
+        valueSet = new DuplicateHashSet<>();
+        entrySet = new HashSet<>();
         this.useSets = useSets;
         this.operationsToGc = operationsToGc;
         opCounter = 0;
@@ -527,7 +527,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
             //
             if (pathResult.restToSearch.length() > 0 && pathResult.similarChars == 0) {
                 // case 1. Tested
-                pathResult.reachedNode.children.add(pathResult.lastPath, new Node<E>(pathResult.reachedNode, pathResult.restToSearch.toString(), value));
+                pathResult.reachedNode.children.add(pathResult.lastPath, new Node<>(pathResult.reachedNode, pathResult.restToSearch.toString(), value));
                 modifySize(pathResult.reachedNode, 1);
                 addToSets(key, value);
                 stringBuilderPool.free(keyBld);
@@ -552,7 +552,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
             } else {
                 // case 4. Tested
                 Node<E> newMiddleNode = divideNode(pathResult.reachedNode, pathResult.lastPath, pathResult.similarChars, key, false, value);
-                Node<E> newNode = new Node<E>(newMiddleNode, pathResult.restToSearch.toString(), value);
+                Node<E> newNode = new Node<>(newMiddleNode, pathResult.restToSearch.toString(), value);
                 if (newNode.key.compareTo(pathResult.reachedNode.key) < 0) {
                     newMiddleNode.children.add(0, newNode);
                 } else {
@@ -579,7 +579,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
             if (oldValue != null) {
                 valueSet.remove(oldValue);
             }
-            entrySet.add(new ThesauriStringMapEntry<E>(this, key));
+            entrySet.add(new ThesauriStringMapEntry<>(this, key));
         }
     }
 
@@ -589,7 +589,7 @@ public class ThesauriStringMap<E> implements Map<String, E> {
             if (value != null) {
                 valueSet.remove(value);
             }
-            entrySet.remove(new ThesauriStringMapEntry<E>(this, key));
+            entrySet.remove(new ThesauriStringMapEntry<>(this, key));
         }
     }
 
@@ -597,11 +597,11 @@ public class ThesauriStringMap<E> implements Map<String, E> {
     private Node<E> divideNode(Node<E> node, int nodePositionInParent, int charsForNewNode, String fullKey, boolean newNodeIsLeaf, E value) {
         Node<E> newNode;
         if (newNodeIsLeaf) {
-            newNode = new Node<E>(node.parentNode, node.key.substring(0, charsForNewNode), value);
+            newNode = new Node<>(node.parentNode, node.key.substring(0, charsForNewNode), value);
             modifySize(node.parentNode, 1);
             addToSets(fullKey, value);
         } else {
-            newNode = new Node<E>(node.parentNode, node.key.substring(0, charsForNewNode));
+            newNode = new Node<>(node.parentNode, node.key.substring(0, charsForNewNode));
         }
         newNode.parentNode.children.set(nodePositionInParent, newNode);
         node.key = node.key.substring(charsForNewNode);
@@ -709,6 +709,6 @@ public class ThesauriStringMap<E> implements Map<String, E> {
     }
 
     public Iterator<String> iterator() {
-        return new ThesauriStringMapIterator<E>(this);
+        return new ThesauriStringMapIterator<>(this);
     }
 }

@@ -17,7 +17,7 @@ public class StringBuilderPool {
     private int counter = 0;
 
     public StringBuilderPool() {
-        pool = new HashSet<StringBuilder>();
+        pool = new HashSet<>();
     }
 
     public StringBuilder request() {

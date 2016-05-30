@@ -20,7 +20,7 @@ public class ObjectCount<E> {
     private int totalCount;
 
     public ObjectCount() {
-        this(new HashSet<E>());
+        this(new HashSet<>());
     }
 
     public ObjectCount(Set<E> objects) {

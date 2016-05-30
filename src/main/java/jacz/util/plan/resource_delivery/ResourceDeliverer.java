@@ -62,7 +62,7 @@ public class ResourceDeliverer<T, Y extends Resource> implements TimerAction {
         targetQueue = new PriorityBlockingQueue<>(INITIAL_QUEUE_CAPACITY);
         availableSpace = new Semaphore(capacity, true);
         accessLock = new ReentrantLock(true);
-        resourceDelivererMessageReader = new ResourceDelivererMessageReader<T, Y>(targetQueue, this, maxSpeed, millisToStore);
+        resourceDelivererMessageReader = new ResourceDelivererMessageReader<>(targetQueue, this, maxSpeed, millisToStore);
         messageProcessor = new MessageProcessor(threadsName + ":" + ResourceDeliverer.class.getName(), resourceDelivererMessageReader, messageHandler, false);
         maxRatio = 0.0d;
         cleanupTimer = new Timer(MILLIS_FOR_CLEANUP, this, threadsName + ":" + ResourceDeliverer.class.getName());
@@ -77,7 +77,7 @@ public class ResourceDeliverer<T, Y extends Resource> implements TimerAction {
         accessLock.lock();
         try {
             if (!resources.containsKey(destination)) {
-                resources.put(destination, new TargetResource<T, Y>(destination, priority, maxRatio));
+                resources.put(destination, new TargetResource<>(destination, priority, maxRatio));
             } else {
                 resources.get(destination).setPriority(priority, maxRatio);
             }
@@ -160,7 +160,7 @@ public class ResourceDeliverer<T, Y extends Resource> implements TimerAction {
         accessLock.lock();
         try {
             resources.clear();
-            targetQueue.add(new TargetResourceFinalizationMessage<T, Y>());
+            targetQueue.add(new TargetResourceFinalizationMessage<>());
             if (cleanupTimer != null) {
                 cleanupTimer.kill();
             }

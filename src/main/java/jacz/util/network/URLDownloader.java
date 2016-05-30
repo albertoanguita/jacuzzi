@@ -2,11 +2,11 @@ package jacz.util.network;
 
 import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.notification.ProgressNotification;
-import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Paths;
 
 /**
  * This class contains methods for downloading files from an URL to disk.
@@ -180,7 +180,7 @@ public class URLDownloader {
             if (urlFile == null || urlFile.length() == 0) {
                 throw new IOException("Cannot form a correct local path");
             }
-            filePath = FileUtils.getFile(filePath, urlFile).getPath();
+            filePath = Paths.get(filePath, urlFile).toString();
         }
         return filePath;
     }

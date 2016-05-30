@@ -2,12 +2,13 @@ package jacz.util.hash.hashdb;
 
 import jacz.util.hash.SHA_256;
 import jacz.util.io.serialization.Serializer;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -198,7 +199,7 @@ public class FileHashDatabaseWithMaxSize {
             orderedPaths.add(annotatedPath);
             currentSize += size;
         } else if (deleteIfExists) {
-            FileUtils.forceDelete(new File(path));
+            Files.delete(Paths.get(path));
         }
         adjustTotalSize();
         return key;

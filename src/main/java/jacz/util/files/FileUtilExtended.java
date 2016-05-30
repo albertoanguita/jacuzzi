@@ -1,16 +1,49 @@
 package jacz.util.files;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.Map;
 
 /**
- * Class description
- * <p/>
- * User: Alberto<br>
- * Date: 20-nov-2008<br>
- * Last Modified: 20-nov-2008
+ * File system utility methods
  */
 public class FileUtilExtended {
+
+    public static boolean isEmpty(String dir) throws IOException {
+        return isEmpty(Paths.get(dir));
+    }
+
+    public static boolean isEmpty(Path dir) throws IOException {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+            return !stream.iterator().hasNext();
+        }
+    }
+
+    public static void cleanDirectory(String dir) throws IOException, InvalidPathException {
+        cleanDirectory(Paths.get(dir));
+    }
+
+    public static void cleanDirectory(Path dir) throws IOException {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+            for (Path file: stream) {
+                if (Files.isDirectory(file)) {
+                    cleanDirectory(file);
+                }
+                Files.delete(file);
+            }
+        } catch (DirectoryIteratorException x) {
+            throw new IOException(x);
+        }
+    }
+
+    public static void deleteDirectoryAndContents(String dir) throws IOException {
+        deleteDirectoryAndContents(Paths.get(dir));
+    }
+
+    public static void deleteDirectoryAndContents(Path dir) throws IOException {
+        cleanDirectory(dir);
+        Files.delete(dir);
+    }
 
     /**
      * Transforms a given route using a mapping of directories
@@ -20,31 +53,28 @@ public class FileUtilExtended {
      * @return the new route
      */
     public static String transformRoute(String route, Map<String, String> mapDir) {
-        // the method is recursive. It transforms or copies a directory at each step
+        return transformRoute(Paths.get(route), mapDir).toString();
+    }
 
-        // finished processing the route
-        if (route.length() == 0) {
-            return "";
-        }
-        // if the route begins with a file separator, copy it and transform the rest
-        else if (route.startsWith(File.separator)) {
-            route = route.substring(File.separator.length());
-            return File.separator + transformRoute(route, mapDir);
-        } else {
-
-            int indexOfFS = route.indexOf(File.separator);
-            String dir;
-            if (indexOfFS > 0) {
-                dir = route.substring(0, indexOfFS);
-                route = route.substring(indexOfFS);
+    /**
+     * Transforms a given route using a mapping of directories
+     *
+     * @param path   the path to modify
+     * @param mapDir the mappings of directories
+     * @return the new route
+     */
+    public static Path transformRoute(Path path, Map<String, String> mapDir) {
+        Path resultPath = path.getRoot() != null ? Paths.get(path.getRoot().toUri()) : null;
+        for (int i = 0; i < path.getNameCount(); i++) {
+            String newName = mapDir.containsKey(path.getName(i).toString()) ?
+                    mapDir.get(path.getName(i).toString()) :
+                    path.getName(i).toString();
+            if (resultPath == null) {
+                resultPath = Paths.get(newName);
             } else {
-                dir = route;
-                route = "";
+                resultPath = resultPath.resolve(newName);
             }
-            if (mapDir.containsKey(dir)) {
-                dir = mapDir.get(dir);
-            }
-            return dir + transformRoute(route, mapDir);
         }
+        return resultPath;
     }
 }

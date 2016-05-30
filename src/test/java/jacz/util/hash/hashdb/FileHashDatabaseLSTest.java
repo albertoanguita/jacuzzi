@@ -1,15 +1,16 @@
 package jacz.util.hash.hashdb;
 
 import jacz.util.files.FileReaderWriter;
-import jacz.util.io.serialization.VersionedObjectSerializer;
+import jacz.util.files.FileUtilExtended;
 import jacz.util.io.serialization.VersionedSerializationException;
 import jacz.util.lists.tuple.Duple;
-import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +25,8 @@ public class FileHashDatabaseLSTest {
     public void test() throws IOException, VersionedSerializationException {
 
         // create test files
-        FileUtils.forceMkdir(new File(dir));
-        FileUtils.cleanDirectory(new File(dir));
+        Files.createDirectories(Paths.get(dir));
+        FileUtilExtended.cleanDirectory(dir);
         List<Duple<String, String>> pathAndHash = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             FileReaderWriter.writeTextFile(path(i), "file " + i);
@@ -77,7 +78,7 @@ public class FileHashDatabaseLSTest {
             Assert.assertEquals(new File(pathAndHash.get(i).element1).getAbsolutePath(), new File(fhd.getFilePath(pathAndHash.get(i).element2)).getAbsolutePath());
         }
 
-        FileUtils.cleanDirectory(new File(dir));
+        FileUtilExtended.cleanDirectory(dir);
     }
 
     private String path(int index) {

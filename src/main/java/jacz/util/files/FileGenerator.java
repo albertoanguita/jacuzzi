@@ -1,22 +1,25 @@
 package jacz.util.files;
 
-import jacz.util.lists.tuple.Duple;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utility operations for copying, moving, etc files.
- * <p/>
+ * <p>
  * todo remove unnecessary methods that are available in apache commons
- * <p/>
- * todo move package to nio
+ * <p>
+ * todo move package to io
+ *
+ * todo use nio classes
  */
 public class FileGenerator {
 
@@ -269,108 +272,106 @@ public class FileGenerator {
 //        }
 //    }
 
-    public static boolean createDirectory(String path) throws IOException {
-        boolean didNotExist = !new File(path).isDirectory();
-        // divide the simple directories and create them one by one
-        StringTokenizer strTok = new StringTokenizer(path, File.separator);
-        // if there is more than one directory (drive or current dir + at least one more directory) -> create them
-        if (strTok.countTokens() > 1) {
-            StringBuilder directory = new StringBuilder(strTok.nextToken());
-            while (strTok.hasMoreTokens()) {
-                directory.append(File.separator).append(strTok.nextToken());
-                File f = new File(directory.toString());
-                try {
-                    f.mkdir();
-                } catch (Exception e) {
-                    throw new IOException("Could not create directory " + directory);
-                }
-            }
-        }
-        return didNotExist && new File(path).isDirectory();
+//    public static boolean createDirectory(String path) throws IOException {
+//        boolean didNotExist = !new File(path).isDirectory();
+//        // divide the simple directories and create them one by one
+//        StringTokenizer strTok = new StringTokenizer(path, File.separator);
+//        // if there is more than one directory (drive or current dir + at least one more directory) -> create them
+//        if (strTok.countTokens() > 1) {
+//            StringBuilder directory = new StringBuilder(strTok.nextToken());
+//            while (strTok.hasMoreTokens()) {
+//                directory.append(File.separator).append(strTok.nextToken());
+//                File f = new File(directory.toString());
+//                try {
+//                    f.mkdir();
+//                } catch (Exception e) {
+//                    throw new IOException("Could not create directory " + directory);
+//                }
+//            }
+//        }
+//        return didNotExist && new File(path).isDirectory();
+//    }
+
+    public static String createDirectoryWithIndex(String containerDir, String name, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
+        return createDirectoryWithIndex(Paths.get(containerDir), name, preIndex, postIndex, startWithoutIndex).toString();
     }
 
-    public static Duple<String, String> createDirectoryWithIndex(String containerDir, String baseDirName, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
-        if (!new File(containerDir).isDirectory()) {
-            throw new IOException(containerDir + " is not a valid directory");
-        }
+    public static synchronized Path createDirectoryWithIndex(Path dir, String name, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
         int index = startWithoutIndex ? -1 : 0;
         // we must generate a path with index (either required by user, or already exists without index)
         while (true) {
-            File dirPath;
+            Path dirPath;
             if (index == -1) {
-                dirPath = FileUtils.getFile(containerDir, baseDirName);
+                dirPath = Paths.get(dir.toString(), name);
             } else {
-                dirPath = FileUtils.getFile(containerDir, baseDirName + preIndex + index + postIndex);
+                dirPath = Paths.get(dir.toString(), name + preIndex + index + postIndex);
             }
-            if (!dirPath.isDirectory()) {
-                FileUtils.forceMkdir(dirPath);
-                return new Duple<>(dirPath.toString(), FilenameUtils.getName(dirPath.toString()));
+            if (!Files.isDirectory(dirPath)) {
+                Files.createDirectories(dirPath);
+                return dirPath;
             } else {
                 index++;
             }
         }
     }
 
-    public static Duple<String, String> createFile(String dir, String baseFileName, String extension, boolean startWithoutIndex) throws IOException {
-        return createFile(dir, baseFileName, extension, "", "", startWithoutIndex);
+    public static String createFile(String dir, String name, String extension, boolean startWithoutIndex) throws IOException {
+        return createFile(Paths.get(dir), name, extension, startWithoutIndex).toString();
     }
 
-    public static Duple<String, String> createFile(String dir, String baseFileName, String extension, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
-        List<String> baseFileNameList = new ArrayList<>(1);
-        baseFileNameList.add(baseFileName);
-        List<String> extensionList = new ArrayList<>(1);
-        extensionList.add(extension);
-        return createFiles(dir, baseFileNameList, extensionList, preIndex, postIndex, startWithoutIndex).get(0);
+    public static Path createFile(Path dir, String name, String extension, boolean startWithoutIndex) throws IOException {
+        return createFile(dir, name, extension, null, null, startWithoutIndex);
     }
 
-    public static List<Duple<String, String>> createFiles(String dir, List<String> baseFileNameList, List<String> extensionList, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
-        return createFiles(dir, baseFileNameList, extensionList, "", "", startWithoutIndex);
+    public static String createFile(String dir, String name, String extension, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
+        return createFile(Paths.get(dir), name, extension, preIndex, postIndex, startWithoutIndex).toString();
     }
 
-    public static List<Duple<String, String>> createFiles(String dir, List<String> baseFileNameList, List<String> extensionList, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
-        if (!new File(dir).isDirectory()) {
+    public static Path createFile(Path dir, String name, String extension, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException {
+        return createFiles(dir, name, Stream.of(extension).collect(Collectors.toList()), preIndex, postIndex, startWithoutIndex).get(0);
+    }
+
+    public static synchronized List<String> createFiles(@NotNull String dir, @NotNull String name, @NotNull List<String> extensions, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
+        List<Path> paths = createFiles(Paths.get(dir), name, extensions, preIndex, postIndex, startWithoutIndex);
+        return paths.stream().map(Path::toString).collect(Collectors.toList());
+    }
+
+    public static synchronized List<Path> createFiles(@NotNull Path dir, @NotNull String name, @NotNull List<String> extensions, String preIndex, String postIndex, boolean startWithoutIndex) throws IOException, IllegalArgumentException {
+        if (!Files.isDirectory(dir)) {
             throw new IOException(dir + " is not a valid directory");
         }
-        if (baseFileNameList.size() != extensionList.size()) {
-            throw new IllegalArgumentException("Invalid lists");
+        if (extensions.isEmpty()) {
+            throw new IllegalArgumentException("Invalid extensions");
         }
-        for (int i = 0; i < extensionList.size(); i++) {
-            if (extensionList.get(i).startsWith(FILE_EXTENSION_SEPARATOR)) {
-                extensionList.set(i, extensionList.get(i).substring(1));
-            }
-        }
+        // add file extension separator
+        extensions = extensions.stream().map(extension -> extension.startsWith(FILE_EXTENSION_SEPARATOR) ? extension.substring(1) : extension).collect(Collectors.toList());
+        preIndex = preIndex != null ? preIndex : "";
+        postIndex = postIndex != null ? postIndex : "";
         int index = startWithoutIndex ? -1 : 0;
-        List<Duple<String, String>> generatedPaths = new ArrayList<>(baseFileNameList.size());
+        List<Path> generatedPaths = new ArrayList<>(extensions.size());
         while (true) {
-            try {
-                generatedPaths.clear();
-                boolean allPathsGood = true;
-                for (int i = 0; i < baseFileNameList.size(); i++) {
-                    File filePath;
-                    if (index == -1) {
-                        filePath = FileUtils.getFile(dir, baseFileNameList.get(i) + FILE_EXTENSION_SEPARATOR + extensionList.get(i));
-                    } else {
-                        filePath = FileUtils.getFile(dir, baseFileNameList.get(i) + preIndex + index + postIndex + FILE_EXTENSION_SEPARATOR + extensionList.get(i));
-                    }
-                    generatedPaths.add(new Duple<>(filePath.toString(), FilenameUtils.getName(filePath.toString())));
-                    if (filePath.isFile()) {
-                        allPathsGood = false;
-                        break;
-                    }
-                }
-                if (allPathsGood) {
-                    for (Duple<String, String> pathAndFile : generatedPaths) {
-                        File file = new File(pathAndFile.element1);
-                        if (!file.createNewFile()) {
-                            throw new IOException("could not create file: " + pathAndFile.element1);
-                        }
-                    }
-                    return generatedPaths;
+            generatedPaths.clear();
+            boolean allPathsGood = true;
+            for (String extension : extensions) {
+                Path newPath;
+                if (index == -1) {
+                    newPath = dir.resolve(name + FILE_EXTENSION_SEPARATOR + extension);
                 } else {
-                    index++;
+                    newPath = dir.resolve(name + preIndex + index + postIndex + FILE_EXTENSION_SEPARATOR + extension);
                 }
-            } catch (IllegalArgumentException e) {
-                throw new IOException("Invalid dir: " + dir);
+                generatedPaths.add(newPath);
+                if (Files.exists(newPath)) {
+                    allPathsGood = false;
+                    break;
+                }
+            }
+            if (allPathsGood) {
+                for (Path newPath : generatedPaths) {
+                    Files.createFile(newPath);
+                }
+                return generatedPaths;
+            } else {
+                index++;
             }
         }
     }

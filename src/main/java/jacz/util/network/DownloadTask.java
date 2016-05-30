@@ -4,11 +4,15 @@ import jacz.util.concurrency.timer.Timer;
 import jacz.util.concurrency.timer.TimerAction;
 import jacz.util.date_time.SpeedMonitor;
 import jacz.util.notification.ProgressNotification;
-import org.apache.commons.io.FileUtils;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -139,7 +143,7 @@ class DownloadTask implements Runnable, TimerAction {
             return e;
         } finally {
             try {
-                FileUtils.forceDelete(new File(localPath));
+                Files.delete(Paths.get(localPath));
             } catch (IOException e) {
                 // ignore
             }

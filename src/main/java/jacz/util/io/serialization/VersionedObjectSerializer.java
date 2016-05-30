@@ -3,12 +3,13 @@ package jacz.util.io.serialization;
 import jacz.util.files.FileReaderWriter;
 import jacz.util.hash.CRC;
 import jacz.util.hash.CRCMismatchException;
-import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /**
@@ -154,7 +155,7 @@ public class VersionedObjectSerializer {
                 backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
                 List<String> repairedFiles = deserialize(versionedObject, newPath, repairIfBroken, backupPaths);
                 if (repairIfBroken) {
-                    FileUtils.copyFile(new File(newPath), new File(path));
+                    Files.copy(Paths.get(newPath), Paths.get(path), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
                     repairedFiles.add(path);
                 }
                 return repairedFiles;

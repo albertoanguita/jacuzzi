@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +30,7 @@ public class FileAndFolderHashDatabase extends FileHashDatabase {
         final List<String> fileNames;
 
         protected AnnotatedFolder(String path, List<String> fileNames, boolean storeAbsolutePaths) {
-            this.path = storeAbsolutePaths ? new File(path).getAbsolutePath() : path;
+            this.path = storeAbsolutePaths ? Paths.get(path).toAbsolutePath().toString() : path;
             this.fileNames = fileNames;
         }
     }
@@ -47,7 +49,7 @@ public class FileAndFolderHashDatabase extends FileHashDatabase {
 
         @Override
         public String generateKey(AnnotatedFolder value) throws IOException {
-            if (!new File(value.path).isDirectory()) {
+            if (!Files.isDirectory(Paths.get(value.path))) {
                 throw new FileNotFoundException();
             }
             HashFunction totalHash = new SHA_256();

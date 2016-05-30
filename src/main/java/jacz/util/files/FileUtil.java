@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * File system utility methods
  */
-public class FileUtilExtended {
+public class FileUtil {
 
     public static boolean isEmpty(String dir) throws IOException {
         return isEmpty(Paths.get(dir));

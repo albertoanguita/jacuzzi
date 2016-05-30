@@ -1,7 +1,7 @@
 package jacz.util.hash.hashdb;
 
 import jacz.util.files.FileReaderWriter;
-import jacz.util.files.FileUtilExtended;
+import jacz.util.files.FileUtil;
 import jacz.util.io.serialization.VersionedObjectSerializer;
 import jacz.util.io.serialization.VersionedSerializationException;
 import jacz.util.lists.tuple.Duple;
@@ -29,7 +29,7 @@ public class FileHashDatabaseTest {
 
         // create test files
         Files.createDirectories(dirPath);
-        FileUtilExtended.cleanDirectory(dirPath);
+        FileUtil.cleanDirectory(dirPath);
         List<Duple<String, String>> pathAndHash = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             FileReaderWriter.writeTextFile(path(i), "file " + i);
@@ -67,7 +67,7 @@ public class FileHashDatabaseTest {
 
 
         VersionedObjectSerializer.serialize(fhd, dir + "fhd.vso", dir + "fhd.bak");
-        FileUtilExtended.deleteDirectoryAndContents(dir + "fhd.vso");
+        FileUtil.deleteDirectoryAndContents(dir + "fhd.vso");
         fhd = new FileHashDatabase(dir + "fhd.vso", true, dir + "fhd.bak");
         ArrayList<String> repairedFiles = new ArrayList<>();
         repairedFiles.add(dir + "fhd.vso");
@@ -85,7 +85,7 @@ public class FileHashDatabaseTest {
             Assert.assertEquals(new File(pathAndHash.get(i).element1).getAbsolutePath(), new File(fhd.getFilePath(pathAndHash.get(i).element2)).getAbsolutePath());
         }
 
-        FileUtilExtended.cleanDirectory(dirPath);
+        FileUtil.cleanDirectory(dirPath);
     }
 
     private String path(int index) {

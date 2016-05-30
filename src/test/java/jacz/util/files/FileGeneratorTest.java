@@ -21,7 +21,7 @@ public class FileGeneratorTest {
 
     private static void setup() throws IOException {
         Files.createDirectories(testsPath);
-        FileUtilExtended.cleanDirectory(tests);
+        FileUtil.cleanDirectory(tests);
     }
 
     @Test

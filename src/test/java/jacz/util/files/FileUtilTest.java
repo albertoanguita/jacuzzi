@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * tests
  */
-public class FileUtilExtendedTest {
+public class FileUtilTest {
 
     private static final Map<String, String> dirMap;
 
@@ -31,22 +31,22 @@ public class FileUtilExtendedTest {
     public void testIsEmpty() throws IOException {
         Path tests = Paths.get("./etc/tests");
         Files.createDirectories(tests);
-        FileUtilExtended.cleanDirectory(tests);
+        FileUtil.cleanDirectory(tests);
 
-        Assert.assertTrue(FileUtilExtended.isEmpty(tests));
+        Assert.assertTrue(FileUtil.isEmpty(tests));
         Files.createFile(tests.resolve("a.txt"));
-        Assert.assertFalse(FileUtilExtended.isEmpty(tests));
+        Assert.assertFalse(FileUtil.isEmpty(tests));
         Files.delete(tests.resolve("a.txt"));
-        Assert.assertTrue(FileUtilExtended.isEmpty(tests));
+        Assert.assertTrue(FileUtil.isEmpty(tests));
     }
 
     @Test
     public void testCleanDirectory() throws IOException {
         Path tests = Paths.get("./etc/tests");
         Files.createDirectories(tests);
-        FileUtilExtended.cleanDirectory(tests);
+        FileUtil.cleanDirectory(tests);
 
-        Assert.assertTrue(FileUtilExtended.isEmpty(tests));
+        Assert.assertTrue(FileUtil.isEmpty(tests));
 
         Files.createFile(tests.resolve("a.txt"));
         Files.createFile(tests.resolve("b.txt"));
@@ -58,18 +58,18 @@ public class FileUtilExtendedTest {
         Files.createFile(tests.resolve("d").resolve("c.txt"));
         Files.createFile(tests.resolve("d").resolve("d.txt"));
 
-        Assert.assertFalse(FileUtilExtended.isEmpty(tests));
+        Assert.assertFalse(FileUtil.isEmpty(tests));
 
-        FileUtilExtended.cleanDirectory(tests);
+        FileUtil.cleanDirectory(tests);
 
-        Assert.assertTrue(FileUtilExtended.isEmpty(tests));
+        Assert.assertTrue(FileUtil.isEmpty(tests));
     }
 
     @Test
     public void testDeleteDirectoryAndContents() throws Exception {
         Path tests = Paths.get("./etc/tests");
         Files.createDirectories(tests);
-        FileUtilExtended.cleanDirectory(tests);
+        FileUtil.cleanDirectory(tests);
 
         Files.createFile(tests.resolve("a.txt"));
         Files.createFile(tests.resolve("b.txt"));
@@ -81,22 +81,22 @@ public class FileUtilExtendedTest {
         Files.createFile(tests.resolve("d").resolve("c.txt"));
         Files.createFile(tests.resolve("d").resolve("d.txt"));
 
-        FileUtilExtended.deleteDirectoryAndContents("./etc/tests");
+        FileUtil.deleteDirectoryAndContents("./etc/tests");
         Assert.assertTrue(Files.notExists(tests));
     }
 
     @Test
     public void testTransformRoute() throws Exception {
-        String newRoute = FileUtilExtended.transformRoute(oldPath.toString(), dirMap);
+        String newRoute = FileUtil.transformRoute(oldPath.toString(), dirMap);
         Assert.assertEquals(newPath.toString(), newRoute);
 
-        newRoute = FileUtilExtended.transformRoute(oldPath.toAbsolutePath().toString(), dirMap);
+        newRoute = FileUtil.transformRoute(oldPath.toAbsolutePath().toString(), dirMap);
         Assert.assertEquals(newPath.toAbsolutePath().toString(), newRoute);
     }
 
     @Test
     public void testTransformRoute1() throws Exception {
-        Assert.assertEquals(newPath, FileUtilExtended.transformRoute(oldPath, dirMap));
-        Assert.assertEquals(newPath.toAbsolutePath(), FileUtilExtended.transformRoute(oldPath.toAbsolutePath(), dirMap));
+        Assert.assertEquals(newPath, FileUtil.transformRoute(oldPath, dirMap));
+        Assert.assertEquals(newPath.toAbsolutePath(), FileUtil.transformRoute(oldPath.toAbsolutePath(), dirMap));
     }
 }

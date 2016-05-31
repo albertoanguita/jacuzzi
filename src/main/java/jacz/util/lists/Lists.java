@@ -3,8 +3,10 @@ package jacz.util.lists;
 import jacz.util.concurrency.task_executor.ThreadExecutor;
 import jacz.util.numeric.NumericUtil;
 
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 /**

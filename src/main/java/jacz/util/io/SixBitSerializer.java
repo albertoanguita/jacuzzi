@@ -5,6 +5,7 @@ import java.util.List;
 
 /**
  * This class provides static methods for serializing/de-serializing in String objects where each character represent 6 bits.
+ * todo check correct string in deserialize. In PeerID, it cannot end after 'f'
  */
 public class SixBitSerializer {
 

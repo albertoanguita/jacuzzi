@@ -14,7 +14,7 @@ public class VersionedLocalStorage extends LocalStorage {
         super(path);
     }
 
-    public VersionedLocalStorage(String path, Updater updater, String currentVersion) throws IOException {
+    public VersionedLocalStorage(String path, Updater updater, String currentVersion) {
         super(path);
         String storedVersion = getVersion();
         while (!currentVersion.equals(storedVersion)) {

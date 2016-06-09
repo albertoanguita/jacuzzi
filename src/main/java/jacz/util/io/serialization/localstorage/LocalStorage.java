@@ -82,7 +82,7 @@ public class LocalStorage {
 
     private static final LockMap<String> locks = new LockMap<>();
 
-    public LocalStorage(String path) throws IOException {
+    public LocalStorage(String path) {
         this.path = path;
         stringItems = Collections.synchronizedMap(new HashMap<>());
         booleanItems = Collections.synchronizedMap(new HashMap<>());

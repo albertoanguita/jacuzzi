@@ -9,7 +9,7 @@ public class AlphaNumFactory extends IdFactory<String> {
 
     private static String staticId = "1";
 
-    private static AlphanumericString.CharTypeSequence charTypeSequence = new AlphanumericString.CharTypeSequence(AlphanumericString.CharType.NUMERIC, AlphanumericString.CharType.UPPERCASE);
+    private static final AlphanumericString.CharTypeSequence charTypeSequence = new AlphanumericString.CharTypeSequence(AlphanumericString.CharType.NUMERIC, AlphanumericString.CharType.UPPERCASE);
 
     public AlphaNumFactory() {
         super("1");

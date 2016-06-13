@@ -62,5 +62,10 @@ public class TestSixBitSerializer {
 
         SixBitSerializer.deserialize("m8DQmSf-yB4si2EbyrPJ_PozPLIyH0ra6KL_O8j3999", 32);
 
+        SixBitSerializer.deserialize("m8DQmSf-yB4si2EbyrPJ_PozPLIyH0ra6KL_O8j399f", 32);
+
+        // this must throw an illegal argument exception
+        SixBitSerializer.deserialize("m8DQmSf-yB4si2EbyrPJ_PozPLIyH0ra6KL_O8j399g", 32);
+
     }
 }

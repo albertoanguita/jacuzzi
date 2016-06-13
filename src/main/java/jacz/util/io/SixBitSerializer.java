@@ -84,7 +84,7 @@ public class SixBitSerializer {
                 return b;
             }
         } else {
-            // few bits but we can get more -> get 8 more
+            // few bits but we can get more -> get 6 more from the next character
             char c = serializedData.charAt(0);
             serializedData.delete(0, 1);
             byte b = deserializeSixBits(c);
@@ -92,6 +92,14 @@ public class SixBitSerializer {
             String s = Integer.toBinaryString(i);
             if (isLastByte && storedBits.length() > 2) {
                 // this is the last byte we will return and there is no more data to deserialize -> add only the needed bits to reach 8
+                // check first that the unneeded part of the string is only built of 0s
+                // The unneededPart string should be only composed of storedBits.length() 0s
+                // (exclude the first char, as it is artificially included to avoid sign issues)
+                for (int index = 1; index < 1 + storedBits.length(); index++) {
+                    if (s.charAt(index) != '0') {
+                        throw new IllegalArgumentException("The provided string has an invalid character at the end: " + c);
+                    }
+                }
                 s = s.substring(1 + storedBits.length());
             } else {
                 // add 6 more bits to the deserialized series

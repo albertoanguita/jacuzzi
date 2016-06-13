@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
  * A local storage implementation backed by SQLite 3 databases. Data access is performed via the ActiveJDBC orm
  * <p>
  * A write-through cache is maintained for all written data, so accessions do not go to the database.
+ *
+ * todo put IOException upon loading not existing path?
  */
 public class LocalStorage {
 
@@ -82,7 +84,7 @@ public class LocalStorage {
 
     private static final LockMap<String> locks = new LockMap<>();
 
-    public LocalStorage(String path) throws IOException {
+    public LocalStorage(String path) {
         this.path = path;
         stringItems = Collections.synchronizedMap(new HashMap<>());
         booleanItems = Collections.synchronizedMap(new HashMap<>());

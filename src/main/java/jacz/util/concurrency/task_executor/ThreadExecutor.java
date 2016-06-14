@@ -18,7 +18,6 @@ import java.util.concurrent.Future;
  * <p>
  * It is compatible with the use of SmartLock for fine control for the execution times of the threads
  * todo fix javadocs
- * todo register the stack trace of registers so we can track down who did not unregister during debugging. Give each register an id which maps to their stack trace, and make the id be used in the unregistering
  */
 public class ThreadExecutor {
 

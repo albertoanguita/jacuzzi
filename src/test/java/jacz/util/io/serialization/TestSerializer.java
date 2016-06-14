@@ -71,10 +71,13 @@ public class TestSerializer {
 
 
         List<String> list = new ArrayList<>();
-        list.add("alb");
+        list.add("al/b");
         list.add(null);
-        list.add("jeje");
-        String serString = Serializer.serializeListToReadableString(list, "<<<", "}}}}");
-        Assert.assertEquals(list, Serializer.deserializeListFromReadableString(serString, "<<<", "}}}}"));
+        list.add("j//e/je");
+        String serString = Serializer.serializeListToReadableString(list);
+        String serString2 = Serializer.serializeListToReadableString("al/b", null, "j//e/je");
+        System.out.println(serString);
+        Assert.assertEquals(list, Serializer.deserializeListFromReadableString(serString));
+        Assert.assertEquals(list, Serializer.deserializeListFromReadableString(serString2));
     }
 }

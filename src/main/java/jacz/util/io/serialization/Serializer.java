@@ -14,6 +14,8 @@ public class Serializer {
 
     private static final String UTF8 = "UTF-8";
 
+    private static final String LIST_SERIALIZER_SEPARATOR = "/";
+
     /**
      * Adds several byte arrays into a single byte array (admits null values)
      *
@@ -90,27 +92,35 @@ public class Serializer {
      * @param list Object list to serialize
      * @return String containing the object
      */
-    public static String serializeListToReadableString(List<?> list, String pre, String post) {
-        if (pre == null || pre.isEmpty()) {
-            throw new IllegalArgumentException("pre cannot be null or empty");
-        }
-        if (post == null) {
-            post = "";
-        }
+    public static String serializeListToReadableString(Object... elements) {
+        return serializeListToReadableString(Arrays.asList(elements));
+    }
+
+    /**
+     * Serializes a list of objects into a String without using the native Java serialization API. The process builds a string as follows:
+     * First, the number of elements and a separator are written. Second, for each element, their length and a separator are written, followed by
+     * the element itself
+     * <p/>
+     * This is not an efficient serialization, but is readable and avoids unexpected characters to appear
+     *
+     * @param list Object list to serialize
+     * @return String containing the object
+     */
+    public static String serializeListToReadableString(List<?> list) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(list.size()).append(pre);
+        stringBuilder.append(list.size()).append(LIST_SERIALIZER_SEPARATOR);
         for (Object o : list) {
             if (o != null) {
-                stringBuilder.append(o.toString().length()).append(pre).append(o.toString()).append(post);
+                stringBuilder.append(o.toString().length()).append(LIST_SERIALIZER_SEPARATOR).append(o.toString()).append(LIST_SERIALIZER_SEPARATOR);
             } else {
-                stringBuilder.append(-1).append(pre).append(post);
+                stringBuilder.append(-1).append(LIST_SERIALIZER_SEPARATOR).append(LIST_SERIALIZER_SEPARATOR);
             }
         }
         return stringBuilder.toString();
     }
 
-    public static byte[] serializeListToByteArray(List<?> list, char separator) {
-        return serialize(serializeListToReadableString(list, Character.toString(separator), null));
+    public static byte[] serializeListToByteArray(List<?> list) {
+        return serialize(serializeListToReadableString(list));
     }
 
     /**
@@ -378,31 +388,25 @@ public class Serializer {
         return si.readObject();
     }
 
-    public static List<String> deserializeListFromReadableString(String s, String pre, String post) throws ParseException {
-        if (pre == null || pre.isEmpty()) {
-            throw new IllegalArgumentException("pre cannot be null or empty");
-        }
-        if (post == null) {
-            post = "";
-        }
+    public static List<String> deserializeListFromReadableString(String s) throws ParseException {
         int offset = 0;
-        int index = s.indexOf(pre);
+        int index = s.indexOf(LIST_SERIALIZER_SEPARATOR);
         try {
             int elementCount = Integer.parseInt(s.substring(0, index));
-            index += pre.length();
+            index += LIST_SERIALIZER_SEPARATOR.length();
             List<String> list = new ArrayList<>();
             while (list.size() < elementCount) {
                 offset = index;
-                index = s.indexOf(pre, offset);
+                index = s.indexOf(LIST_SERIALIZER_SEPARATOR, offset);
                 int elementLength = Integer.parseInt(s.substring(offset, index));
                 if (elementLength >= 0) {
-                    String element = s.substring(index + pre.length(), index + pre.length() + elementLength);
+                    String element = s.substring(index + LIST_SERIALIZER_SEPARATOR.length(), index + LIST_SERIALIZER_SEPARATOR.length() + elementLength);
                     list.add(element);
-                    index += pre.length() + elementLength + post.length();
+                    index += LIST_SERIALIZER_SEPARATOR.length() + elementLength + LIST_SERIALIZER_SEPARATOR.length();
                 } else {
                     // element is null
                     list.add(null);
-                    index += pre.length() + post.length();
+                    index += LIST_SERIALIZER_SEPARATOR.length() + LIST_SERIALIZER_SEPARATOR.length();
                 }
             }
             return list;
@@ -411,8 +415,8 @@ public class Serializer {
         }
     }
 
-    public static List<String> deserializeListFromByteArray(byte[] data, MutableOffset offset, char separator) throws ParseException {
-        return deserializeListFromReadableString(deserializeString(data, offset), Character.toString(separator), null);
+    public static List<String> deserializeListFromByteArray(byte[] data, MutableOffset offset) throws ParseException {
+        return deserializeListFromReadableString(deserializeString(data, offset));
     }
 
     public static String deserializeString(byte[] data, MutableOffset offset) {

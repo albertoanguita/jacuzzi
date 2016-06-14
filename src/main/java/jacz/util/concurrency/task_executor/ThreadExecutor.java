@@ -2,14 +2,20 @@ package jacz.util.concurrency.task_executor;
 
 import jacz.util.concurrency.ThreadUtil;
 import jacz.util.concurrency.concurrency_controller.ConcurrencyController;
-import jacz.util.maps.ObjectCount;
+import jacz.util.id.AlphaNumFactory;
 
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * This class provides static methods for launching named threads (runnable and callable implementations),
  * using a cached thread pool in the background
- * <p/>
+ * <p>
  * It is compatible with the use of SmartLock for fine control for the execution times of the threads
  * todo fix javadocs
  * todo register the stack trace of registers so we can track down who did not unregister during debugging. Give each register an id which maps to their stack trace, and make the id be used in the unregistering
@@ -84,33 +90,68 @@ public class ThreadExecutor {
         }
     }
 
+    public static class ClientData {
+
+        public final String clientName;
+
+        public final StackTraceElement[] threadStack;
+
+        public ClientData(String clientName, StackTraceElement[] threadStack) {
+            this.clientName = clientName;
+            this.threadStack = threadStack;
+        }
+
+        @Override
+        public String toString() {
+            return "ClientData{" +
+                    "clientName='" + clientName + '\'' +
+                    ", threadStack=" + Arrays.toString(threadStack) +
+                    '}';
+        }
+    }
+
+    private static final String UNNAMED_CLIENT = "unnamed_client";
+
     private static ExecutorService executorService;
 
-    private static final ObjectCount<String> registeredClients = new ObjectCount<>();
+    //private static final ObjectCount<String> registeredClients = new ObjectCount<>();
+    private static final Map<String, ClientData> registeredClients = new HashMap<>();
 
-    public static synchronized void registerClient(String clientName) {
-        registeredClients.addObject(clientName);
-        if (registeredClients.getTotalCount() == 1) {
+    public static synchronized String registerClient() {
+        return registerClient(UNNAMED_CLIENT);
+    }
+
+    public static synchronized String registerClient(String clientName) {
+        String clientId = AlphaNumFactory.getStaticId();
+        registeredClients.put(clientId, new ClientData(clientName, Thread.currentThread().getStackTrace()));
+        //registeredClients.addObject(clientName);
+        if (registeredClients.size() == 1) {
             // we must activate the executor service now
             executorService = Executors.newCachedThreadPool();
         }
+        return clientId;
     }
 
-    public static synchronized void shutdownClient(String clientName) throws IllegalArgumentException {
-        try {
-            registeredClients.subtractObject(clientName);
-            if (registeredClients.getTotalCount() == 0) {
-                // no registered clients at this moment -> shutdown the service
-                executorService.shutdown();
-            }
-        } catch (RuntimeException e) {
-            throw new IllegalArgumentException("No registered client: " + clientName);
+    public static synchronized void shutdownClient(String clientId) throws IllegalArgumentException {
+        if (registeredClients.containsKey(clientId)) {
+            registeredClients.remove(clientId);
+        } else {
+            throw new IllegalArgumentException("No registered client: " + clientId);
+        }
+        //registeredClients.subtractObject(clientName);
+        if (registeredClients.isEmpty()) {
+            // no registered clients at this moment -> shutdown the service
+            executorService.shutdown();
         }
     }
 
-    public static ObjectCount<String> getRegisteredClients() {
+    public static Map<String, ClientData> getRegisteredClients() {
         return registeredClients;
     }
+
+    //public static ObjectCount<String> getRegisteredClients() {
+    //    return registeredClients;
+    //}
 
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The

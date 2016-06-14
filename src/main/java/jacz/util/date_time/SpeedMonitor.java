@@ -83,6 +83,9 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
 
     private final AtomicBoolean alive;
 
+    private final String threadExecutorClientId;
+
+
     public SpeedMonitor(long millisToStore) {
         this(millisToStore, null, null, -1);
     }
@@ -109,7 +112,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
         justReportedAboveSpeed = false;
         justReportedBelowSpeed = false;
         alive = new AtomicBoolean(true);
-        ThreadExecutor.registerClient(this.getClass().getName());
+        threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");
     }
 
     public synchronized void setSpeedMonitorRange(LongRange newSpeedMonitorRange) {
@@ -187,7 +190,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             if (reportSpeedBelowTimer != null) {
                 reportSpeedBelowTimer.kill();
             }
-            ThreadExecutor.shutdownClient(this.getClass().getName());
+            ThreadExecutor.shutdownClient(threadExecutorClientId);
         }
     }
 

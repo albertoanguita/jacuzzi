@@ -71,6 +71,8 @@ public class Daemon {
 
     private final String threadName;
 
+    private final String threadExecutorClientId;
+
 
     public Daemon(DaemonAction daemonAction) {
         this(daemonAction, ThreadUtil.invokerName(1));
@@ -84,7 +86,7 @@ public class Daemon {
         blockUntilStateSolve = new TrafficControl();
         alive = new AtomicBoolean(true);
         this.threadName = threadName;
-        ThreadExecutor.registerClient(this.getClass().getName());
+        threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");
     }
 
     /**
@@ -119,7 +121,7 @@ public class Daemon {
                     // ignore exceptions
                 }
             }
-            ThreadExecutor.shutdownClient(this.getClass().getName());
+            ThreadExecutor.shutdownClient(threadExecutorClientId);
         }
     }
 

@@ -91,6 +91,8 @@ public class Timer {
      */
     private WakeUpTask wakeUpTask;
 
+    private final String threadExecutorClientId;
+
     public Timer(long millis, TimerAction timerAction) {
         this(millis, timerAction, ThreadUtil.invokerName(1));
     }
@@ -108,7 +110,7 @@ public class Timer {
         alive = new AtomicBoolean(true);
         remainingTimeWhenStopped = 0;
         this.threadName = threadName + "/Timer";
-        ThreadExecutor.registerClient(this.getClass().getName());
+        threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");
         if (start) {
             start();
         }
@@ -263,7 +265,7 @@ public class Timer {
     public synchronized void kill() {
         if (alive.getAndSet(false)) {
             stop();
-            ThreadExecutor.shutdownClient(this.getClass().getName());
+            ThreadExecutor.shutdownClient(threadExecutorClientId);
         }
     }
 

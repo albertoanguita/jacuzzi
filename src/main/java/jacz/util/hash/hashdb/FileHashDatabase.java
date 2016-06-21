@@ -3,12 +3,14 @@ package jacz.util.hash.hashdb;
 import jacz.util.hash.HashFunction;
 import jacz.util.hash.MD5;
 import jacz.util.io.serialization.*;
+import jacz.util.lists.tuple.Duple;
 import jacz.util.maps.AutoKeyMap;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,6 +42,20 @@ public class FileHashDatabase implements VersionedObject {
             return "AnnotatedFile{" +
                     "path='" + path + '\'' +
                     '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof AnnotatedFile)) return false;
+
+            AnnotatedFile that = (AnnotatedFile) o;
+            return Paths.get(path).equals(Paths.get(that.path));
+        }
+
+        @Override
+        public int hashCode() {
+            return path.hashCode();
         }
     }
 
@@ -175,8 +191,12 @@ public class FileHashDatabase implements VersionedObject {
         return filesMap.containsKey(key);
     }
 
-    public boolean containsValue(String path) throws IOException {
+    public boolean containsPath(String path) throws IOException {
         return filesMap.containsValue(new AnnotatedFile(path, storeAbsolutePaths));
+    }
+
+    public Duple<Boolean, String> containsSimilarFile(String path) throws IOException {
+        return filesMap.containsSimilarValue(new AnnotatedFile(path, storeAbsolutePaths));
     }
 
 //    public boolean containsValue(String folderPath, List<String> fileNames) throws IOException {

@@ -155,7 +155,7 @@ public class VersionedObjectSerializer {
                 backupPaths = Arrays.copyOfRange(backupPaths, 1, backupPaths.length);
                 List<String> repairedFiles = deserialize(versionedObject, newPath, repairIfBroken, backupPaths);
                 if (repairIfBroken) {
-                    Files.copy(Paths.get(newPath), Paths.get(path), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                    Files.copy(Paths.get(newPath), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
                     repairedFiles.add(path);
                 }
                 return repairedFiles;

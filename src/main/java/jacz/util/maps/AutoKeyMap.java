@@ -1,5 +1,7 @@
 package jacz.util.maps;
 
+import jacz.util.lists.tuple.Duple;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,7 +53,12 @@ public class AutoKeyMap<K, V, E extends Throwable> implements Serializable {
     }
 
     public boolean containsValue(V value) throws E {
-        return containsKey(keyGenerator.generateKey(value));
+        return map.containsValue(value);
+    }
+
+    public Duple<Boolean, K> containsSimilarValue(V value) throws E {
+        K key = keyGenerator.generateKey(value);
+        return new Duple<>(containsKey(key), key);
     }
 
     public K put(V value) throws E {

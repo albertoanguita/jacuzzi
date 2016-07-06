@@ -35,11 +35,9 @@ public class ThreadExecutor {
             this.threadName = threadName;
         }
 
-        protected void start() {
+        protected boolean start() {
             Thread.currentThread().setName(threadName);
-            if (concurrencyController != null) {
-                concurrencyController.beginActivity(concurrentActivity);
-            }
+            return concurrencyController == null || concurrencyController.beginActivity(concurrentActivity);
         }
 
         protected void end() {
@@ -61,8 +59,7 @@ public class ThreadExecutor {
         @Override
         public V call() throws Exception {
             try {
-                start();
-                return task.call();
+                return start() ? task.call() : null;
             } finally {
                 end();
             }
@@ -81,8 +78,9 @@ public class ThreadExecutor {
         @Override
         public void run() {
             try {
-                start();
-                task.run();
+                if (start()) {
+                    task.run();
+                }
             } finally {
                 end();
             }

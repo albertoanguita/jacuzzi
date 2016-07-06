@@ -188,6 +188,12 @@ public class ConcurrencyController implements DaemonAction {
      * @param activity type of activity that the client pretends to execute
      */
     private synchronized QueueElement registerActivity(String activity) {
+        // the whole method is synchronized to ensure that, once a thread enters here, its queue element
+        // will be placed in the queue before other threads. If not, the stop action could enter and
+        // place its queue element before
+        // it causes no issues because this method does not block upon any condition
+        // also, this way we ensure that the daemon is not stopped in the middle of this function by
+        // the stopAndWaitForFinalization method
         //synchronized (this) {
         if (!alive.get() && !activity.equals(STOP_ACTIVITY)) {
             // we are no longer alive -> no activity can be registered
@@ -258,7 +264,7 @@ public class ConcurrencyController implements DaemonAction {
         }
     }
 
-    public synchronized void stopAndWaitForFinalization() {
+    public void stopAndWaitForFinalization() {
         if (alive.getAndSet(false)) {
             beginActivity(STOP_ACTIVITY);
             endActivity(STOP_ACTIVITY);

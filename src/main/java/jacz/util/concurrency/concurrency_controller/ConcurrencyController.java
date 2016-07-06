@@ -149,7 +149,7 @@ public class ConcurrencyController implements DaemonAction {
      *
      * @param activity type of activity that the client pretends to execute
      */
-    public final void beginActivity(String activity) {
+    public final boolean beginActivity(String activity) {
         // the procedure is:
         // - place the executor in the priority blocking queue (by means of providing his identifier)
         // - block him
@@ -164,10 +164,15 @@ public class ConcurrencyController implements DaemonAction {
         // place the executor in the priority queue, so the daemon eventually takes it
 
         QueueElement queueElement = registerActivity(activity);
+        if (queueElement == null) {
+            // concurrency controller is dead -> execution is forbidden
+            return false;
+        }
 
         // block this executor in these lines of code -> it will be liberated when other thread
         // releases it from its block (queueElement.allowContinue())
         beginRegisteredActivity(queueElement);
+        return true;
 
         // now the executor is free to perform the requested activity
     }
@@ -182,13 +187,14 @@ public class ConcurrencyController implements DaemonAction {
      *
      * @param activity type of activity that the client pretends to execute
      */
-    private QueueElement registerActivity(String activity) {
-        QueueElement queueElement = new QueueElement(activity, getActivityPriority(activity));
+    private synchronized QueueElement registerActivity(String activity) {
         //synchronized (this) {
         if (!alive.get() && !activity.equals(STOP_ACTIVITY)) {
-            throw new IllegalStateException("Concurrency controller has been stopped. No more activities allowed");
+            // we are no longer alive -> no activity can be registered
+            return null;
         }
         //}
+        QueueElement queueElement = new QueueElement(activity, getActivityPriority(activity));
         activityRequestsQueue.put(queueElement);
         daemon.stateChange();
         return queueElement;
@@ -252,7 +258,7 @@ public class ConcurrencyController implements DaemonAction {
         }
     }
 
-    public void stopAndWaitForFinalization() {
+    public synchronized void stopAndWaitForFinalization() {
         if (alive.getAndSet(false)) {
             beginActivity(STOP_ACTIVITY);
             endActivity(STOP_ACTIVITY);

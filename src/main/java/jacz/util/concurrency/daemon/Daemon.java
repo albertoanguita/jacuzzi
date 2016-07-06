@@ -93,13 +93,15 @@ public class Daemon {
      * Indicates a state change that must be solved by the daemon
      */
     public synchronized void stateChange() {
-        stateChangeFlag.set(true);
-        blockUntilStateSolve.pause();
-        // check if we need to create a new daemon thread
-        if (!daemonThreadFlag.get()) {
-            daemonThreadFlag.set(true);
-            stateChangeFlag.set(false);
-            future = ThreadExecutor.submit(new DaemonTask(this), threadName + "/Daemon");
+        if (alive.get()) {
+            stateChangeFlag.set(true);
+            blockUntilStateSolve.pause();
+            // check if we need to create a new daemon thread
+            if (!daemonThreadFlag.get()) {
+                daemonThreadFlag.set(true);
+                stateChangeFlag.set(false);
+                future = ThreadExecutor.submit(new DaemonTask(this), threadName + "/Daemon");
+            }
         }
     }
 
@@ -112,8 +114,7 @@ public class Daemon {
     }
 
     public void stop() {
-        if (alive.get()) {
-            alive.set(false);
+        if (alive.getAndSet(false)) {
             if (future != null) {
                 try {
                     future.get();

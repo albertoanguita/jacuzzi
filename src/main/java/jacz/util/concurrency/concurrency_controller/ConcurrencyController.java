@@ -270,10 +270,6 @@ public class ConcurrencyController implements DaemonAction {
             endActivity(STOP_ACTIVITY);
             daemon.stop();
         }
-//        synchronized (this) {
-//            alive = false;
-//            this.ignoreFutureTasks = ignoreFutureTasks;
-//        }
     }
 
     @Override

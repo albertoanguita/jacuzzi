@@ -93,12 +93,6 @@ public class ConcurrencyController implements DaemonAction {
     private AtomicBoolean alive;
 
     /**
-     * After being stopped, subsequent tasks will be ignored if this flag is set to true
-     * If set to false, tasks will produce an exception
-     */
-    private AtomicBoolean ignoreFutureTasks;
-
-    /**
      * Default class constructor. Initializes the concurrency controller with no limit of simultaneous executions
      */
     public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
@@ -117,7 +111,6 @@ public class ConcurrencyController implements DaemonAction {
         this.maxNumberOfExecutionsAllowed = maxNumberOfExecutionsAllowed;
         daemon = new Daemon(this);
         alive = new AtomicBoolean(true);
-        ignoreFutureTasks = new AtomicBoolean();
     }
 
     /**
@@ -192,7 +185,7 @@ public class ConcurrencyController implements DaemonAction {
     private QueueElement registerActivity(String activity) {
         QueueElement queueElement = new QueueElement(activity, getActivityPriority(activity));
         //synchronized (this) {
-        if (!alive.get() && !activity.equals(STOP_ACTIVITY) && !ignoreFutureTasks.get()) {
+        if (!alive.get() && !activity.equals(STOP_ACTIVITY)) {
             throw new IllegalStateException("Concurrency controller has been stopped. No more activities allowed");
         }
         //}
@@ -260,12 +253,7 @@ public class ConcurrencyController implements DaemonAction {
     }
 
     public void stopAndWaitForFinalization() {
-        stopAndWaitForFinalization(true);
-    }
-
-    public void stopAndWaitForFinalization(boolean ignoreFutureTasks) {
         if (alive.getAndSet(false)) {
-            this.ignoreFutureTasks.set(ignoreFutureTasks);
             beginActivity(STOP_ACTIVITY);
             endActivity(STOP_ACTIVITY);
             daemon.stop();
@@ -279,7 +267,6 @@ public class ConcurrencyController implements DaemonAction {
                 ", numberOfExecutionsOfActivities=" + numberOfExecutionsOfActivities +
                 ", maxNumberOfExecutionsAllowed=" + maxNumberOfExecutionsAllowed +
                 ", alive=" + alive +
-                ", ignoreFutureTasks=" + ignoreFutureTasks +
                 '}';
     }
 }

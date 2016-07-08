@@ -9,7 +9,7 @@ public class TestXMLRead {
 
     public static void main(String[] args) throws Exception {
 
-        XMLReader xmlReader = new XMLReader("Test3.xml");
+        XMLReader xmlReader = new XMLReader("./etc/tests/Test3.xml");
 
         String x = xmlReader.getFieldValue("x");
         String s = xmlReader.getFieldValue("s");

@@ -1,0 +1,13 @@
+package org.aanguita.jacuzzi.plan.resource_delivery;
+
+/**
+ * Class description
+ * <p/>
+ * User: Alberto<br>
+ * Date: 08-jun-2010<br>
+ * Last Modified: 08-jun-2010
+ */
+public interface Resource {
+
+    int size();
+}

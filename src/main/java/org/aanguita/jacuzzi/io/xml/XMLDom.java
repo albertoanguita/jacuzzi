@@ -1,6 +1,5 @@
 package org.aanguita.jacuzzi.io.xml;
 
-import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import org.aanguita.jacuzzi.hash.CRCMismatchException;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 
@@ -234,7 +233,7 @@ public class XMLDom {
 
     public static void write(OutputStream stream, Element element, int hashLength) throws XMLStreamException {
         XMLOutputFactory xof = XMLOutputFactory.newInstance();
-        IndentingXMLStreamWriter xtw = new IndentingXMLStreamWriter(xof.createXMLStreamWriter(stream));
+        XMLStreamWriter xtw = xof.createXMLStreamWriter(stream);
         writeXMLStreamWriter(xtw, element, hashLength);
     }
 

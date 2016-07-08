@@ -54,15 +54,23 @@ public class GenericFSM<T, Y> {
     }
 
     public boolean start() {
-        currentState = genericFSMAction.init();
-        checkFinalState();
-        started.set(true);
+        try {
+            currentState = genericFSMAction.init();
+            checkFinalState();
+            started.set(true);
+        } catch (Exception e) {
+            unhandledException(e);
+        }
         return isActive();
     }
 
     private void checkFinalState() {
-        if (genericFSMAction.isFinalState(currentState)) {
-            active.set(false);
+        try {
+            if (genericFSMAction.isFinalState(currentState)) {
+                active.set(false);
+            }
+        } catch (Exception e) {
+            unhandledException(e);
         }
     }
 
@@ -75,8 +83,8 @@ public class GenericFSM<T, Y> {
         }
         try {
             currentState = genericFSMAction.processInput(currentState, input);
-        } catch (IllegalArgumentException e) {
-            active.set(false);
+        } catch (Exception e) {
+            unhandledException(e);
             return false;
         }
         checkFinalState();
@@ -85,8 +93,17 @@ public class GenericFSM<T, Y> {
 
     public void stop() {
         if (active.getAndSet(false)) {
-            genericFSMAction.stopped();
+            try {
+                genericFSMAction.stopped();
+            } catch (Exception e) {
+                unhandledException(e);
+            }
         }
+    }
+
+    private void unhandledException(Exception e) {
+        genericFSMAction.raisedUnhandledException(e);
+        active.set(false);
     }
 
     @Override

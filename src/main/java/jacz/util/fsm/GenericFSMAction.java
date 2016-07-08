@@ -9,11 +9,13 @@ package jacz.util.fsm;
  */
 public interface GenericFSMAction<T, Y> {
 
-    T processInput(T currentState, Y input) throws IllegalArgumentException;
+    T processInput(T currentState, Y input);
 
     T init();
 
     boolean isFinalState(T state);
 
     void stopped();
+
+    void raisedUnhandledException(Exception e);
 }

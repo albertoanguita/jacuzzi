@@ -12,7 +12,7 @@ import jacz.util.fsm.GenericFSMAction;
 public class TestAction implements GenericFSMAction<String, Integer> {
 
     @Override
-    public String processInput(String currentState, Integer input) throws IllegalArgumentException {
+    public String processInput(String currentState, Integer input) {
         if (currentState.compareTo("cero") == 0) {
             System.out.println("estado cero, recibo " + input + ", paso a uno");
             return "uno";
@@ -42,5 +42,10 @@ public class TestAction implements GenericFSMAction<String, Integer> {
     @Override
     public void stopped() {
         System.out.println("timer stopped");
+    }
+
+    @Override
+    public void raisedUnhandledException(Exception e) {
+        e.printStackTrace();
     }
 }

@@ -2,13 +2,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>jacz.util</groupId>
-  <artifactId>util</artifactId>
-  <version>0.1</version>
+  <groupId>org.aanguita</groupId>
+  <artifactId>jacuzzi</artifactId>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
-  <name>util</name>
-  <url>http://maven.apache.org</url>
+  <name>jacuzzi</name>
+  <url>https://github.com/albertoanguita/jacuzzi</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

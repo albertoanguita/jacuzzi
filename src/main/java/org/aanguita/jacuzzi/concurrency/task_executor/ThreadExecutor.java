@@ -60,6 +60,9 @@ public class ThreadExecutor {
         public V call() throws Exception {
             try {
                 return start() ? task.call() : null;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
             } finally {
                 end();
             }
@@ -81,6 +84,8 @@ public class ThreadExecutor {
                 if (start()) {
                     task.run();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             } finally {
                 end();
             }

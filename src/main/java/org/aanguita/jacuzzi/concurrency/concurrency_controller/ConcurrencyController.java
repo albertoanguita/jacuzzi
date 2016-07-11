@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * This class provides the general framework for creating classes that act as concurrency controllers
@@ -70,12 +71,12 @@ public class ConcurrencyController implements DaemonAction {
      * Queue where requests for executing specific activities are stored. This queue allows elements with higher
      * priority to be extracted first
      */
-    private PriorityBlockingQueue<QueueElement> activityRequestsQueue;
+    private final PriorityBlockingQueue<QueueElement> activityRequestsQueue;
 
     /**
      * Stores the number of executions of each activity at every moment
      */
-    private ObjectCount<String> numberOfExecutionsOfActivities;
+    private final ObjectCount<String> numberOfExecutionsOfActivities;
 
     /**
      * Daemon for controlling the execution of activities
@@ -85,7 +86,17 @@ public class ConcurrencyController implements DaemonAction {
     /**
      * Whether this CC is alive (accepts more activities) or not
      */
-    private AtomicBoolean alive;
+    private final AtomicBoolean alive;
+
+    /**
+     * Logger that receives log messages when activities request to begin or end
+     */
+    private final Consumer<String> logger;
+
+    /**
+     * Name of this concurrency controller, for logging purposes
+     */
+    private final String name;
 
 //    /**
 //     * Default class constructor. Initializes the concurrency controller with no limit of simultaneous executions
@@ -98,11 +109,20 @@ public class ConcurrencyController implements DaemonAction {
      * Class constructor. Initializes the concurrency controller with a specific amount of allowed simultaneous executions
      */
     public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
+        this(concurrencyControllerAction, message -> {}, "");
+    }
+
+    /**
+     * Class constructor. Initializes the concurrency controller with a specific amount of allowed simultaneous executions
+     */
+    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction, Consumer<String> logger, String name) {
         this.concurrencyControllerAction = concurrencyControllerAction;
         activityRequestsQueue = new PriorityBlockingQueue<>();
         numberOfExecutionsOfActivities = new ObjectCount<>();
         daemon = new Daemon(this);
         alive = new AtomicBoolean(true);
+        this.logger = logger;
+        this.name = name;
     }
 
     /**
@@ -155,6 +175,8 @@ public class ConcurrencyController implements DaemonAction {
         // in the concurrency controller
 
         // place the executor in the priority queue, so the daemon eventually takes it
+
+        logger.accept(formatStateLog("request begin activity"));
 
         QueueElement queueElement = registerActivity(activity);
         if (queueElement == null) {
@@ -221,6 +243,8 @@ public class ConcurrencyController implements DaemonAction {
         synchronized (this) {
             numberOfExecutionsOfActivities.subtractObject(activity);
         }
+        logger.accept(formatStateLog("end activity"));
+
         concurrencyControllerAction.activityHasEnded(activity, numberOfExecutionsOfActivities);
         // alert the daemon that a new opportunity for execution has raised
         daemon.stateChange();
@@ -270,8 +294,13 @@ public class ConcurrencyController implements DaemonAction {
         return "ConcurrencyController{" +
                 ", activityRequestsQueue=" + activityRequestsQueue +
                 ", numberOfExecutionsOfActivities=" + numberOfExecutionsOfActivities +
-                ", maxNumberOfExecutionsAllowed=" + concurrencyControllerAction.maxNumberOfExecutionsAllowed() +
                 ", alive=" + alive +
                 '}';
+    }
+
+    private String formatStateLog(String message) {
+        StringBuilder log = new StringBuilder();
+        log.append(name).append(" performs ").append(message).append("\n").append(this.toString());
+        return log.toString();
     }
 }

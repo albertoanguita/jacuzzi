@@ -187,6 +187,8 @@ public class ConcurrencyController implements DaemonAction {
         // block this executor in these lines of code -> it will be liberated when other thread
         // releases it from its block (queueElement.allowContinue())
         beginRegisteredActivity(queueElement);
+        logger.accept(formatStateLog("activity proceeds with execution"));
+
         return true;
 
         // now the executor is free to perform the requested activity

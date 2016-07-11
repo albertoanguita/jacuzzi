@@ -78,12 +78,6 @@ public class ConcurrencyController implements DaemonAction {
     private ObjectCount<String> numberOfExecutionsOfActivities;
 
     /**
-     * Maximum number of simultaneous activity executions allowed. It may be preferable to limit this number
-     * taking into account the number of available cores. A value of 0 or negative indicates no limit
-     */
-    private int maxNumberOfExecutionsAllowed;
-
-    /**
      * Daemon for controlling the execution of activities
      */
     private final Daemon daemon;
@@ -93,23 +87,20 @@ public class ConcurrencyController implements DaemonAction {
      */
     private AtomicBoolean alive;
 
-    /**
-     * Default class constructor. Initializes the concurrency controller with no limit of simultaneous executions
-     */
-    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
-        this(concurrencyControllerAction, concurrencyControllerAction.maxNumberOfExecutionsAllowed());
-    }
+//    /**
+//     * Default class constructor. Initializes the concurrency controller with no limit of simultaneous executions
+//     */
+//    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
+//        this(concurrencyControllerAction, concurrencyControllerAction.maxNumberOfExecutionsAllowed());
+//    }
 
     /**
      * Class constructor. Initializes the concurrency controller with a specific amount of allowed simultaneous executions
-     *
-     * @param maxNumberOfExecutionsAllowed maximum amount of allowed simultaneous executions
      */
-    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction, int maxNumberOfExecutionsAllowed) {
+    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
         this.concurrencyControllerAction = concurrencyControllerAction;
         activityRequestsQueue = new PriorityBlockingQueue<>();
         numberOfExecutionsOfActivities = new ObjectCount<>();
-        this.maxNumberOfExecutionsAllowed = maxNumberOfExecutionsAllowed;
         daemon = new Daemon(this);
         alive = new AtomicBoolean(true);
     }
@@ -127,7 +118,8 @@ public class ConcurrencyController implements DaemonAction {
         // first check that, if there is an actual limit for the number of simultaneous executions (given by
         // a value of maxNumberOfExecutionsAllowed greater than zero), this limit has not been reached
         // (if so, do not allow this execution to start)
-        if (maxNumberOfExecutionsAllowed > 0 && numberOfExecutionsOfActivities.getTotalCount() >= maxNumberOfExecutionsAllowed) {
+        if (concurrencyControllerAction.maxNumberOfExecutionsAllowed() > 0 &&
+                numberOfExecutionsOfActivities.getTotalCount() >= concurrencyControllerAction.maxNumberOfExecutionsAllowed()) {
             return false;
         }
         // next, check if it is the STOP activity. STOP can only execute if there are no running activities
@@ -278,7 +270,7 @@ public class ConcurrencyController implements DaemonAction {
         return "ConcurrencyController{" +
                 ", activityRequestsQueue=" + activityRequestsQueue +
                 ", numberOfExecutionsOfActivities=" + numberOfExecutionsOfActivities +
-                ", maxNumberOfExecutionsAllowed=" + maxNumberOfExecutionsAllowed +
+                ", maxNumberOfExecutionsAllowed=" + concurrencyControllerAction.maxNumberOfExecutionsAllowed() +
                 ", alive=" + alive +
                 '}';
     }

@@ -7,6 +7,10 @@ import org.aanguita.jacuzzi.maps.ObjectCount;
  */
 public interface ConcurrencyControllerAction {
 
+    /**
+     * Maximum number of simultaneous activity executions allowed. It may be preferable to limit this number
+     * taking into account the number of available cores. A value of 0 or negative indicates no limit
+     */
     int maxNumberOfExecutionsAllowed();
 
     int getActivityPriority(String activity);

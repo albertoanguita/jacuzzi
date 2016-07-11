@@ -25,7 +25,6 @@ public class Timer {
         private final long millis;
 
         public WakeUpTask(Timer timer, long millis) {
-            System.out.println("create wake up task " + millis);
             this.timer = timer;
             this.millis = millis;
         }
@@ -33,9 +32,7 @@ public class Timer {
         @Override
         public void run() {
             try {
-                System.out.println("begin sleep " + millis);
                 Thread.sleep(millis);
-                System.out.println("wake up after " + millis);
                 timer.wakeUp(this);
             } catch (InterruptedException e) {
                 // the timer interrupted this wake up task because it was stopped -> break
@@ -119,7 +116,6 @@ public class Timer {
     private void start(long millis) {
         stop(false);
         if (!active.getAndSet(true)) {
-            System.out.println("start: " + millis);
             wakeUpTask = new WakeUpTask(this, millis);
             registerThread();
             future = ThreadExecutor.submit(wakeUpTask, threadName);
@@ -158,7 +154,6 @@ public class Timer {
                     // the timer has not been reset nor stopped during the wake up action. See if it must be restarted
                     if (timerActionResult != null && timerActionResult > 0) {
                         // the timer must be reset again with a new time
-                        System.out.println(timerActionResult);
                         reset(timerActionResult);
                         //millisForThisRun = timerActionResult;
                         //setActivationTime();

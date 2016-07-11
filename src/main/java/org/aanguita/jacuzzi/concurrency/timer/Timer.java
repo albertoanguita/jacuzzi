@@ -4,7 +4,6 @@ import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.aanguita.jacuzzi.log.ErrorLog;
-import org.aanguita.jacuzzi.objects.Util;
 
 import java.util.Arrays;
 import java.util.concurrent.Future;
@@ -16,21 +15,34 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * Note that if you have activated a timer and then you assign your Timer object a null value or any other Timer,
  * the first timer will still activate itself. You must stop it first!!!
- * todo make it so the thread executor is only registered when needed, and unregistered when timer stops
  */
 public class Timer {
 
-    /**
-     * Possible states of a timer
-     */
-    public enum State {
-        // timer is running
-        RUNNING,
-        // timer is stopped (can be resumed)
-        STOPPED,
-        // timer is not alive anymore (can no longer be used)
-        KILLED
+    private static class WakeUpTask implements Runnable {
+
+        private final Timer timer;
+
+        private final long millis;
+
+        public WakeUpTask(Timer timer, long millis) {
+            System.out.println("create wake up task " + millis);
+            this.timer = timer;
+            this.millis = millis;
+        }
+
+        @Override
+        public void run() {
+            try {
+                System.out.println("begin sleep " + millis);
+                Thread.sleep(millis);
+                System.out.println("wake up after " + millis);
+                timer.wakeUp(this);
+            } catch (InterruptedException e) {
+                // the timer interrupted this wake up task because it was stopped -> break
+            }
+        }
     }
+
 
     /**
      * Unique identifier of this timer, for comparison purposes
@@ -48,14 +60,9 @@ public class Timer {
     private Future future;
 
     /**
-     * Indicates if this timer is active (alive and running)
+     * Indicates if this timer is active (running)
      */
     private final AtomicBoolean active;
-
-    /**
-     * Indicates if this timer is alive
-     */
-    private final AtomicBoolean alive;
 
     /**
      * The last timeout set for this timer
@@ -63,15 +70,7 @@ public class Timer {
     private long millis;
 
     /**
-     * The time that the current timer run will have to wait (if reset, it will be similar to millis. If resumed,
-     * it will be the remaining time).
-     * <p>
-     * This is the actual time that the wake up task will query for
-     */
-    private long millisForThisRun;
-
-    /**
-     * The time at which this timer was last activated
+     * The time at which this timer was last started
      */
     private long activationTime;
 
@@ -91,7 +90,7 @@ public class Timer {
      */
     private WakeUpTask wakeUpTask;
 
-    private final String threadExecutorClientId;
+    private String threadExecutorClientId;
 
     public Timer(long millis, TimerAction timerAction) {
         this(millis, timerAction, ThreadUtil.invokerName(1));
@@ -104,15 +103,12 @@ public class Timer {
     public Timer(long millis, TimerAction timerAction, boolean start, String threadName) {
         id = AlphaNumFactory.getStaticId();
         this.millis = millis;
-        this.millisForThisRun = millis;
         this.timerAction = timerAction;
         active = new AtomicBoolean(false);
-        alive = new AtomicBoolean(true);
         remainingTimeWhenStopped = 0;
         this.threadName = threadName + "/Timer";
-        threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");
         if (start) {
-            start();
+            start(millis);
         }
     }
 
@@ -120,81 +116,74 @@ public class Timer {
         return id;
     }
 
-    private void start() {
-        if (alive.get() && !active.get()) {
-            active.set(true);
-            wakeUpTask = new WakeUpTask(this);
+    private void start(long millis) {
+        stop(false);
+        if (!active.getAndSet(true)) {
+            System.out.println("start: " + millis);
+            wakeUpTask = new WakeUpTask(this, millis);
+            registerThread();
             future = ThreadExecutor.submit(wakeUpTask, threadName);
-            setActivationTime();
+            activationTime = System.currentTimeMillis();
             remainingTimeWhenStopped = 0;
         }
     }
 
-    private synchronized void setActivationTime() {
-        activationTime = System.currentTimeMillis();
+    private synchronized void registerThread() {
+        if (threadExecutorClientId == null) {
+            threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");
+        }
     }
 
-    boolean wakeUp(WakeUpTask wakeUpTask) {
+    private synchronized void shutdownThread() {
+        if (threadExecutorClientId != null) {
+            ThreadExecutor.shutdownClient(threadExecutorClientId);
+            threadExecutorClientId = null;
+        }
+    }
+
+    void wakeUp(WakeUpTask wakeUpTask) {
         // first check wake up task object is the one we last activated (null is anonymous, always valid)
-        AtomicBoolean validWakeUp = new AtomicBoolean(wakeUpTask == null || wakeUpTask == this.wakeUpTask);
-        if (validWakeUp.get() && active.get() && alive.get()) {
+        if (isRunning() && wakeUpTask == this.wakeUpTask) {
             Long timerActionResult = null;
             try {
                 timerActionResult = timerAction.wakeUp(this);
             } catch (Exception e) {
                 //unexpected exception obtained. Print error and terminate
                 ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in timer action implementation", e, Arrays.toString(e.getStackTrace()));
-                kill();
+                stop();
             }
             synchronized (this) {
                 // first, check if the timer has been killed, reset or stopped during the task execution
-                if (!alive.get()) {
-                    // the timer was killed
-                    return false;
-                } else if (!Util.equals(this.wakeUpTask, wakeUpTask)) {
-                    // the timer has been reset (new wake up task)
-                    return true;
-                } else if (!active.get()) {
-                    // the timer has been stopped
-                    return false;
-                } else {
-                    // recalculate active
+                if (isRunning() && wakeUpTask == this.wakeUpTask) {
+                    // the timer has not been reset nor stopped during the wake up action. See if it must be restarted
                     if (timerActionResult != null && timerActionResult > 0) {
-                        millis = timerActionResult;
-                        millisForThisRun = timerActionResult;
-                        setActivationTime();
-                        return true;
-                    }
-                    if (timerActionResult == null) {
-                        setActivationTime();
-                        return true;
+                        // the timer must be reset again with a new time
+                        System.out.println(timerActionResult);
+                        reset(timerActionResult);
+                        //millisForThisRun = timerActionResult;
+                        //setActivationTime();
+                    } else if (timerActionResult == null) {
+                        // the timer must be reset again with the same time
+                        reset();
                     } else {
                         // 0 or negative value -> stop the timer
                         stop();
-                        return false;
                     }
                 }
             }
-        } else {
-            // this is an old wake up task -> kill it
-            return false;
         }
     }
 
-    public synchronized State getState() {
-        if (!alive.get()) {
-            return State.KILLED;
-        } else {
-            return active.get() ? State.RUNNING : State.STOPPED;
-        }
+    public boolean isRunning() {
+        return active.get();
+    }
+
+    public boolean isStopped() {
+        return !isRunning();
     }
 
     public synchronized long getMillis() {
         return millis;
-    }
-
-    synchronized long getMillisForThisRun() {
-        return millisForThisRun;
     }
 
     public synchronized long remainingTime() {
@@ -205,68 +194,41 @@ public class Timer {
         }
     }
 
-    /**
-     * Makes the timer go off, no matter how much time is left. The timer is reset with the same time as before
-     */
-    public synchronized void goOff() {
-        stop();
-        wakeUp(null);
-        start();
-    }
-
     public synchronized void reset() {
-        reset(millis);
-    }
-
-    public synchronized void reset(double factorWithLastDelay) {
-        // only reset time if remaining time is not reduced
-        if (factorWithLastDelay < 0.0d) {
-            factorWithLastDelay = 0.0d;
-        } else if (factorWithLastDelay > 1.0d) {
-            factorWithLastDelay = 1.0d;
-        }
-        long resetTime = (long) (millis * factorWithLastDelay);
-        if (!active.get() || (resetTime > remainingTime())) {
-            reset((long) (millis * factorWithLastDelay));
-        }
+        start(millis);
     }
 
     public synchronized void reset(long millis) {
         this.millis = millis;
-        runTimer(millis);
-    }
-
-    private void runTimer(long millisForThisRun) {
-        stop();
-        this.millisForThisRun = millisForThisRun;
-        start();
+        start(millis);
     }
 
     /**
      * The timer can still be resumed or reset
      */
     public synchronized void stop() {
-        if (active.get()) {
+        stop(true);
+    }
+
+    private synchronized void stop(boolean shutdown) {
+        if (active.getAndSet(false)) {
             remainingTimeWhenStopped = remainingTime();
-            active.set(false);
             future.cancel(true);
+            if (shutdown) {
+                shutdownThread();
+            }
         }
     }
 
     public synchronized void resume() {
-        if (!active.get() && remainingTimeWhenStopped > 0) {
-            runTimer(remainingTimeWhenStopped);
+        if (isStopped() && remainingTimeWhenStopped > 0) {
+            start(remainingTimeWhenStopped);
         }
     }
 
-    /**
-     * The timer is stopped, and cannot be resumed/reset again
-     */
+    @Deprecated
     public synchronized void kill() {
-        if (alive.getAndSet(false)) {
-            stop();
-            ThreadExecutor.shutdownClient(threadExecutorClientId);
-        }
+        stop();
     }
 
 

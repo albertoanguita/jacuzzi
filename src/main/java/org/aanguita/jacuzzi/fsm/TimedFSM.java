@@ -22,15 +22,11 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
         timer = new Timer(timeoutMillis, this, false, name);
     }
 
-    private void restartTimer() {
-        timer.reset();
-    }
-
     @Override
     public boolean start() {
         if (super.start()) {
             // if it is active after start, initiate the timer. Otherwise, the timer is not initiated and thus it does not need to be killed later
-            restartTimer();
+            timer.reset();
             return true;
         } else {
             timer.kill();
@@ -42,7 +38,7 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
     public boolean newInput(Y input) {
         timer.stop();
         if (super.newInput(input)) {
-            restartTimer();
+            timer.reset();
             return true;
         } else {
             timer.kill();

@@ -84,10 +84,10 @@ class NotificationReceiverHandler implements TimerAction {
     }
 
     private void setTimer() {
-        if (timer.getState() != Timer.State.RUNNING) {
+        if (timer.isStopped()) {
             timer.reset(millis);
         } else {
-            timer.reset(timeFactorAtEachEvent);
+            timer.reset((long) timeFactorAtEachEvent * millis);
         }
     }
 
@@ -116,7 +116,7 @@ class NotificationReceiverHandler implements TimerAction {
     @Override
     public synchronized Long wakeUp(Timer timer) {
         // check in case it has been stopped before
-        if (timer.getState() == Timer.State.RUNNING) {
+        if (timer.isRunning()) {
             notifyReceiver();
         }
         return 0L;

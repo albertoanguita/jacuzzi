@@ -162,7 +162,7 @@ public class ResourceDeliverer<T, Y extends Resource> implements TimerAction {
             resources.clear();
             targetQueue.add(new TargetResourceFinalizationMessage<>());
             if (cleanupTimer != null) {
-                cleanupTimer.kill();
+                cleanupTimer.stop();
             }
             messageProcessor.stop();
         } finally {

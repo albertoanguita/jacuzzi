@@ -15,8 +15,8 @@ public class TimerTest implements TimerAction {
 
         Timer timer = new Timer(waitTime, this);
 
-        ThreadUtil.safeSleep(12000L);
-        timer.kill();
+        ThreadUtil.safeSleep(10000L);
+        timer.stop();
     }
 
     @Test
@@ -29,9 +29,9 @@ public class TimerTest implements TimerAction {
         timer.reset();
         timer2.reset();
 
-        ThreadUtil.safeSleep(6000L);
-        timer.kill();
-        timer2.kill();
+        ThreadUtil.safeSleep(16000L);
+        timer.stop();
+        timer2.stop();
     }
 
     @Override

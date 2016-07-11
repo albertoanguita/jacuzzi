@@ -5,11 +5,11 @@ package org.aanguita.jacuzzi.concurrency.timer;
  */
 class WakeUpTask implements Runnable {
 
-    private final Timer timer;
+    private final TimerOld timer;
 
     private boolean finished;
 
-    public WakeUpTask(Timer timer) {
+    public WakeUpTask(TimerOld timer) {
         this.timer = timer;
     }
 

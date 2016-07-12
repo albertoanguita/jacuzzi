@@ -176,7 +176,7 @@ public class ConcurrencyController implements DaemonAction {
 
         // place the executor in the priority queue, so the daemon eventually takes it
 
-        logger.accept(formatStateLog("request begin activity"));
+        logger.accept(formatStateLog("request begin activity", activity));
 
         QueueElement queueElement = registerActivity(activity);
         if (queueElement == null) {
@@ -187,7 +187,7 @@ public class ConcurrencyController implements DaemonAction {
         // block this executor in these lines of code -> it will be liberated when other thread
         // releases it from its block (queueElement.allowContinue())
         beginRegisteredActivity(queueElement);
-        logger.accept(formatStateLog("activity proceeds with execution"));
+        logger.accept(formatStateLog("activity proceeds with execution", activity));
 
         return true;
 
@@ -245,7 +245,7 @@ public class ConcurrencyController implements DaemonAction {
         synchronized (this) {
             numberOfExecutionsOfActivities.subtractObject(activity);
         }
-        logger.accept(formatStateLog("end activity"));
+        logger.accept(formatStateLog("end activity", activity));
 
         concurrencyControllerAction.activityHasEnded(activity, numberOfExecutionsOfActivities);
         // alert the daemon that a new opportunity for execution has raised
@@ -300,9 +300,7 @@ public class ConcurrencyController implements DaemonAction {
                 '}';
     }
 
-    private String formatStateLog(String message) {
-        StringBuilder log = new StringBuilder();
-        log.append(name).append(" performs ").append(message).append("\n").append(this.toString());
-        return log.toString();
+    private String formatStateLog(String message, String activity) {
+        return name + " performs " + message + ":" + activity + "\n" + this.toString();
     }
 }

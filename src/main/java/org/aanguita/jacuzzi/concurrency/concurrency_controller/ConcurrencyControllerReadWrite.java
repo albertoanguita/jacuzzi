@@ -2,6 +2,8 @@ package org.aanguita.jacuzzi.concurrency.concurrency_controller;
 
 import org.aanguita.jacuzzi.maps.ObjectCount;
 
+import java.util.function.Consumer;
+
 /**
  * An implementation of ConcurrencyControllerAction for a basic read-write schema
  */
@@ -47,5 +49,9 @@ public class ConcurrencyControllerReadWrite extends ConcurrencyController {
 
     public ConcurrencyControllerReadWrite() {
         super(new ReadWriteAction());
+    }
+
+    public ConcurrencyControllerReadWrite(Consumer<String> logger, String name) {
+        super(new ReadWriteAction(), logger, name);
     }
 }

@@ -301,6 +301,6 @@ public class ConcurrencyController implements DaemonAction {
     }
 
     private String formatStateLog(String message, String activity) {
-        return name + " performs " + message + ":" + activity + "\n" + this.toString();
+        return name + " performs " + message + ": " + activity + "\n" + this.toString();
     }
 }

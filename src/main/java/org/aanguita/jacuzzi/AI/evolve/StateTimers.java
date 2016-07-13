@@ -131,6 +131,6 @@ public class StateTimers<S> implements TimerAction {
 
     public synchronized void stop() {
         alive.set(false);
-        timer.kill();
+        timer.stop();
     }
 }

@@ -9,29 +9,33 @@ import org.junit.Test;
 public class StateTimersTest {
 
     private static final long WAIT = 1000;
-    private static final long WAIT2 = 1500;
+    private static final long WAIT2 = 4000;
 
     @Test
     public void test() {
 
         StateTimers<Integer> stateTimers = new StateTimers<>(1);
 
-        stateTimers.setStateTimer(1, WAIT, () -> System.out.println("state 1"));
-        stateTimers.setStateTimer(2, WAIT / 2, () -> System.out.println("state 2"));
+        //stateTimers.setStateTimer(2, WAIT, () -> System.out.println("state 2"));
+        stateTimers.setStateTimer(state -> true, WAIT * 3, () -> System.out.println("general delay"));
 
         ThreadUtil.safeSleep(WAIT2);
-        stateTimers.setState(2);
+        setState(stateTimers, 2);
 
         ThreadUtil.safeSleep(WAIT2);
-        stateTimers.setState(1);
+        setState(stateTimers, 1);
 
         ThreadUtil.safeSleep(WAIT2);
-        stateTimers.setState(2);
+        setState(stateTimers, 2);
 
         ThreadUtil.safeSleep(WAIT2);
-        stateTimers.setState(1);
+        setState(stateTimers, 1);
 
         ThreadUtil.safeSleep(WAIT2);
     }
 
+    private void setState(StateTimers<Integer> stateTimers, int newState) {
+        System.out.println("Setting new state: " + newState);
+        stateTimers.setState(newState);
+    }
 }

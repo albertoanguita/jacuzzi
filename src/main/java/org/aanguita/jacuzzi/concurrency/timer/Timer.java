@@ -98,6 +98,7 @@ public class Timer {
     }
 
     public Timer(long millis, TimerAction timerAction, boolean start, String threadName) {
+        validateTime(millis);
         id = AlphaNumFactory.getStaticId();
         this.millis = millis;
         this.timerAction = timerAction;
@@ -183,7 +184,8 @@ public class Timer {
 
     public synchronized long remainingTime() {
         if (active.get()) {
-            return activationTime + millis - System.currentTimeMillis();
+            long time = activationTime + millis - System.currentTimeMillis();
+            return Math.max(time, 0L);
         } else {
             return remainingTimeWhenStopped;
         }
@@ -194,6 +196,7 @@ public class Timer {
     }
 
     public synchronized void reset(long millis) {
+        validateTime(millis);
         this.millis = millis;
         start(millis);
     }
@@ -206,8 +209,9 @@ public class Timer {
     }
 
     private synchronized void stop(boolean shutdown) {
-        if (active.getAndSet(false)) {
+        if (active.get()) {
             remainingTimeWhenStopped = remainingTime();
+            active.set(false);
             future.cancel(true);
             if (shutdown) {
                 shutdownThread();
@@ -216,7 +220,7 @@ public class Timer {
     }
 
     public synchronized void resume() {
-        if (isStopped() && remainingTimeWhenStopped > 0) {
+        if (isStopped()) {
             start(remainingTimeWhenStopped);
         }
     }
@@ -239,5 +243,11 @@ public class Timer {
     @Override
     public int hashCode() {
         return id.hashCode();
+    }
+
+    private void validateTime(long millis) throws IllegalArgumentException {
+        if (millis < 0L) {
+            throw new IllegalArgumentException("Millis cannot be negative, received " + millis);
+        }
     }
 }

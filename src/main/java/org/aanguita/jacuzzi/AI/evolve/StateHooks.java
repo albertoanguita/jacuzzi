@@ -6,6 +6,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 
 /**
  * Created by Alberto on 20/03/2016.
@@ -14,13 +15,13 @@ public class StateHooks<S> {
 
     private S state;
 
-    private final Map<StateCondition<S>, Runnable> registeredEnterStateHooks;
+    private final Map<Predicate<S>, Runnable> registeredEnterStateHooks;
 
-    private Set<StateCondition<S>> activeEnterStateHooks;
+    private Set<Predicate<S>> activeEnterStateHooks;
 
-    private final Map<StateCondition<S>, Runnable> registeredExitStateHooks;
+    private final Map<Predicate<S>, Runnable> registeredExitStateHooks;
 
-    private Set<StateCondition<S>> activeExitStateHooks;
+    private Set<Predicate<S>> activeExitStateHooks;
 
     private final boolean executeInParallel;
 
@@ -66,47 +67,47 @@ public class StateHooks<S> {
     }
 
     public synchronized void setEnterStateHook(S state, Runnable task) {
-        registeredEnterStateHooks.put(new SimpleStateCondition<>(state), task);
+        registeredEnterStateHooks.put(new CompareStatePredicate<>(state), task);
     }
 
-    public synchronized void setEnterStateHook(StateCondition<S> stateCondition, Runnable task) {
+    public synchronized void setEnterStateHook(Predicate<S> stateCondition, Runnable task) {
         registeredEnterStateHooks.put(stateCondition, task);
     }
 
     public synchronized void removeEnterStateHook(S state) {
-        registeredEnterStateHooks.remove(new SimpleStateCondition<>(state));
+        registeredEnterStateHooks.remove(new CompareStatePredicate<>(state));
     }
 
-    public synchronized void removeEnterStateHook(StateCondition<S> stateCondition) {
+    public synchronized void removeEnterStateHook(Predicate<S> stateCondition) {
         registeredEnterStateHooks.remove(stateCondition);
     }
 
     public synchronized void setExitStateHook(S state, Runnable task) {
-        registeredExitStateHooks.put(new SimpleStateCondition<>(state), task);
+        registeredExitStateHooks.put(new CompareStatePredicate<>(state), task);
     }
 
-    public synchronized void setExitStateHook(StateCondition<S> stateCondition, Runnable task) {
+    public synchronized void setExitStateHook(Predicate<S> stateCondition, Runnable task) {
         registeredExitStateHooks.put(stateCondition, task);
     }
 
     public synchronized void removeExitStateHook(S state) {
-        registeredExitStateHooks.remove(new SimpleStateCondition<>(state));
+        registeredExitStateHooks.remove(new CompareStatePredicate<>(state));
     }
 
-    public synchronized void removeExitStateHook(StateCondition<S> stateCondition) {
+    public synchronized void removeExitStateHook(Predicate<S> stateCondition) {
         registeredExitStateHooks.remove(stateCondition);
     }
 
     private void checkStateHooks() {
-        Set<StateCondition<S>> newActiveExitStateHooks = matchingStateConditions(registeredExitStateHooks.keySet());
-        Set<StateCondition<S>> newActiveEnterStateHooks = matchingStateConditions(registeredEnterStateHooks.keySet());
-        Collection<StateCondition<S>> exitHooksToInvoke = CollectionUtils.subtract(activeExitStateHooks, newActiveExitStateHooks);
-        Collection<StateCondition<S>> enterHooksToInvoke = CollectionUtils.subtract(newActiveEnterStateHooks, activeEnterStateHooks);
-        for (StateCondition<S> exitHookToInvoke : exitHooksToInvoke) {
+        Set<Predicate<S>> newActiveExitStateHooks = matchingStateConditions(registeredExitStateHooks.keySet());
+        Set<Predicate<S>> newActiveEnterStateHooks = matchingStateConditions(registeredEnterStateHooks.keySet());
+        Collection<Predicate<S>> exitHooksToInvoke = CollectionUtils.subtract(activeExitStateHooks, newActiveExitStateHooks);
+        Collection<Predicate<S>> enterHooksToInvoke = CollectionUtils.subtract(newActiveEnterStateHooks, activeEnterStateHooks);
+        for (Predicate<S> exitHookToInvoke : exitHooksToInvoke) {
             // stop timer of old state
             runTask(registeredExitStateHooks.get(exitHookToInvoke));
         }
-        for (StateCondition<S> enterHookToInvoke : enterHooksToInvoke) {
+        for (Predicate<S> enterHookToInvoke : enterHooksToInvoke) {
             // start new state timer
             runTask(registeredEnterStateHooks.get(enterHookToInvoke));
         }
@@ -114,10 +115,10 @@ public class StateHooks<S> {
         activeExitStateHooks = newActiveExitStateHooks;
     }
 
-    private Set<StateCondition<S>> matchingStateConditions(Set<StateCondition<S>> stateConditions) {
-        Set<StateCondition<S>> matchingStateConditions = new HashSet<>();
-        for (StateCondition<S> stateCondition : stateConditions) {
-            if (stateCondition.isInCondition(state)) {
+    private Set<Predicate<S>> matchingStateConditions(Set<Predicate<S>> stateConditions) {
+        Set<Predicate<S>> matchingStateConditions = new HashSet<>();
+        for (Predicate<S> stateCondition : stateConditions) {
+            if (stateCondition.test(state)) {
                 matchingStateConditions.add(stateCondition);
             }
         }

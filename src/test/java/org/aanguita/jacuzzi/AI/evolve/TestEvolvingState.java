@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Evolving state tests
@@ -116,9 +117,9 @@ public class TestEvolvingState {
         EvolvingState<DiscreteState, Boolean> evolvingState = new EvolvingState<>(DiscreteState.A, true, transitions);
         evolvingState.setEvolveStateTimer(DiscreteState.B, BLOCK);
         evolvingState.setEvolveStateTimer(DiscreteState.C, BLOCK * 2);
-        evolvingState.setEvolveStateTimer(new StateCondition<DiscreteState>() {
+        evolvingState.setEvolveStateTimer(new Predicate<DiscreteState>() {
             @Override
-            public boolean isInCondition(DiscreteState state) {
+            public boolean test(DiscreteState state) {
                 return true;
             }
 
@@ -264,7 +265,7 @@ public class TestEvolvingState {
 
     private EvolvingState<Boolean, Boolean> dynamicState;
 
-    private static final StateCondition<Boolean> trueStateCondition = state -> true;
+    private static final Predicate<Boolean> trueStateCondition = state -> true;
 
     private void updateRetryTime() {
         setRetryTime(Math.min(currentRetry * 2, MAX_RETRY));

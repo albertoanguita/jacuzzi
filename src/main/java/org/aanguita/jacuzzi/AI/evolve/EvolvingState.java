@@ -5,6 +5,7 @@ import org.aanguita.jacuzzi.concurrency.daemon.Daemon;
 import org.aanguita.jacuzzi.concurrency.daemon.DaemonAction;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 /**
  * State and goal must be mutable objects that are never re-assigned
@@ -99,7 +100,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         evolveStateTimers.setStateTimer(state, millis, evolveTask);
     }
 
-    public synchronized void setEvolveStateTimer(StateCondition<S> stateCondition, long millis) {
+    public synchronized void setEvolveStateTimer(Predicate<S> stateCondition, long millis) {
         evolveStateTimers.setStateTimer(stateCondition, millis, evolveTask);
     }
 
@@ -107,7 +108,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         runnableStateTimers.setStateTimer(state, millis, runnable);
     }
 
-    public synchronized void setRunnableStateTimer(StateCondition<S> stateCondition, long millis, Runnable runnable) {
+    public synchronized void setRunnableStateTimer(Predicate<S> stateCondition, long millis, Runnable runnable) {
         runnableStateTimers.setStateTimer(stateCondition, millis, runnable);
     }
 
@@ -115,7 +116,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         evolveStateTimers.removeStateTimer(state);
     }
 
-    public synchronized void removeEvolveStateTimer(StateCondition<S> stateCondition) {
+    public synchronized void removeEvolveStateTimer(Predicate<S> stateCondition) {
         evolveStateTimers.removeStateTimer(stateCondition);
     }
 
@@ -123,7 +124,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         runnableStateTimers.removeStateTimer(state);
     }
 
-    public synchronized void removeRunnableStateTimer(StateCondition<S> stateCondition) {
+    public synchronized void removeRunnableStateTimer(Predicate<S> stateCondition) {
         runnableStateTimers.removeStateTimer(stateCondition);
     }
 
@@ -131,7 +132,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         stateHooks.setEnterStateHook(state, task);
     }
 
-    public synchronized void setEnterStateHook(StateCondition<S> stateCondition, Runnable task) {
+    public synchronized void setEnterStateHook(Predicate<S> stateCondition, Runnable task) {
         stateHooks.setEnterStateHook(stateCondition, task);
     }
 
@@ -139,7 +140,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         stateHooks.removeEnterStateHook(state);
     }
 
-    public synchronized void removeEnterStateHook(StateCondition<S> stateCondition) {
+    public synchronized void removeEnterStateHook(Predicate<S> stateCondition) {
         stateHooks.removeEnterStateHook(stateCondition);
     }
 
@@ -147,7 +148,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         stateHooks.setExitStateHook(state, task);
     }
 
-    public synchronized void setExitStateHook(StateCondition<S> stateCondition, Runnable task) {
+    public synchronized void setExitStateHook(Predicate<S> stateCondition, Runnable task) {
         stateHooks.setExitStateHook(stateCondition, task);
     }
 
@@ -155,7 +156,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         stateHooks.removeExitStateHook(state);
     }
 
-    public synchronized void removeExitStateHook(StateCondition<S> stateCondition) {
+    public synchronized void removeExitStateHook(Predicate<S> stateCondition) {
         stateHooks.removeExitStateHook(stateCondition);
     }
 

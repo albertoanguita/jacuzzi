@@ -1,18 +1,20 @@
 package org.aanguita.jacuzzi.AI.evolve;
 
+import java.util.function.Predicate;
+
 /**
  * Created by Alberto on 21/03/2016.
  */
-public class SimpleStateCondition<S> implements StateCondition<S> {
+class CompareStatePredicate<S> implements Predicate<S> {
 
     private final S state;
 
-    public SimpleStateCondition(S state) {
+    public CompareStatePredicate(S state) {
         this.state = state;
     }
 
     @Override
-    public boolean isInCondition(S state) {
+    public boolean test(S state) {
         return this.state.equals(state);
     }
 
@@ -21,7 +23,7 @@ public class SimpleStateCondition<S> implements StateCondition<S> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        SimpleStateCondition<?> that = (SimpleStateCondition<?>) o;
+        CompareStatePredicate<?> that = (CompareStatePredicate<?>) o;
 
         return state.equals(that.state);
 

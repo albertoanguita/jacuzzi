@@ -2,13 +2,14 @@ package org.aanguita.jacuzzi.log;
 
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * This class logs error and reports to some specified class for closing resources
- * <p/>
+ * <p>
  * We statically register ErrorLog objects, indexed by their name. This way, we can independently register several
  * error logs belonging to different environments
  */
@@ -59,6 +60,10 @@ public class ErrorLog {
         int i = 0;
         for (Object o : data) {
             printStream.println("Data " + i + ": " + o.toString());
+            if (o instanceof Throwable) {
+                Throwable throwable = (Throwable) o;
+                printStream.println("Stacktrace: " + Arrays.toString(throwable.getStackTrace()));
+            }
             i++;
         }
     }

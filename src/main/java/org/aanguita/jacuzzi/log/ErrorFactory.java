@@ -3,6 +3,7 @@ package org.aanguita.jacuzzi.log;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -32,6 +33,10 @@ public class ErrorFactory {
         int i = 0;
         for (Object o : data) {
             ps.println("Data " + i + ": " + o.toString());
+            if (o instanceof Throwable) {
+                Throwable throwable = (Throwable) o;
+                ps.println("Stacktrace: " + Arrays.toString(throwable.getStackTrace()));
+            }
             i++;
         }
     }

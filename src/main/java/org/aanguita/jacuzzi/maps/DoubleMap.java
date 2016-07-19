@@ -47,6 +47,10 @@ public class DoubleMap<K, V> implements Serializable {
         reverseMap.put(v, k);
     }
 
+    public void putAll(Map<? extends K, ? extends V> m) {
+        m.entrySet().stream().forEach(entry -> put(entry.getKey(), entry.getValue()));
+    }
+
     public V get(K k) {
         return directMap.get(k);
     }
@@ -55,11 +59,11 @@ public class DoubleMap<K, V> implements Serializable {
         return reverseMap.get(v);
     }
 
-    public boolean contains(K k) {
+    public boolean containsKey(K k) {
         return directMap.containsKey(k);
     }
 
-    public boolean containsReverse(V v) {
+    public boolean containsValue(V v) {
         return reverseMap.containsKey(v);
     }
 
@@ -96,11 +100,36 @@ public class DoubleMap<K, V> implements Serializable {
         return directMap.keySet();
     }
 
+    public Collection<K> keys() {
+        return reverseMap.values();
+    }
+
+    public Set<V> valueSet() {
+        return reverseMap.keySet();
+    }
+
     public Collection<V> values() {
         return directMap.values();
     }
 
     public Set<Map.Entry<K, V>> entrySet() {
         return directMap.entrySet();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DoubleMap)) return false;
+
+        DoubleMap<?, ?> doubleMap = (DoubleMap<?, ?>) o;
+
+        return directMap.equals(doubleMap.directMap) && reverseMap.equals(doubleMap.reverseMap);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = directMap.hashCode();
+        result = 31 * result + reverseMap.hashCode();
+        return result;
     }
 }

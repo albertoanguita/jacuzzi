@@ -4,10 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Alberto on 08/04/2016.
@@ -70,7 +67,7 @@ public class LocalStorageTest {
         LocalStorage ls = LocalStorage.createNew("localStorage.db");
 
         Assert.assertEquals(LocalStorage.CURRENT_VERSION, ls.getLocalStorageVersion());
-        Assert.assertTrue((new Date().getTime() - ls.getCreationDate().getTime()) < 250);
+        Assert.assertTrue((new Date().getTime() - ls.getCreationDate().getTime()) < 500);
 
 
         ls.setString("string", "hello");
@@ -148,5 +145,19 @@ public class LocalStorageTest {
         keys = Arrays.asList("string", "enum", "bool", "byte", "short", "int", "long", "float", "double", "date", "stringList", "enumList", "booleanList", "byteList", "shortList", "integerList", "longList", "floatList", "doubleList", "dateList");
         Assert.assertEquals(keys, ls.keys());
         Assert.assertFalse(ls.containsItem("stringNull"));
+
+        ls.setString("string", "hello", "cat1");
+        ls.setBoolean("boolean", false, "cat1", "cat2");
+        ls.setInteger("int", 26, "cat1");
+
+        Assert.assertEquals(23, ls.itemCount());
+        Assert.assertEquals(keys, ls.keys());
+        List<String> cat1Keys = Arrays.asList("string", "int");
+        List<String> cat2Keys = Collections.singletonList("boolean");
+        Assert.assertEquals(cat1Keys, ls.keys("cat1"));
+        Assert.assertEquals(cat2Keys, ls.keys("cat1", "cat2"));
+        Assert.assertEquals("hello", ls.getString("string", "cat1"));
+        Assert.assertEquals(false, ls.getBoolean("boolean", "cat1", "cat2"));
+        Assert.assertEquals(new Integer(26), ls.getInteger("int", "cat1"));
     }
 }

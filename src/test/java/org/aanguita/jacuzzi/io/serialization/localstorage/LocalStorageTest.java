@@ -154,8 +154,12 @@ public class LocalStorageTest {
         Assert.assertEquals(keys, ls.keys());
         List<String> cat1Keys = Arrays.asList("string", "int");
         List<String> cat2Keys = Collections.singletonList("boolean");
+        Set<String> cat1 = new HashSet<>(Collections.singletonList("cat1"));
+        Set<String> cat2 = new HashSet<>(Collections.singletonList("cat2"));
         Assert.assertEquals(cat1Keys, ls.keys("cat1"));
         Assert.assertEquals(cat2Keys, ls.keys("cat1", "cat2"));
+        Assert.assertEquals(cat1, ls.categories());
+        Assert.assertEquals(cat2, ls.categories("cat1"));
         Assert.assertEquals("hello", ls.getString("string", "cat1"));
         Assert.assertEquals(false, ls.getBoolean("boolean", "cat1", "cat2"));
         Assert.assertEquals(new Integer(26), ls.getInteger("int", "cat1"));

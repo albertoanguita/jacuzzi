@@ -209,6 +209,21 @@ public class LocalStorage {
         }
     }
 
+    public Set<String> categories(String... categories) {
+        String preKey = generateName("", categories);
+        ActiveJDBCController.connect(DATABASE, path);
+        try {
+            return Item.where(ID.name + " LIKE ?", preKey + "%").stream()
+                    .map(model -> model.getString(NAME.name))
+                    .map(fullKey -> fullKey.substring(preKey.length()))
+                    .filter(key -> key.contains(CATEGORY_SEPARATOR))
+                    .map(key -> key.substring(0, key.indexOf(CATEGORY_SEPARATOR)))
+                    .collect(Collectors.toSet());
+        } finally {
+            ActiveJDBCController.disconnect();
+        }
+    }
+
     public boolean containsItem(String name, String... categories) {
         name = generateName(name, categories);
         connect(name);

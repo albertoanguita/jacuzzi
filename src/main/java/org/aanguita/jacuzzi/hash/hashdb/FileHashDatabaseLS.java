@@ -55,7 +55,7 @@ public class FileHashDatabaseLS extends FileHashDatabase implements Updater {
             storeAbsolutePaths = localStorage.getBoolean(STORE_ABSOLUTE_PATHS_KEY);
             for (String key : localStorage.keys(HASH_CATEGORY)) {
                 // this is a file hash -> extract the hash and the path and load
-                filesMap.put(key, new AnnotatedFile(localStorage.getString(HASH_CATEGORY, key), storeAbsolutePaths));
+                filesMap.put(key, new AnnotatedFile(localStorage.getString(key, HASH_CATEGORY), storeAbsolutePaths));
             }
             return localStorage;
         } else {
@@ -86,7 +86,7 @@ public class FileHashDatabaseLS extends FileHashDatabase implements Updater {
     @Override
     public String put(String path) throws IOException {
         String hash = super.put(path);
-        localStorage.setString(HASH_CATEGORY, hash, getFilePath(hash));
+        localStorage.setString(hash, getFilePath(hash), HASH_CATEGORY);
         return hash;
     }
 
@@ -94,14 +94,14 @@ public class FileHashDatabaseLS extends FileHashDatabase implements Updater {
     @Override
     public String remove(String key) {
         String path = super.remove(key);
-        localStorage.removeItem(HASH_CATEGORY, key);
+        localStorage.removeItem(key, HASH_CATEGORY);
         return path;
     }
 
     @Override
     public String removeValue(String path) throws IOException {
         String hash = super.removeValue(path);
-        localStorage.removeItem(HASH_CATEGORY, hash);
+        localStorage.removeItem(hash, HASH_CATEGORY);
         return hash;
     }
 

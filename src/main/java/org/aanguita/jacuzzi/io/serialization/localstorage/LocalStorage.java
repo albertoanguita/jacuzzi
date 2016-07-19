@@ -111,6 +111,7 @@ public class LocalStorage {
         db.exec(create.toString());
 
         create = new StringBuilder("CREATE TABLE ").append(ITEMS_TABLE).append("(");
+        // todo add index to name
         appendField(create, NAME, false);
         appendField(create, STRING_ITEM, false);
         appendField(create, INTEGER_ITEM, false);

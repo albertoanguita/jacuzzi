@@ -116,6 +116,14 @@ public class DoubleMap<K, V> implements Serializable {
         return directMap.entrySet();
     }
 
+    public Map<K, V> getDirectMap() {
+        return directMap;
+    }
+
+    public Map<V, K> getReverseMap() {
+        return reverseMap;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -6,6 +6,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * @deprecated use ObjectMapPool
  * A generic map of re-entrant locks
  */
 public class LockMap<T> {

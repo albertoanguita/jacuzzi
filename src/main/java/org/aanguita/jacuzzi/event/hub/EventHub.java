@@ -3,8 +3,7 @@ package org.aanguita.jacuzzi.event.hub;
 import org.aanguita.jacuzzi.objects.ObjectMapPool;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * This class provides named event hubs. An event hub allows publishing messages with some tags, while other classes can subscribe from specific
@@ -19,11 +18,61 @@ import java.util.function.Supplier;
  */
 public class EventHub {
 
+    private static class ParsedChannel {
+
+        protected static final String ONE_LEVEL_WILDCARD = "?";
+
+        protected static final String MULTILEVEL_WILDCARD = "*";
+
+        protected final List<String> levels;
+
+        public static ParsedChannel parseChannel(String channel) {
+            ParsedChannel parsedChannel = new ParsedChannel(channel);
+            for (String level : parsedChannel.levels) {
+                if (level.equals(ONE_LEVEL_WILDCARD) || level.equals(MULTILEVEL_WILDCARD)) {
+                    throw new IllegalArgumentException("Levels of a channel cannot match a wildcard: " + level);
+                }
+            }
+            return parsedChannel;
+        }
+
+        private ParsedChannel(String channel) {
+            levels = new ArrayList<>(Arrays.asList(channel.split("/")));
+        }
+    }
+
+    private static class ParsedChannelExpression extends ParsedChannel {
+
+        public static ParsedChannelExpression parseChannelExpression(String channel) {
+            return new ParsedChannelExpression(channel);
+        }
+
+        public ParsedChannelExpression(String channel) {
+            super(channel);
+        }
+
+        public boolean expressionMatchesChannel(ParsedChannel parsedChannel) {
+            int index = 0;
+            int thisSize = levels.size();
+            int otherSize = parsedChannel.levels.size();
+            while (index < thisSize && index < otherSize) {
+                if (levels.get(index).equals(MULTILEVEL_WILDCARD)) {
+                    return true;
+                } else if (levels.get(index).equals(ONE_LEVEL_WILDCARD) || levels.get(index).equals(parsedChannel.levels.get(index))) {
+                    index++;
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     private static class SubscriberAndChannelExpressions {
 
         private final EventHubSubscriber subscriber;
 
-        private final Set<String> channelExpressions;
+        private final Set<ParsedChannelExpression> channelExpressions;
 
         public SubscriberAndChannelExpressions(EventHubSubscriber subscriber) {
             this.subscriber = subscriber;
@@ -36,11 +85,15 @@ public class EventHub {
         }
 
         private void subscribe(String... channelExpressions) {
-            this.channelExpressions.addAll(Arrays.asList(channelExpressions));
+            this.channelExpressions.addAll(Arrays.stream(channelExpressions)
+                    .map(ParsedChannelExpression::parseChannelExpression)
+                    .collect(Collectors.toList()));
         }
 
         private void unsubscribe(String... channelExpressions) {
-            this.channelExpressions.removeAll(Arrays.asList(channelExpressions));
+            this.channelExpressions.removeAll(Arrays.stream(channelExpressions)
+                    .map(ParsedChannelExpression::parseChannelExpression)
+                    .collect(Collectors.toList()));
         }
     }
 
@@ -59,15 +112,47 @@ public class EventHub {
         subscribers = new HashMap<>();
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void publish(String channel, Object... messages) {
-
+        ParsedChannel parsedChannel = ParsedChannel.parseChannel(channel);
+        for (EventHubSubscriber eventHubSubscriber : findSubscribers(parsedChannel)) {
+            eventHubSubscriber.event(channel, messages);
+        }
     }
 
-    public void subscribe(EventHubSubscriber subscriber, String... channelExpressions) {
-
+    private synchronized List<EventHubSubscriber> findSubscribers(ParsedChannel parsedChannel) {
+        List<EventHubSubscriber> foundSubscribers = new ArrayList<>();
+        for (SubscriberAndChannelExpressions subscriberAndChannelExpressions : subscribers.values()) {
+            if (expressionsMatchChannel(subscriberAndChannelExpressions.channelExpressions, parsedChannel)) {
+                foundSubscribers.add(subscriberAndChannelExpressions.subscriber);
+            }
+        }
+        return foundSubscribers;
     }
 
-    public void unsubscribe(EventHubSubscriber subscriber, String... channelExpressions) {
+    private boolean expressionsMatchChannel(Set<ParsedChannelExpression> channelExpressions, ParsedChannel parsedChannel) {
+        for (ParsedChannelExpression channelExpression : channelExpressions) {
+            if (channelExpression.expressionMatchesChannel(parsedChannel)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    public synchronized void subscribe(EventHubSubscriber subscriber, String... channelExpressions) {
+        if (!subscribers.containsKey(subscriber.getId())) {
+            subscribers.put(subscriber.getId(), new SubscriberAndChannelExpressions(subscriber, channelExpressions));
+        } else {
+            subscribers.get(subscriber.getId()).subscribe(channelExpressions);
+        }
+    }
+
+    public synchronized void unsubscribe(EventHubSubscriber subscriber, String... channelExpressions) {
+        if (subscribers.containsKey(subscriber.getId())) {
+            subscribers.get(subscriber.getId()).unsubscribe(channelExpressions);
+        }
     }
 }

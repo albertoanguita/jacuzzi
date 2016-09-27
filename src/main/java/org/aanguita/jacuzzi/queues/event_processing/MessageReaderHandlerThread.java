@@ -26,16 +26,16 @@ class MessageReaderHandlerThread extends Thread {
         while (!finished) {
             Object message = null;
             try {
-                messageProcessor.accessReaderPausableElement();
+                messageProcessor.accessTrafficControl();
                 message = messageReader.readMessage();
-                messageProcessor.accessReaderPausableElement();
+                messageProcessor.accessTrafficControl();
             } catch (Exception e) {
                 // user should not let any exceptions to reach this level -> error exposed in console
                 // todo, handle better
                 e.printStackTrace();
                 finished = true;
             }
-            messageProcessor.accessHandlerPausableElement();
+            messageProcessor.accessTrafficControl();
             if (!finished) {
                 finished = MessageHandlerThread.handleMessageAux(messageHandler, message);
             }

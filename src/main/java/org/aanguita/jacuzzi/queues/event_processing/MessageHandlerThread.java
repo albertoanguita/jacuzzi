@@ -20,20 +20,6 @@ class MessageHandlerThread extends Thread {
         this.messageHandler = messageHandler;
     }
 
-    /*void stopThread() {
-        // the thread must stop processing messages, but only after no more messages are left to process (it is
-        // assumed that no more messages will be inserted in the message queue after it is isEmpty)
-        boolean finished = false;
-        while (!finished) {
-            try {
-                messageProcessor.addMessage(new StopReadingMessages());
-            } catch (InterruptedException e) {
-                continue;
-            }
-            finished = true;
-        }
-    }*/
-
     public void run() {
         boolean finished = false;
         while (!finished) {
@@ -42,10 +28,10 @@ class MessageHandlerThread extends Thread {
         messageHandler.finalizeHandler();
     }
 
-    static boolean handleMessage(MessageProcessor messageProcessor, MessageHandler messageHandler) {
+    private static boolean handleMessage(MessageProcessor messageProcessor, MessageHandler messageHandler) {
         try {
             Object message = messageProcessor.takeMessage();
-            messageProcessor.accessHandlerPausableElement();
+            messageProcessor.accessTrafficControl();
             return handleMessageAux(messageHandler, message);
         } catch (InterruptedException e) {
             // only the MessageProcessor can interrupt this thread, cannot be an error

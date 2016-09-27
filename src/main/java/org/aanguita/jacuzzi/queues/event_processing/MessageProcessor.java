@@ -16,6 +16,9 @@ public class MessageProcessor {
      */
     private final static int DEFAULT_QUEUE_CAPACITY = 1024;
 
+    /**
+     * Unique id of this message processor
+     */
     private final String id;
 
     /**
@@ -26,31 +29,37 @@ public class MessageProcessor {
     /**
      * Queue storing messages awaiting to be processed. The first in the queue is the first to be processed
      */
-    private ArrayBlockingQueue<Object> messageQueue;
+    private final ArrayBlockingQueue<Object> messageQueue;
 
     /**
      * Thread in charge of processing incoming messages
      */
-    private MessageHandlerThread messageHandlerThread = null;
+    private final MessageHandlerThread messageHandlerThread;
 
     /**
      * Thread in charge of reading new messages and adding them to the internal message queue (optional)
      */
-    private MessageReaderThread messageReaderThread = null;
+    private final MessageReaderThread messageReaderThread;
 
     /**
      * Thread in charge of both reading and processing messages
      */
-    private MessageReaderHandlerThread messageReaderHandlerThread = null;
+    private final MessageReaderHandlerThread messageReaderHandlerThread;
 
     /**
      * Whether reading and handling of messenger is done in separate threads (true), or in a single thread (false)
      */
-    private boolean separateThreads;
+    private final boolean separateThreads;
 
-    private TrafficControl readerTrafficControl;
+    /**
+     * Traffic control object for pausing the message processing system
+     */
+    private TrafficControl trafficControl;
 
-    private TrafficControl handlerTrafficControl;
+
+    //********************//
+    // CONSTRUCTORS       //
+    //********************//
 
     public MessageProcessor(MessageReader messageReader) throws IllegalArgumentException {
         this(ThreadUtil.invokerName(1), messageReader, null, DEFAULT_QUEUE_CAPACITY, true);
@@ -93,21 +102,44 @@ public class MessageProcessor {
             throw new IllegalArgumentException("Both MessageReader and MessageHandler objects must be received if no separate threads are employed");
         }
         id = AlphaNumFactory.getStaticId();
-        if (separateThreads) {
-            messageQueue = new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
-        }
-        if (messageReader != null && separateThreads) {
-            messageReaderThread = new MessageReaderThread(name, this, messageReader);
-        }
-        if (messageHandler != null && separateThreads) {
-            messageHandlerThread = new MessageHandlerThread(name, this, messageHandler);
-        }
-        if (messageReader != null && messageHandler != null && !separateThreads) {
-            messageReaderHandlerThread = new MessageReaderHandlerThread(name, this, messageReader, messageHandler);
-        }
+        messageQueue = initializeMessageQueue(separateThreads, queueCapacity);
+        messageReaderThread = initializeMessageReaderThread(messageReader, separateThreads, name);
+        messageHandlerThread = initializeMessageHandlerThread(messageHandler, separateThreads, name);
+        messageReaderHandlerThread = initializeMessageReaderHandlerThread(messageReader, messageHandler, separateThreads, name);
         this.separateThreads = separateThreads;
-        readerTrafficControl = new TrafficControl();
-        handlerTrafficControl = new TrafficControl();
+        trafficControl = new TrafficControl();
+    }
+
+    private ArrayBlockingQueue<Object> initializeMessageQueue(boolean separateThreads, int queueCapacity) {
+        if (separateThreads) {
+            return new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
+        } else {
+            return null;
+        }
+    }
+
+    private MessageReaderThread initializeMessageReaderThread(MessageReader messageReader, boolean separateThreads, String name) {
+        if (messageReader != null && separateThreads) {
+            return new MessageReaderThread(name, this, messageReader);
+        } else {
+            return null;
+        }
+    }
+
+    private MessageHandlerThread initializeMessageHandlerThread(MessageHandler messageHandler, boolean separateThreads, String name) {
+        if (messageHandler != null && separateThreads) {
+            return new MessageHandlerThread(name, this, messageHandler);
+        } else {
+            return null;
+        }
+    }
+
+    private MessageReaderHandlerThread initializeMessageReaderHandlerThread(MessageReader messageReader, MessageHandler messageHandler, boolean separateThreads, String name) {
+        if (messageReader != null && messageHandler != null && !separateThreads) {
+            return new MessageReaderHandlerThread(name, this, messageReader, messageHandler);
+        } else {
+            return null;
+        }
     }
 
     public void start() {
@@ -134,37 +166,43 @@ public class MessageProcessor {
     }
 
     public void pause() {
-        pauseReader();
-        pauseHandler();
+        trafficControl.pause();
     }
 
     public void resume() {
-        resumeReader();
-        resumeHandler();
+        trafficControl.resume();
     }
 
+    /**
+     * @deprecated use pause
+     */
     public void pauseReader() {
-        readerTrafficControl.pause();
+        pause();
     }
 
+    /**
+     * @deprecated use resume
+     */
     public void resumeReader() {
-        readerTrafficControl.resume();
+        resume();
     }
 
-    void accessReaderPausableElement() {
-        readerTrafficControl.access();
+    void accessTrafficControl() {
+        trafficControl.access();
     }
 
+    /**
+     * @deprecated use pause
+     */
     public void pauseHandler() {
-        handlerTrafficControl.pause();
+        pause();
     }
 
+    /**
+     * @deprecated use resume
+     */
     public void resumeHandler() {
-        handlerTrafficControl.resume();
-    }
-
-    void accessHandlerPausableElement() {
-        handlerTrafficControl.access();
+        resume();
     }
 
     public void addMessage(Object message) throws InterruptedException {

@@ -37,9 +37,9 @@ class MessageReaderThread extends Thread {
         // message if we are paused, but also a situation where we go through the pause ok, then we wait for a
         // message, and subsequent pauses do not affect the first message read
         try {
-            messageProcessor.accessReaderPausableElement();
+            messageProcessor.accessTrafficControl();
             Object message = messageReader.readMessage();
-            messageProcessor.accessReaderPausableElement();
+            messageProcessor.accessTrafficControl();
             if (message instanceof StopReadingMessages) {
                 return true;
             }

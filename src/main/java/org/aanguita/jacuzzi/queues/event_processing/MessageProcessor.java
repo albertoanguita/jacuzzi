@@ -144,7 +144,7 @@ public class MessageProcessor {
 
     public void start() {
         if (separateThreads) {
-            startReading();
+            startThread(messageReaderThread);
             startThread(messageHandlerThread);
         } else {
             startThread(messageReaderHandlerThread);

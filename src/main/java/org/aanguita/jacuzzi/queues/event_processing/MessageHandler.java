@@ -3,9 +3,9 @@ package org.aanguita.jacuzzi.queues.event_processing;
 /**
  *
  */
-public interface MessageHandler {
+public interface MessageHandler<E> {
 
-    void handleMessage(Object message);
+    void handleMessage(E message);
 
     /**
      * This method is invoked to indicate that the handling of message has finalized, in case the handler

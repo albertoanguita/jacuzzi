@@ -2,24 +2,18 @@ package org.aanguita.jacuzzi.queues.event_processing;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.concurrency.execution_control.TrafficControl;
-import org.aanguita.jacuzzi.id.AlphaNumFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * todo invoke message handler finalize
  */
-public class MessageProcessor {
+public class MessageProcessor<E> {
 
     /**
      * Default capacity for the event queue
      */
     private final static int DEFAULT_QUEUE_CAPACITY = 1024;
-
-    /**
-     * Unique id of this message processor
-     */
-    private final String id;
 
     /**
      * Fairness of petitions is always true
@@ -29,7 +23,7 @@ public class MessageProcessor {
     /**
      * Queue storing messages awaiting to be processed. The first in the queue is the first to be processed
      */
-    private final ArrayBlockingQueue<Object> messageQueue;
+    private final ArrayBlockingQueue<E> messageQueue;
 
     /**
      * Thread in charge of processing incoming messages
@@ -101,7 +95,6 @@ public class MessageProcessor {
         } else if (!separateThreads && (messageReader == null || messageHandler == null)) {
             throw new IllegalArgumentException("Both MessageReader and MessageHandler objects must be received if no separate threads are employed");
         }
-        id = AlphaNumFactory.getStaticId();
         messageQueue = initializeMessageQueue(separateThreads, queueCapacity);
         messageReaderThread = initializeMessageReaderThread(messageReader, separateThreads, name);
         messageHandlerThread = initializeMessageHandlerThread(messageHandler, separateThreads, name);
@@ -110,7 +103,7 @@ public class MessageProcessor {
         trafficControl = new TrafficControl();
     }
 
-    private ArrayBlockingQueue<Object> initializeMessageQueue(boolean separateThreads, int queueCapacity) {
+    private ArrayBlockingQueue<E> initializeMessageQueue(boolean separateThreads, int queueCapacity) {
         if (separateThreads) {
             return new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
         } else {
@@ -205,11 +198,11 @@ public class MessageProcessor {
         resume();
     }
 
-    public void addMessage(Object message) throws InterruptedException {
+    public void addMessage(E message) throws InterruptedException {
         messageQueue.put(message);
     }
 
-    public Object takeMessage() throws InterruptedException {
+    public E takeMessage() throws InterruptedException {
         return messageQueue.take();
     }
 
@@ -267,30 +260,15 @@ public class MessageProcessor {
         resume();
     }
 
-    private synchronized void stopProcessor() {
-        // we simply insert a StopReadingMessages message in the queue. When it reaches the handler it will stop.
-        try {
-            addMessage(new StopReadingMessages());
-        } catch (InterruptedException e) {
-            // the message was not put, try again
-            stopProcessor();
-        }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        MessageProcessor that = (MessageProcessor) o;
-
-        return id.equals(that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return id.hashCode();
-    }
+//    private synchronized void stopProcessor() {
+//        // we simply insert a StopReadingMessages message in the queue. When it reaches the handler it will stop.
+//        try {
+//            addMessage(new StopReadingMessages());
+//        } catch (InterruptedException e) {
+//            // the message was not put, try again
+//            stopProcessor();
+//        }
+//    }
 
     @Override
     protected synchronized void finalize() throws Throwable {

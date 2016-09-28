@@ -7,14 +7,14 @@ package org.aanguita.jacuzzi.queues.event_processing;
  * Date: 08-mar-2010<br>
  * Last Modified: 08-mar-2010
  */
-class MessageHandlerThread extends Thread {
+class MessageHandlerThread<E> extends Thread {
 
 
-    private MessageProcessor messageProcessor;
+    private MessageProcessor<E> messageProcessor;
 
-    private MessageHandler messageHandler;
+    private MessageHandler<E> messageHandler;
 
-    MessageHandlerThread(String name, MessageProcessor messageProcessor, MessageHandler messageHandler) {
+    MessageHandlerThread(String name, MessageProcessor<E> messageProcessor, MessageHandler<E> messageHandler) {
         super(name + "/MessageHandlerThread");
         this.messageProcessor = messageProcessor;
         this.messageHandler = messageHandler;
@@ -28,28 +28,20 @@ class MessageHandlerThread extends Thread {
         messageHandler.finalizeHandler();
     }
 
-    private static boolean handleMessage(MessageProcessor messageProcessor, MessageHandler messageHandler) {
+    private boolean handleMessage(MessageProcessor<E> messageProcessor, MessageHandler<E> messageHandler) {
         try {
-            Object message = messageProcessor.takeMessage();
+            E message = messageProcessor.takeMessage();
             messageProcessor.accessTrafficControl();
-            return handleMessageAux(messageHandler, message);
+            messageHandler.handleMessage(message);
+            return false;
         } catch (InterruptedException e) {
             // only the MessageProcessor can interrupt this thread, cannot be an error
             return true;
         } catch (Exception e) {
             // user should not let any exceptions to reach this level -> error exposed in console
+            // todo how to handle this
             e.printStackTrace();
             return true;
         }
     }
-
-    static boolean handleMessageAux(MessageHandler messageHandler, Object message) {
-        if (message instanceof StopReadingMessages) {
-            return true;
-        } else {
-            messageHandler.handleMessage(message);
-            return false;
-        }
-    }
-
 }

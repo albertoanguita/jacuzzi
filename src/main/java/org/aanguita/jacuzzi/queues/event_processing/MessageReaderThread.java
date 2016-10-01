@@ -22,6 +22,10 @@ class MessageReaderThread<E> extends Thread {
         this.messageReader = messageReader;
     }
 
+    MessageReader<E> getMessageReader() {
+        return messageReader;
+    }
+
     public void run() {
         boolean finished = false;
         while (!finished) {
@@ -29,7 +33,7 @@ class MessageReaderThread<E> extends Thread {
         }
         // report both the MessageProcessor and the MessageReader implementation that this process
         // has been stopped externally
-        reportStop(messageProcessor, messageReader);
+        messageProcessor.readerHasStopped();
     }
 
     private boolean readMessage(MessageProcessor<E> messageProcessor, MessageReader<E> messageReader) {
@@ -51,10 +55,5 @@ class MessageReaderThread<E> extends Thread {
             return true;
         }
         return false;
-    }
-
-    static void reportStop(MessageProcessor messageProcessor, MessageReader messageReader) {
-        messageProcessor.readerHasStopped();
-        messageReader.stopped();
     }
 }

@@ -2,13 +2,18 @@ package org.aanguita.jacuzzi.queues.event_processing;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.concurrency.execution_control.TrafficControl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * todo invoke message handler finalize
  */
 public class MessageProcessor<E> {
+
+    Logger logger = LoggerFactory.getLogger(MessageProcessor.class);
 
     /**
      * Default capacity for the event queue
@@ -48,46 +53,51 @@ public class MessageProcessor<E> {
     /**
      * Traffic control object for pausing the message processing system
      */
-    private TrafficControl trafficControl;
+    private final TrafficControl trafficControl;
+
+    /**
+     * Indicates if this message processor is alive. Once stopped, a message processor cannot come to live again
+     */
+    private final AtomicBoolean alive;
 
 
     //********************//
     // CONSTRUCTORS       //
     //********************//
 
-    public MessageProcessor(MessageReader messageReader) throws IllegalArgumentException {
+    public MessageProcessor(MessageReader<E> messageReader) throws IllegalArgumentException {
         this(ThreadUtil.invokerName(1), messageReader, null, DEFAULT_QUEUE_CAPACITY, true);
     }
 
-    public MessageProcessor(String name, MessageReader messageReader) throws IllegalArgumentException {
+    public MessageProcessor(String name, MessageReader<E> messageReader) throws IllegalArgumentException {
         this(name, messageReader, null, DEFAULT_QUEUE_CAPACITY, true);
     }
 
-    public MessageProcessor(String name, MessageReader messageReader, int queueCapacity) throws IllegalArgumentException {
+    public MessageProcessor(String name, MessageReader<E> messageReader, int queueCapacity) throws IllegalArgumentException {
         this(name, messageReader, null, queueCapacity, true);
     }
 
-    public MessageProcessor(MessageHandler messageHandler) throws IllegalArgumentException {
+    public MessageProcessor(MessageHandler<E> messageHandler) throws IllegalArgumentException {
         this(ThreadUtil.invokerName(1), null, messageHandler, DEFAULT_QUEUE_CAPACITY, true);
     }
 
-    public MessageProcessor(String name, MessageHandler messageHandler) throws IllegalArgumentException {
+    public MessageProcessor(String name, MessageHandler<E> messageHandler) throws IllegalArgumentException {
         this(name, null, messageHandler, DEFAULT_QUEUE_CAPACITY, true);
     }
 
-    public MessageProcessor(String name, MessageHandler messageHandler, int queueCapacity) throws IllegalArgumentException {
+    public MessageProcessor(String name, MessageHandler<E> messageHandler, int queueCapacity) throws IllegalArgumentException {
         this(name, null, messageHandler, queueCapacity, true);
     }
 
-    public MessageProcessor(MessageReader messageReader, MessageHandler messageHandler, boolean separateThreads) throws IllegalArgumentException {
+    public MessageProcessor(MessageReader<E> messageReader, MessageHandler<E> messageHandler, boolean separateThreads) throws IllegalArgumentException {
         this(ThreadUtil.invokerName(1), messageReader, messageHandler, DEFAULT_QUEUE_CAPACITY, separateThreads);
     }
 
-    public MessageProcessor(String name, MessageReader messageReader, MessageHandler messageHandler, boolean separateThreads) throws IllegalArgumentException {
+    public MessageProcessor(String name, MessageReader<E> messageReader, MessageHandler<E> messageHandler, boolean separateThreads) throws IllegalArgumentException {
         this(name, messageReader, messageHandler, DEFAULT_QUEUE_CAPACITY, separateThreads);
     }
 
-    public MessageProcessor(String name, MessageReader messageReader, MessageHandler messageHandler, int queueCapacity, boolean separateThreads) throws IllegalArgumentException {
+    public MessageProcessor(String name, MessageReader<E> messageReader, MessageHandler<E> messageHandler, int queueCapacity, boolean separateThreads) throws IllegalArgumentException {
         if (name == null) {
             throw new IllegalArgumentException("name must not be null");
         } else if (separateThreads && messageReader == null && messageHandler == null) {
@@ -101,6 +111,7 @@ public class MessageProcessor<E> {
         messageReaderHandlerThread = initializeMessageReaderHandlerThread(messageReader, messageHandler, separateThreads, name);
         this.separateThreads = separateThreads;
         trafficControl = new TrafficControl();
+        alive = new AtomicBoolean(true);
     }
 
     private ArrayBlockingQueue<E> initializeMessageQueue(boolean separateThreads, int queueCapacity) {
@@ -144,14 +155,6 @@ public class MessageProcessor<E> {
         }
     }
 
-    public synchronized void startReading() {
-        if (separateThreads) {
-            startThread(messageReaderThread);
-        } else {
-            startThread(messageReaderHandlerThread);
-        }
-    }
-
     private synchronized void startThread(Thread thread) {
         if (thread != null && !thread.isAlive()) {
             thread.start();
@@ -159,7 +162,9 @@ public class MessageProcessor<E> {
     }
 
     public void pause() {
-        trafficControl.pause();
+        if (alive.get()) {
+            trafficControl.pause();
+        }
     }
 
     public void resume() {
@@ -180,8 +185,9 @@ public class MessageProcessor<E> {
         resume();
     }
 
-    void accessTrafficControl() {
+    boolean accessTrafficControl() {
         trafficControl.access();
+        return alive.get();
     }
 
     /**
@@ -211,37 +217,28 @@ public class MessageProcessor<E> {
     }
 
     /**
-     * Only useful when no MessageReader is used, just a MessageHandler. If a MessageReader is being used and
-     * needs to be stopped, it must be fed with a StopReadingMessages object. The same happens if we use only
-     * one thread both both tasks.
-     * <p/>
-     * If both reader and handler are used in different threads, the handler will be stopped, but the reader will
-     * still be working and adding messages to an internal queue. This reader must be stopped with a
-     * StopReadingMessages message
+     * Stops the processes associated to this message processor. In case an implementation of message reader is
+     * being used, its stop method will be invoked. It is responsibility of the implementation to leave any blocking
+     * process that it might be waiting on, and clean its resources.
+     * <p>
+     * If an implementation of message handler is being used, its close method will be invoked so it closes any
+     * open resources
      */
     public synchronized void stop() {
         // we resume the processor, in case it was paused, so the threads can advance and finish
-        resume();
-        if (messageReaderThread != null || messageReaderHandlerThread != null) {
-            // this method is not the appropriate for stopping the processor, but issuing a stopReadingMessages to the reader implementation
-            throw new IllegalStateException("stop method must not be invoked as there is a messageReader implementation active");
-        } else {
-            // put a stopReadingMessages so the handler thread stops
-            stopProcessor();
-        }
-//        if (separateThreads) {
-//            stopProcessor();
-//        }
-
-
-        // the reader cannot be stopped from here, the MessageReader implementation must stop it itself
-        /* else {
-            if (messageReaderHandlerThread != null) {
-                MessageReaderHandlerThread moribundReaderHandler = messageReaderHandlerThread;
-                messageReaderHandlerThread = null;
-                moribundReaderHandler.stopThread();
+        if (alive.getAndSet(false)) {
+            resume();
+            if (messageReaderThread != null) {
+                messageReaderThread.getMessageReader().stop();
             }
-        }*/
+            if (messageHandlerThread != null) {
+                messageHandlerThread.interrupt();
+            }
+            if (messageReaderHandlerThread != null) {
+                messageReaderHandlerThread.getMessageReader().stop();
+                messageReaderHandlerThread.interrupt();
+            }
+        }
     }
 
     /**
@@ -251,30 +248,19 @@ public class MessageProcessor<E> {
      * it is needed
      */
     synchronized void readerHasStopped() {
-        // the message reader thread has stopped, now we stop the processor (if any)
-        stopProcessor();
-        resume();
+        if (alive.getAndSet(false)) {
+            resume();
+            if (messageHandlerThread != null) {
+                messageHandlerThread.interrupt();
+            }
+        }
     }
-
-    synchronized void readerHandlerStopped() {
-        resume();
-    }
-
-//    private synchronized void stopProcessor() {
-//        // we simply insert a StopReadingMessages message in the queue. When it reaches the handler it will stop.
-//        try {
-//            addMessage(new StopReadingMessages());
-//        } catch (InterruptedException e) {
-//            // the message was not put, try again
-//            stopProcessor();
-//        }
-//    }
 
     @Override
     protected synchronized void finalize() throws Throwable {
         super.finalize();
-        if (messageHandlerThread != null && messageHandlerThread.isAlive()) {
-            stopProcessor();
+        if (alive.getAndSet(false)) {
+            stop();
         }
     }
 }

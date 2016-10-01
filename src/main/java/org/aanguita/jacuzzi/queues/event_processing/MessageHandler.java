@@ -11,5 +11,5 @@ public interface MessageHandler<E> {
      * This method is invoked to indicate that the handling of message has finalized, in case the handler
      * implementation needs to close resources
      */
-    void finalizeHandler();
+    void close();
 }

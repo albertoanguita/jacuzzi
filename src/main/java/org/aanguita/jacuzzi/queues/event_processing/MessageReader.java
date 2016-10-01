@@ -23,14 +23,4 @@ public interface MessageReader<E> {
      * {@link FinishReadingMessagesException} in its next (or current) readMessage invocation
      */
     void stop();
-
-    /**
-     * This method is invoked when the message reader receives a StopReadingMessages message (either intentionally or
-     * due to some error). Note: additionally to this, a StopReadingMessages message will be propagated upwards. If
-     * the MessageProcessor has been given a handler implementation, the thread for handling messages will terminate
-     * (if separated from the thread for reading messages). If there is no handler implementation, meaning that the
-     * client handles the messages himself, he must be ready to handle this StopReadingMessages message
-     * handling messages,
-     */
-    void stopped();
 }

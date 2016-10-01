@@ -25,7 +25,7 @@ class MessageHandlerThread<E> extends Thread {
         while (!finished) {
             finished = handleMessage(messageProcessor, messageHandler);
         }
-        messageHandler.finalizeHandler();
+        messageHandler.close();
     }
 
     private boolean handleMessage(MessageProcessor<E> messageProcessor, MessageHandler<E> messageHandler) {

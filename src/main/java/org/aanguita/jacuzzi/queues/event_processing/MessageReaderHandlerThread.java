@@ -11,11 +11,15 @@ class MessageReaderHandlerThread<E> extends Thread {
 
     private MessageHandler<E> messageHandler;
 
-    public MessageReaderHandlerThread(String name, MessageProcessor<E> messageProcessor, MessageReader<E> messageReader, MessageHandler<E> messageHandler) {
+    MessageReaderHandlerThread(String name, MessageProcessor<E> messageProcessor, MessageReader<E> messageReader, MessageHandler<E> messageHandler) {
         super(name + "/MessageReaderHandlerThread");
         this.messageProcessor = messageProcessor;
         this.messageReader = messageReader;
         this.messageHandler = messageHandler;
+    }
+
+    MessageReader<E> getMessageReader() {
+        return messageReader;
     }
 
     public void run() {
@@ -26,10 +30,8 @@ class MessageReaderHandlerThread<E> extends Thread {
         while (!finished) {
             finished = readAndHandleMessage();
         }
-        // report both the MessageReader implementation that this process has been stopped
-        messageProcessor.readerHandlerStopped();
-        messageReader.stopped();
-        messageHandler.finalizeHandler();
+        // report the handler that this process has been stopped
+        messageHandler.close();
     }
 
     private boolean readAndHandleMessage() {

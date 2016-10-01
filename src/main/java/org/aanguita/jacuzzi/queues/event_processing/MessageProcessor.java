@@ -13,12 +13,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class MessageProcessor<E> {
 
-    Logger logger = LoggerFactory.getLogger(MessageProcessor.class);
+    Logger LOGGER = LoggerFactory.getLogger(MessageProcessor.class);
 
     /**
      * Default capacity for the event queue
      */
     private final static int DEFAULT_QUEUE_CAPACITY = 1024;
+
+    /**
+     * Name of this message processor (logging purposes)
+     */
+    private final String name;
 
     /**
      * Fairness of petitions is always true
@@ -105,6 +110,7 @@ public class MessageProcessor<E> {
         } else if (!separateThreads && (messageReader == null || messageHandler == null)) {
             throw new IllegalArgumentException("Both MessageReader and MessageHandler objects must be received if no separate threads are employed");
         }
+        this.name = name;
         messageQueue = initializeMessageQueue(separateThreads, queueCapacity);
         messageReaderThread = initializeMessageReaderThread(messageReader, separateThreads, name);
         messageHandlerThread = initializeMessageHandlerThread(messageHandler, separateThreads, name);
@@ -112,6 +118,7 @@ public class MessageProcessor<E> {
         this.separateThreads = separateThreads;
         trafficControl = new TrafficControl();
         alive = new AtomicBoolean(true);
+        LOGGER.debug(logInit() + ") initialized");
     }
 
     private ArrayBlockingQueue<E> initializeMessageQueue(boolean separateThreads, int queueCapacity) {
@@ -153,6 +160,7 @@ public class MessageProcessor<E> {
         } else {
             startThread(messageReaderHandlerThread);
         }
+        LOGGER.debug(logInit() + ") started");
     }
 
     private synchronized void startThread(Thread thread) {
@@ -164,11 +172,13 @@ public class MessageProcessor<E> {
     public void pause() {
         if (alive.get()) {
             trafficControl.pause();
+            LOGGER.debug(logInit() + ") paused");
         }
     }
 
     public void resume() {
         trafficControl.resume();
+        LOGGER.debug(logInit() + ") resumed");
     }
 
     /**
@@ -205,10 +215,12 @@ public class MessageProcessor<E> {
     }
 
     public void addMessage(E message) throws InterruptedException {
+        LOGGER.debug(logInit() + ") added message");
         messageQueue.put(message);
     }
 
     public E takeMessage() throws InterruptedException {
+        LOGGER.debug(logInit() + ") removed message");
         return messageQueue.take();
     }
 
@@ -238,6 +250,7 @@ public class MessageProcessor<E> {
                 messageReaderHandlerThread.getMessageReader().stop();
                 messageReaderHandlerThread.interrupt();
             }
+            LOGGER.debug(logInit() + ") stopped");
         }
     }
 
@@ -262,5 +275,9 @@ public class MessageProcessor<E> {
         if (alive.getAndSet(false)) {
             stop();
         }
+    }
+
+    private String logInit() {
+        return "Message processor (" + name;
     }
 }

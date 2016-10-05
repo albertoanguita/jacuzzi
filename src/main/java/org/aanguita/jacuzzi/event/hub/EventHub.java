@@ -1,5 +1,6 @@
 package org.aanguita.jacuzzi.event.hub;
 
+import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
 import org.aanguita.jacuzzi.objects.ObjectMapPool;
 
 import java.util.*;
@@ -43,12 +44,15 @@ public class EventHub {
 
     private static class ParsedChannelExpression extends ParsedChannel {
 
-        public static ParsedChannelExpression parseChannelExpression(String channel) {
-            return new ParsedChannelExpression(channel);
-        }
+        private boolean inBackground;
 
-        public ParsedChannelExpression(String channel) {
+//        public static ParsedChannelExpression parseChannelExpression(String channel) {
+//            return new ParsedChannelExpression(channel);
+//        }
+
+        public ParsedChannelExpression(String channel, boolean inBackground) {
             super(channel);
+            this.inBackground = inBackground;
         }
 
         public boolean expressionMatchesChannel(ParsedChannel parsedChannel) {
@@ -84,15 +88,15 @@ public class EventHub {
             subscribe(channelExpressions);
         }
 
-        private void subscribe(String... channelExpressions) {
+        private void subscribe(boolean inBackground, String... channelExpressions) {
             this.channelExpressions.addAll(Arrays.stream(channelExpressions)
-                    .map(ParsedChannelExpression::parseChannelExpression)
+                    .map(ParsedChannelExpression::new)
                     .collect(Collectors.toList()));
         }
 
         private void unsubscribe(String... channelExpressions) {
             this.channelExpressions.removeAll(Arrays.stream(channelExpressions)
-                    .map(ParsedChannelExpression::parseChannelExpression)
+                    .map(ParsedChannelExpression::new)
                     .collect(Collectors.toList()));
         }
     }
@@ -117,8 +121,29 @@ public class EventHub {
     }
 
     public void publish(String channel, Object... messages) {
+        publish(channel, false, messages);
+    }
+
+    public void publish(String channel, boolean inBackground, Object... messages) {
         ParsedChannel parsedChannel = ParsedChannel.parseChannel(channel);
+        List<EventHubSubscriber> subscribers = findSubscribers(parsedChannel);
+        if (inBackground) {
+            ThreadExecutor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    invokeSubscribers(subscribers, true, channel, messages);
+                }
+            });
+        } else {
+            invokeSubscribers(subscribers, false, channel, messages);
+        }
         for (EventHubSubscriber eventHubSubscriber : findSubscribers(parsedChannel)) {
+            eventHubSubscriber.event(channel, messages);
+        }
+    }
+
+    private void invokeSubscribers(Collection<EventHubSubscriber> subscribers, boolean newThread, String channel, Object... messages) {
+        for (EventHubSubscriber eventHubSubscriber : subscribers) {
             eventHubSubscriber.event(channel, messages);
         }
     }
@@ -143,6 +168,10 @@ public class EventHub {
     }
 
     public synchronized void subscribe(EventHubSubscriber subscriber, String... channelExpressions) {
+        subscribe(subscriber, false, channelExpressions);
+    }
+
+    public synchronized void subscribe(EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
         if (!subscribers.containsKey(subscriber.getId())) {
             subscribers.put(subscriber.getId(), new SubscriberAndChannelExpressions(subscriber, channelExpressions));
         } else {

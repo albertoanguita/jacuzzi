@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class MessageProcessor<E> {
 
-    Logger LOGGER = LoggerFactory.getLogger(MessageProcessor.class);
+    private Logger LOGGER = LoggerFactory.getLogger(MessageProcessor.class);
 
     /**
      * Default capacity for the event queue

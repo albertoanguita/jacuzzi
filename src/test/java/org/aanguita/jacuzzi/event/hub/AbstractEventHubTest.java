@@ -9,9 +9,9 @@ import static org.mockito.Mockito.*;
 /**
  * Created by Alberto on 23/09/2016.
  */
-public class EventHubTest {
+public class AbstractEventHubTest {
 
-    EventHub eventHub;
+    AbstractEventHub abstractEventHub;
 
     EventHubSubscriber mockedSubscriberAll;
 
@@ -21,16 +21,16 @@ public class EventHubTest {
 
     @Before
     public void setUp() throws Exception {
-        eventHub = EventHub.getEventHub("test");
+        abstractEventHub = AbstractEventHub.getEventHub("test");
         mockedSubscriberAll = mock(EventHubSubscriber.class);
         mockedSubscriberSome = mock(EventHubSubscriber.class);
         mockedSubscriberOne = mock(EventHubSubscriber.class);
         when(mockedSubscriberAll.getId()).thenReturn("all");
         when(mockedSubscriberSome.getId()).thenReturn("some");
         when(mockedSubscriberOne.getId()).thenReturn("one");
-        eventHub.subscribe(mockedSubscriberAll, "*");
-        eventHub.subscribe(mockedSubscriberSome, "test/?");
-        eventHub.subscribe(mockedSubscriberOne, "test/one");
+        abstractEventHub.subscribe(mockedSubscriberAll, "*");
+        abstractEventHub.subscribe(mockedSubscriberSome, "test/?");
+        abstractEventHub.subscribe(mockedSubscriberOne, "test/one");
     }
 
     @After
@@ -48,9 +48,9 @@ public class EventHubTest {
         Integer i = 5;
         Boolean b = true;
 
-        eventHub.publish(event1);
-        eventHub.publish(event2, i);
-        eventHub.publish(event3, i, b);
+        abstractEventHub.publish(event1);
+        abstractEventHub.publish(event2, i);
+        abstractEventHub.publish(event3, i, b);
 
         verify(mockedSubscriberAll).event(event1);
         verify(mockedSubscriberAll).event(event2, i);

@@ -1,6 +1,7 @@
 package org.aanguita.jacuzzi.concurrency.daemon;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.function.Consumer;
 
 /**
  * A queue of events handled by a daemon processor
@@ -22,13 +23,13 @@ public class DaemonQueue<T> implements DaemonAction {
 
     private final Daemon daemon;
 
-    private final DaemonQueueAction<T> daemonQueueAction;
+    private final Consumer<T> daemonQueueAction;
 
-    public DaemonQueue(DaemonQueueAction<T> daemonQueueAction) {
+    public DaemonQueue(Consumer<T> daemonQueueAction) {
         this(daemonQueueAction, DEFAULT_QUEUE_CAPACITY);
     }
 
-    public DaemonQueue(DaemonQueueAction<T> daemonQueueAction, int queueCapacity) {
+    public DaemonQueue(Consumer<T> daemonQueueAction, int queueCapacity) {
         eventQueue = new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
         daemon = new Daemon(this);
         this.daemonQueueAction = daemonQueueAction;
@@ -48,7 +49,7 @@ public class DaemonQueue<T> implements DaemonAction {
     public boolean solveState() {
         if (!eventQueue.isEmpty()) {
             try {
-                daemonQueueAction.solveEvent(eventQueue.take());
+                daemonQueueAction.accept(eventQueue.take());
             } catch (InterruptedException e) {
                 // ignore, solve state in next iteration
             }

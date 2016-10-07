@@ -11,7 +11,7 @@ import static org.mockito.Mockito.*;
  */
 public class AbstractEventHubTest {
 
-    AbstractEventHub abstractEventHub;
+    EventHub eventHub;
 
     EventHubSubscriber mockedSubscriberAll;
 
@@ -21,16 +21,16 @@ public class AbstractEventHubTest {
 
     @Before
     public void setUp() throws Exception {
-        abstractEventHub = AbstractEventHub.getEventHub("test");
+        eventHub = EventHubFactory.getEventHub("test", EventHubFactory.Type.ASYNCHRONOUS_PERMANENT_THREAD);
         mockedSubscriberAll = mock(EventHubSubscriber.class);
         mockedSubscriberSome = mock(EventHubSubscriber.class);
         mockedSubscriberOne = mock(EventHubSubscriber.class);
         when(mockedSubscriberAll.getId()).thenReturn("all");
         when(mockedSubscriberSome.getId()).thenReturn("some");
         when(mockedSubscriberOne.getId()).thenReturn("one");
-        abstractEventHub.subscribe(mockedSubscriberAll, "*");
-        abstractEventHub.subscribe(mockedSubscriberSome, "test/?");
-        abstractEventHub.subscribe(mockedSubscriberOne, "test/one");
+        eventHub.subscribe(mockedSubscriberAll, "*");
+        eventHub.subscribe(mockedSubscriberSome, "test/?");
+        eventHub.subscribe(mockedSubscriberOne, "test/one");
     }
 
     @After
@@ -48,9 +48,9 @@ public class AbstractEventHubTest {
         Integer i = 5;
         Boolean b = true;
 
-        abstractEventHub.publish(event1);
-        abstractEventHub.publish(event2, i);
-        abstractEventHub.publish(event3, i, b);
+        eventHub.publish(event1);
+        eventHub.publish(event2, i);
+        eventHub.publish(event3, i, b);
 
         verify(mockedSubscriberAll).event(event1);
         verify(mockedSubscriberAll).event(event2, i);

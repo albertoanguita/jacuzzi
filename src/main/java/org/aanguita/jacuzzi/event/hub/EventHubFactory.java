@@ -17,6 +17,10 @@ public class EventHubFactory {
     private static ObjectMapPoolAdvancedCreator<String, Type, EventHub> instances = new ObjectMapPoolAdvancedCreator<>(
             stringTypeDuple -> createEventHub(stringTypeDuple.element1, stringTypeDuple.element2));
 
+    public static EventHub getEventHub(String name, Type type) {
+        return instances.getObject(name, type);
+    }
+
     private static EventHub createEventHub(String name, Type type) {
         switch (type) {
 

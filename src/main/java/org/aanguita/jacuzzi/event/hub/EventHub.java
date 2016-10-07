@@ -1,6 +1,7 @@
 package org.aanguita.jacuzzi.event.hub;
 
 import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.lists.tuple.Duple;
 import org.aanguita.jacuzzi.objects.ObjectMapPool;
 
 import java.util.*;
@@ -40,15 +41,21 @@ public class EventHub {
         private ParsedChannel(String channel) {
             levels = new ArrayList<>(Arrays.asList(channel.split("/")));
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ParsedChannel that = (ParsedChannel) o;
+
+            return levels.equals(that.levels);
+        }
     }
 
     private static class ParsedChannelExpression extends ParsedChannel {
 
-        private boolean inBackground;
-
-//        public static ParsedChannelExpression parseChannelExpression(String channel) {
-//            return new ParsedChannelExpression(channel);
-//        }
+        private final boolean inBackground;
 
         public ParsedChannelExpression(String channel, boolean inBackground) {
             super(channel);
@@ -83,20 +90,20 @@ public class EventHub {
             channelExpressions = new HashSet<>();
         }
 
-        public SubscriberAndChannelExpressions(EventHubSubscriber subscriber, String... channelExpressions) {
+        public SubscriberAndChannelExpressions(EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
             this(subscriber);
-            subscribe(channelExpressions);
+            subscribe(inBackground, channelExpressions);
         }
 
         private void subscribe(boolean inBackground, String... channelExpressions) {
             this.channelExpressions.addAll(Arrays.stream(channelExpressions)
-                    .map(ParsedChannelExpression::new)
+                    .map(channel -> new ParsedChannelExpression(channel, inBackground))
                     .collect(Collectors.toList()));
         }
 
         private void unsubscribe(String... channelExpressions) {
             this.channelExpressions.removeAll(Arrays.stream(channelExpressions)
-                    .map(ParsedChannelExpression::new)
+                    .map(channel -> new ParsedChannelExpression(channel, false))
                     .collect(Collectors.toList()));
         }
     }
@@ -126,45 +133,60 @@ public class EventHub {
 
     public void publish(String channel, boolean inBackground, Object... messages) {
         ParsedChannel parsedChannel = ParsedChannel.parseChannel(channel);
-        List<EventHubSubscriber> subscribers = findSubscribers(parsedChannel);
+        List<Duple<EventHubSubscriber, Boolean>> subscribers = findSubscribers(parsedChannel);
         if (inBackground) {
-            ThreadExecutor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    invokeSubscribers(subscribers, true, channel, messages);
-                }
-            });
+            ThreadExecutor.submit(() -> invokeSubscribers(subscribers, true, channel, messages));
         } else {
             invokeSubscribers(subscribers, false, channel, messages);
         }
-        for (EventHubSubscriber eventHubSubscriber : findSubscribers(parsedChannel)) {
-            eventHubSubscriber.event(channel, messages);
+    }
+
+    private void invokeSubscribers(Collection<Duple<EventHubSubscriber, Boolean>> subscribers, boolean haveThreadAvailable, String channel, Object... messages) {
+        for (Duple<EventHubSubscriber, Boolean> eventHubSubscriber : subscribers) {
+            haveThreadAvailable = invokeSubscriber(eventHubSubscriber, haveThreadAvailable, channel, messages);
         }
     }
 
-    private void invokeSubscribers(Collection<EventHubSubscriber> subscribers, boolean newThread, String channel, Object... messages) {
-        for (EventHubSubscriber eventHubSubscriber : subscribers) {
-            eventHubSubscriber.event(channel, messages);
+    private boolean invokeSubscriber(Duple<EventHubSubscriber, Boolean> eventHubSubscriber, boolean haveThreadAvailable, String channel, Object... messages) {
+        if (eventHubSubscriber.element2) {
+            // this subscriber wants a thread for his own
+            if (haveThreadAvailable) {
+                // use the available thread
+                eventHubSubscriber.element1.event(channel, messages);
+                haveThreadAvailable = false;
+            } else {
+                // create a new thread only for him
+                ThreadExecutor.submit(() -> eventHubSubscriber.element1.event(channel, messages));
+            }
+        } else {
+            // do not spawn a new thread
+            eventHubSubscriber.element1.event(channel, messages);
         }
+        return haveThreadAvailable;
     }
 
-    private synchronized List<EventHubSubscriber> findSubscribers(ParsedChannel parsedChannel) {
-        List<EventHubSubscriber> foundSubscribers = new ArrayList<>();
+    private synchronized List<Duple<EventHubSubscriber, Boolean>> findSubscribers(ParsedChannel parsedChannel) {
+        List<Duple<EventHubSubscriber, Boolean>> foundSubscribers = new ArrayList<>();
         for (SubscriberAndChannelExpressions subscriberAndChannelExpressions : subscribers.values()) {
-            if (expressionsMatchChannel(subscriberAndChannelExpressions.channelExpressions, parsedChannel)) {
-                foundSubscribers.add(subscriberAndChannelExpressions.subscriber);
+            Duple<Boolean, Boolean> expressionsMatchChannel = expressionsMatchChannel(subscriberAndChannelExpressions.channelExpressions, parsedChannel);
+            if (expressionsMatchChannel.element1) {
+                foundSubscribers.add(new Duple<>(subscriberAndChannelExpressions.subscriber, expressionsMatchChannel.element2));
             }
         }
         return foundSubscribers;
     }
 
-    private boolean expressionsMatchChannel(Set<ParsedChannelExpression> channelExpressions, ParsedChannel parsedChannel) {
+    private Duple<Boolean, Boolean> expressionsMatchChannel(Set<ParsedChannelExpression> channelExpressions, ParsedChannel parsedChannel) {
+        boolean oneExpressionMatches = false;
         for (ParsedChannelExpression channelExpression : channelExpressions) {
             if (channelExpression.expressionMatchesChannel(parsedChannel)) {
-                return true;
+                oneExpressionMatches = true;
+                if (channelExpression.inBackground) {
+                    return new Duple<>(true, true);
+                }
             }
         }
-        return false;
+        return new Duple<>(oneExpressionMatches, false);
     }
 
     public synchronized void subscribe(EventHubSubscriber subscriber, String... channelExpressions) {
@@ -173,9 +195,9 @@ public class EventHub {
 
     public synchronized void subscribe(EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
         if (!subscribers.containsKey(subscriber.getId())) {
-            subscribers.put(subscriber.getId(), new SubscriberAndChannelExpressions(subscriber, channelExpressions));
+            subscribers.put(subscriber.getId(), new SubscriberAndChannelExpressions(subscriber, inBackground, channelExpressions));
         } else {
-            subscribers.get(subscriber.getId()).subscribe(channelExpressions);
+            subscribers.get(subscriber.getId()).subscribe(inBackground, channelExpressions);
         }
     }
 

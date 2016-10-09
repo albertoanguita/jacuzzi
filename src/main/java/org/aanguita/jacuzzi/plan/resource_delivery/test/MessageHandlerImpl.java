@@ -26,7 +26,7 @@ public class MessageHandlerImpl implements MessageHandler {
     }
 
     @Override
-    public void finalizeHandler() {
+    public void close() {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 }

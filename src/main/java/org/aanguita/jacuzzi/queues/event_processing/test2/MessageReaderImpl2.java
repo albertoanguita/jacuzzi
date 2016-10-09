@@ -31,7 +31,7 @@ public class MessageReaderImpl2 implements MessageReader {
         return new StopReadingMessages();
     }
 
-    public void stopped() {
+    public void stop() {
         System.out.println("stop");
     }
 }

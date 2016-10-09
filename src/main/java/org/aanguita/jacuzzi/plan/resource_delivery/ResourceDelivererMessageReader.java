@@ -51,7 +51,7 @@ class ResourceDelivererMessageReader<T, Y extends Resource> implements MessageRe
     }
 
     @Override
-    public void stopped() {
+    public void stop() {
         System.out.println("Reader stopped");
         speedLimiter.stop();
     }

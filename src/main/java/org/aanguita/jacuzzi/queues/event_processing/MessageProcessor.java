@@ -9,7 +9,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * todo invoke message handler finalize
+ *
  */
 public class MessageProcessor<E> {
 

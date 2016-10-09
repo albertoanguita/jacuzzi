@@ -9,25 +9,29 @@ import java.util.List;
 /**
  * Created by Alberto on 08/10/2016.
  */
-public class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
+class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
 
-    // todo add type
-    private final MessageProcessor publicationMessageProcessor;
+    private final MessageProcessor<Publication> publicationMessageProcessor;
+
+    @Override
+    public EventHubFactory.Type getType() {
+        return EventHubFactory.Type.ASYNCHRONOUS_PERMANENT_THREAD;
+    }
 
     AsynchronousPermanentThreadEventHub(String name) {
         super(name);
-        publicationMessageProcessor = new MessageProcessor(name + "/MessageProcessor", new MessageHandler() {
+        publicationMessageProcessor = new MessageProcessor<>(name + "/MessageProcessor", new MessageHandler<Publication>() {
             @Override
-            public void handleMessage(Object message) {
-                Publication publication = (Publication) message;
+            public void handleMessage(Publication publication) {
                 invokeSubscribers(publication.receivers, false, publication.channel, publication.messages);
             }
 
             @Override
-            public void finalizeHandler() {
+            public void close() {
                 // nothing to do here
             }
         });
+        publicationMessageProcessor.start();
     }
 
     @Override
@@ -37,5 +41,10 @@ public class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
         } catch (InterruptedException e) {
             // ignore, cannot happen
         }
+    }
+
+    @Override
+    public void close() {
+        publicationMessageProcessor.stop();
     }
 }

@@ -17,6 +17,11 @@ class MixedEventHub extends AbstractEventHub {
     }
 
     @Override
+    public EventHubFactory.Type getType() {
+        return EventHubFactory.Type.MIXED;
+    }
+
+    @Override
     protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribers, String channel, boolean inBackground, Object... messages) {
         if (inBackground) {
             ThreadExecutor.submit(() -> invokeSubscribers(subscribers, true, channel, messages));

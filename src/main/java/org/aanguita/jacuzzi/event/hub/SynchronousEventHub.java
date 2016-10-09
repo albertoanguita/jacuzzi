@@ -14,6 +14,11 @@ class SynchronousEventHub extends AbstractEventHub {
     }
 
     @Override
+    public EventHubFactory.Type getType() {
+        return EventHubFactory.Type.SYNCHRONOUS;
+    }
+
+    @Override
     protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribers, String channel, boolean inBackground, Object... messages) {
         invokeSubscribers(subscribers, false, channel, messages);
     }

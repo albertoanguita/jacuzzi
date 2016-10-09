@@ -211,4 +211,10 @@ abstract class AbstractEventHub implements EventHub {
             subscribers.get(subscriber.getId()).unsubscribe(channelExpressions);
         }
     }
+
+    /**
+     * Override if some resources need to be closed/cleaned up
+     */
+    @Override
+    public void close() {}
 }

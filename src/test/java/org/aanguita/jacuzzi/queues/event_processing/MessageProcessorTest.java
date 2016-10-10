@@ -6,8 +6,7 @@ import org.junit.Test;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by Alberto on 02/10/2016.
@@ -18,7 +17,7 @@ public class MessageProcessorTest {
 
         private final ArrayBlockingQueue<String> inputQueue;
 
-        public MessageReaderImpl(ArrayBlockingQueue<String> inputQueue) {
+        MessageReaderImpl(ArrayBlockingQueue<String> inputQueue) {
             this.inputQueue = inputQueue;
         }
 
@@ -33,7 +32,6 @@ public class MessageProcessorTest {
 
         @Override
         public void stop() {
-            System.out.println("Reader stop");
         }
     }
 
@@ -41,7 +39,7 @@ public class MessageProcessorTest {
 
         private final Output output;
 
-        public MessageHandlerImpl(Output output) {
+        MessageHandlerImpl(Output output) {
             this.output = output;
         }
 
@@ -52,7 +50,6 @@ public class MessageProcessorTest {
 
         @Override
         public void close() {
-            System.out.println("Handler close");
         }
     }
 
@@ -75,9 +72,11 @@ public class MessageProcessorTest {
     @Before
     public void setUp() throws Exception {
         inputQueue = new ArrayBlockingQueue<>(100);
-        messageReader = new MessageReaderImpl(inputQueue);
+        messageReader = spy(new MessageReaderImpl(inputQueue));
+//        messageReader = new MessageReaderImpl(inputQueue);
         output = mock(Output.class);
-        messageHandler = new MessageHandlerImpl(output);
+        messageHandler = spy(new MessageHandlerImpl(output));
+//        messageHandler = new MessageHandlerImpl(output);
     }
 
     @Test
@@ -96,18 +95,41 @@ public class MessageProcessorTest {
         messageProcessor.start();
         addMessages();
 
-        ThreadUtil.safeSleep(1000L);
+        ThreadUtil.safeSleep(100L);
 
         verify(output).handleValue("one");
         verify(output).handleValue("two");
         verify(output).handleValue("three");
 
+        addPausedMessages();
+
+
+        verify(output).handleValue("four");
+        verify(output, never()).handleValue("five");
+        verify(output, never()).handleValue("six");
+        messageProcessor.resume();
+        ThreadUtil.safeSleep(100L);
+        verify(output).handleValue("five");
+        verify(output).handleValue("six");
+
         messageProcessor.stop();
+        ThreadUtil.safeSleep(100L);
+
+        verify(messageReader).stop();
+        verify(messageHandler).close();
     }
 
     private void addMessages() throws InterruptedException {
         inputQueue.put("one");
         inputQueue.put("two");
         inputQueue.put("three");
+    }
+
+    private void addPausedMessages() throws InterruptedException {
+        inputQueue.put("four");
+        ThreadUtil.safeSleep(100L);
+        messageProcessor.pause();
+        inputQueue.put("five");
+        inputQueue.put("six");
     }
 }

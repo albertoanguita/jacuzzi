@@ -215,17 +215,29 @@ public class MessageProcessor<E> {
     }
 
     public void addMessage(E message) throws InterruptedException {
-        LOGGER.debug(logInit() + ") added message");
-        messageQueue.put(message);
+        if (messageQueue != null) {
+            LOGGER.debug(logInit() + ") added message");
+            messageQueue.put(message);
+        } else {
+            throw new IllegalStateException("Tried to add a message with no queue configured");
+        }
     }
 
     public E takeMessage() throws InterruptedException {
-        LOGGER.debug(logInit() + ") removed message");
-        return messageQueue.take();
+        if (messageQueue != null) {
+            LOGGER.debug(logInit() + ") removed message");
+            return messageQueue.take();
+        } else {
+            throw new IllegalStateException("Tried to retrieve a message with no queue configured");
+        }
     }
 
     public int queueSize() {
-        return messageQueue.size();
+        if (messageQueue != null) {
+            return messageQueue.size();
+        } else {
+            return 0;
+        }
     }
 
     /**

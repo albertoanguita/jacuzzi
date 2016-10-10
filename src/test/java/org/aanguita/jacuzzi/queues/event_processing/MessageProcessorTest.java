@@ -1,6 +1,7 @@
 package org.aanguita.jacuzzi.queues.event_processing;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -82,16 +83,16 @@ public class MessageProcessorTest {
     @Test
     public void testSingleThread() throws InterruptedException {
         messageProcessor = new MessageProcessor<>(messageReader, messageHandler, false);
-        test();
+        test(false);
     }
 
     @Test
     public void testSeparateThreads() throws InterruptedException {
         messageProcessor = new MessageProcessor<>(messageReader, messageHandler, true);
-        test();
+        test(true);
     }
 
-    private void test() throws InterruptedException {
+    private void test(boolean separateThreads) throws InterruptedException {
         messageProcessor.start();
         addMessages();
 
@@ -107,10 +108,12 @@ public class MessageProcessorTest {
         verify(output).handleValue("four");
         verify(output, never()).handleValue("five");
         verify(output, never()).handleValue("six");
+        Assert.assertEquals(0, messageProcessor.queueSize());
         messageProcessor.resume();
         ThreadUtil.safeSleep(100L);
         verify(output).handleValue("five");
         verify(output).handleValue("six");
+        Assert.assertEquals(0, messageProcessor.queueSize());
 
         messageProcessor.stop();
         ThreadUtil.safeSleep(100L);

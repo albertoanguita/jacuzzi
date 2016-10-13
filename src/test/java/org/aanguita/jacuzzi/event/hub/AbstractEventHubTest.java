@@ -9,7 +9,7 @@ import static org.mockito.Mockito.*;
 /**
  * Created by Alberto on 23/09/2016.
  */
-public class EventHubTest {
+public class AbstractEventHubTest {
 
     EventHub eventHub;
 
@@ -21,7 +21,7 @@ public class EventHubTest {
 
     @Before
     public void setUp() throws Exception {
-        eventHub = EventHub.getEventHub("test");
+        eventHub = EventHubFactory.getEventHub("test", EventHubFactory.Type.ASYNCHRONOUS_PERMANENT_THREAD);
         mockedSubscriberAll = mock(EventHubSubscriber.class);
         mockedSubscriberSome = mock(EventHubSubscriber.class);
         mockedSubscriberOne = mock(EventHubSubscriber.class);

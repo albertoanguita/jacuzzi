@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.concurrency.timer;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.aanguita.jacuzzi.log.ErrorLog;
 
@@ -24,7 +24,7 @@ public class Timer {
 
         private final long millis;
 
-        public WakeUpTask(Timer timer, long millis) {
+        private WakeUpTask(Timer timer, long millis) {
             this.timer = timer;
             this.millis = millis;
         }

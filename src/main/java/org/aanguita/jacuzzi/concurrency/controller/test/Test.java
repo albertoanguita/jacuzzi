@@ -1,8 +1,8 @@
-package org.aanguita.jacuzzi.concurrency.concurrency_controller.test;
+package org.aanguita.jacuzzi.concurrency.controller.test;
 
-import org.aanguita.jacuzzi.concurrency.concurrency_controller.ConcurrencyController;
-import org.aanguita.jacuzzi.concurrency.concurrency_controller.ConcurrencyControllerReadWrite;
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.controller.ConcurrencyController;
+import org.aanguita.jacuzzi.concurrency.controller.ConcurrencyControllerReadWrite;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 
 import java.util.concurrent.Future;
 

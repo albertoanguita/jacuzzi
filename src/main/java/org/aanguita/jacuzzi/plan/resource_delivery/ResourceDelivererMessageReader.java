@@ -1,8 +1,8 @@
 package org.aanguita.jacuzzi.plan.resource_delivery;
 
 import org.aanguita.jacuzzi.date_time.SpeedLimiter;
-import org.aanguita.jacuzzi.queues.event_processing.MessageReader;
-import org.aanguita.jacuzzi.queues.event_processing.StopReadingMessages;
+import org.aanguita.jacuzzi.queues.processor.FinishReadingMessagesException;
+import org.aanguita.jacuzzi.queues.processor.MessageReader;
 
 import java.util.concurrent.PriorityBlockingQueue;
 
@@ -28,7 +28,7 @@ class ResourceDelivererMessageReader<T, Y extends Resource> implements MessageRe
     }
 
     @Override
-    public synchronized Object readMessage() {
+    public synchronized Object readMessage() throws FinishReadingMessagesException {
         TargetResource<T, Y> targetResource = null;
         do {
             try {
@@ -38,7 +38,7 @@ class ResourceDelivererMessageReader<T, Y extends Resource> implements MessageRe
             }
         } while (targetResource == null);
         if (targetResource.isFinalizationMessage()) {
-            return new StopReadingMessages();
+            throw new FinishReadingMessagesException();
         }
         TargetAndResource<T, Y> targetAndResource = targetResource.getTargetAndResource();
         resourceDeliverer.setMaxRatio(targetResource.getRatio());

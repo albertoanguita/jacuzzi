@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.network;
 
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.notification.ProgressNotification;
 
 import java.io.*;

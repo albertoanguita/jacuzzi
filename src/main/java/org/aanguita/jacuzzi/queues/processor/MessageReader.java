@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.queues.event_processing;
+package org.aanguita.jacuzzi.queues.processor;
 
 /**
  * Class description
@@ -11,10 +11,11 @@ public interface MessageReader<E> {
 
     /**
      * This method is invoked by the reader to obtain a new message object. The next message to process must be
-     * returned. Returning a StopReadingMessages object is the way to tell the reader that it must finish its
-     * execution
+     * returned. Throwing a {@link FinishReadingMessagesException} object is the way to tell the reader that it
+     * must finish its execution
      *
-     * @return the next message to process, or a StopReadingMessages if the execution of the reader must finish
+     * @return the next message to process
+     * @throws FinishReadingMessagesException if this reader has finished providing messages
      */
     E readMessage() throws FinishReadingMessagesException;
 

@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.concurrency.concurrency_controller;
+package org.aanguita.jacuzzi.concurrency.controller;
 
 import org.aanguita.jacuzzi.maps.ObjectCount;
 

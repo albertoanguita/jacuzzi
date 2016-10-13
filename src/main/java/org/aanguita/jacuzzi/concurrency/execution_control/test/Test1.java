@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.concurrency.execution_control.test;
 
-import org.aanguita.jacuzzi.concurrency.execution_control.TrafficControl;
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 
 /**
  * Created by IntelliJ IDEA.

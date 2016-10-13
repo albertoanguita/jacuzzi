@@ -1,7 +1,7 @@
-package org.aanguita.jacuzzi.queues.event_processing;
+package org.aanguita.jacuzzi.queues.processor;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.execution_control.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.TrafficControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -267,7 +267,7 @@ public class MessageProcessor<E> {
     }
 
     /**
-     * The MessageReaderThread or the MessageReaderHandlerThread reports that an StopReadingMessages object has been
+     * The MessageReaderThread or the MessageReaderHandlerThread reports that a stop command has been
      * read, and therefore it has stopped executing. This same thread will directly report our client that it has
      * been stopped. This method allows the MessageProcessor to stop additional threads (the handler thread) in case
      * it is needed

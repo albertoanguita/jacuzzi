@@ -1,10 +1,10 @@
-package org.aanguita.jacuzzi.queues.event_processing;
+package org.aanguita.jacuzzi.queues.processor;
 
 /**
  * This thread cannot be stopped by its corresponding MessageProcessor, because the readMessage method does not throw
  * an InterruptedException. It will therefore be responsibility of the user to stop it by means of other exceptions
- * catched in the readMessage method. By returning a StopReadingMessages object, the user will be able to indicate
- * this thread to stop reading messages.
+ * catched in the readMessage method. By throwing a {@link FinishReadingMessagesException}, the user will be able to
+ * indicate this thread to stop reading messages.
  * <p/>
  * User: Alberto<br>
  * Date: 25-mar-2010<br>

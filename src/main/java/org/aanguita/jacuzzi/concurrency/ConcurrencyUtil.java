@@ -2,6 +2,7 @@ package org.aanguita.jacuzzi.concurrency;
 
 /**
  * This class offers utility methods for concurrency handling
+ * @deprecated Use ThreadUtil
  */
 public class ConcurrencyUtil {
 

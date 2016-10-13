@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.queues.event_processing;
+package org.aanguita.jacuzzi.queues.processor;
 
 /**
  *

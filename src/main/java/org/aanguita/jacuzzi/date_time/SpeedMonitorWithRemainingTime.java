@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.date_time;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.concurrency.timer.Timer;
 import org.aanguita.jacuzzi.numeric.range.LongRange;
 

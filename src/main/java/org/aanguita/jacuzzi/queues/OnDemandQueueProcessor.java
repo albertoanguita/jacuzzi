@@ -1,11 +1,15 @@
-package org.aanguita.jacuzzi.concurrency.daemon;
+package org.aanguita.jacuzzi.queues;
+
+import org.aanguita.jacuzzi.concurrency.monitor.Monitor;
+import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.function.Consumer;
 
 /**
- * A queue of events handled by a daemon processor
+ * A queue of events handled by a monitor processor
  */
-public class DaemonQueue<T> implements DaemonAction {
+public class OnDemandQueueProcessor<T> implements StateSolver {
 
     /**
      * Default capacity for the event queue
@@ -20,18 +24,18 @@ public class DaemonQueue<T> implements DaemonAction {
 
     private final ArrayBlockingQueue<T> eventQueue;
 
-    private final Daemon daemon;
+    private final Monitor monitor;
 
-    private final DaemonQueueAction<T> daemonQueueAction;
+    private final Consumer<T> consumer;
 
-    public DaemonQueue(DaemonQueueAction<T> daemonQueueAction) {
+    public OnDemandQueueProcessor(Consumer<T> daemonQueueAction) {
         this(daemonQueueAction, DEFAULT_QUEUE_CAPACITY);
     }
 
-    public DaemonQueue(DaemonQueueAction<T> daemonQueueAction, int queueCapacity) {
+    public OnDemandQueueProcessor(Consumer<T> daemonQueueAction, int queueCapacity) {
         eventQueue = new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
-        daemon = new Daemon(this);
-        this.daemonQueueAction = daemonQueueAction;
+        monitor = new Monitor(this);
+        this.consumer = daemonQueueAction;
     }
 
     public void addEvent(T event) {
@@ -41,14 +45,14 @@ public class DaemonQueue<T> implements DaemonAction {
             // avoid interrupts
             addEvent(event);
         }
-        daemon.stateChange();
+        monitor.stateChange();
     }
 
     @Override
     public boolean solveState() {
         if (!eventQueue.isEmpty()) {
             try {
-                daemonQueueAction.solveEvent(eventQueue.take());
+                consumer.accept(eventQueue.take());
             } catch (InterruptedException e) {
                 // ignore, solve state in next iteration
             }

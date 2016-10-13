@@ -1,16 +1,17 @@
-package org.aanguita.jacuzzi.concurrency.concurrency_controller;
+package org.aanguita.jacuzzi.concurrency.controller;
 
-import org.aanguita.jacuzzi.concurrency.daemon.Daemon;
-import org.aanguita.jacuzzi.concurrency.daemon.DaemonAction;
-import org.aanguita.jacuzzi.concurrency.execution_control.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.monitor.Monitor;
+import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 import org.aanguita.jacuzzi.maps.ObjectCount;
 import org.jetbrains.annotations.NotNull;
-//import javax.validation.constraints.NotNull;
 
 import java.util.Arrays;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+
+//import javax.validation.constraints.NotNull;
 
 /**
  * This class provides the general framework for creating classes that act as concurrency controllers
@@ -20,7 +21,7 @@ import java.util.function.Consumer;
  * Only ONE object of such classes must exist (or at least just one per schema of concurrency), in order to
  * ensure correct functioning
  */
-public class ConcurrencyController implements DaemonAction {
+public class ConcurrencyController implements StateSolver {
 
     private static class QueueElement implements Comparable<QueueElement> {
 
@@ -79,9 +80,9 @@ public class ConcurrencyController implements DaemonAction {
     private final ObjectCount<String> numberOfExecutionsOfActivities;
 
     /**
-     * Daemon for controlling the execution of activities
+     * Monitor for controlling the execution of activities
      */
-    private final Daemon daemon;
+    private final Monitor monitor;
 
     /**
      * Whether this CC is alive (accepts more activities) or not
@@ -98,13 +99,6 @@ public class ConcurrencyController implements DaemonAction {
      */
     private final String name;
 
-//    /**
-//     * Default class constructor. Initializes the concurrency controller with no limit of simultaneous executions
-//     */
-//    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
-//        this(concurrencyControllerAction, concurrencyControllerAction.maxNumberOfExecutionsAllowed());
-//    }
-
     /**
      * Class constructor. Initializes the concurrency controller with a specific amount of allowed simultaneous executions
      */
@@ -119,7 +113,7 @@ public class ConcurrencyController implements DaemonAction {
         this.concurrencyControllerAction = concurrencyControllerAction;
         activityRequestsQueue = new PriorityBlockingQueue<>();
         numberOfExecutionsOfActivities = new ObjectCount<>();
-        daemon = new Daemon(this);
+        monitor = new Monitor(this);
         alive = new AtomicBoolean(true);
         this.logger = logger;
         this.name = name;
@@ -174,7 +168,7 @@ public class ConcurrencyController implements DaemonAction {
         // execution of his activity. He must specify the same activity he requested, as this is not recorded
         // in the concurrency controller
 
-        // place the executor in the priority queue, so the daemon eventually takes it
+        // place the executor in the priority queue, so the monitor eventually takes it
 
         logger.accept(formatStateLog("request begin activity", activity));
 
@@ -209,7 +203,7 @@ public class ConcurrencyController implements DaemonAction {
         // will be placed in the queue before other threads. If not, the stop action could enter and
         // place its queue element before
         // it causes no issues because this method does not block upon any condition
-        // also, this way we ensure that the daemon is not stopped in the middle of this function by
+        // also, this way we ensure that the monitor is not stopped in the middle of this function by
         // the stopAndWaitForFinalization method
         //synchronized (this) {
         if (!alive.get() && !activity.equals(STOP_ACTIVITY)) {
@@ -219,7 +213,7 @@ public class ConcurrencyController implements DaemonAction {
         //}
         QueueElement queueElement = new QueueElement(activity, getActivityPriority(activity));
         activityRequestsQueue.put(queueElement);
-        daemon.stateChange();
+        monitor.stateChange();
         return queueElement;
     }
 
@@ -248,8 +242,8 @@ public class ConcurrencyController implements DaemonAction {
         logger.accept(formatStateLog("end activity", activity));
 
         concurrencyControllerAction.activityHasEnded(activity, numberOfExecutionsOfActivities);
-        // alert the daemon that a new opportunity for execution has raised
-        daemon.stateChange();
+        // alert the monitor that a new opportunity for execution has raised
+        monitor.stateChange();
     }
 
     @Override
@@ -274,7 +268,7 @@ public class ConcurrencyController implements DaemonAction {
                     // remove this specific element from the queue (since queue elements do not implement equals,
                     // they are compared by their memory address)
                     activityRequestsQueue.remove(queueElement);
-                    // allow the daemon to check for more activities in the queue to unlock
+                    // allow the monitor to check for more activities in the queue to unlock
                     return false;
                 }
             }
@@ -287,7 +281,7 @@ public class ConcurrencyController implements DaemonAction {
         if (alive.getAndSet(false)) {
             beginActivity(STOP_ACTIVITY);
             endActivity(STOP_ACTIVITY);
-            daemon.stop();
+            monitor.stop();
         }
     }
 

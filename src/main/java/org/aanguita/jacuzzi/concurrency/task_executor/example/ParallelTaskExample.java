@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.concurrency.task_executor.example;
 
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;

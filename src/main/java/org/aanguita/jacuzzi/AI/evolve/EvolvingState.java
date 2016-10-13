@@ -1,8 +1,8 @@
 package org.aanguita.jacuzzi.AI.evolve;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.daemon.Daemon;
-import org.aanguita.jacuzzi.concurrency.daemon.DaemonAction;
+import org.aanguita.jacuzzi.concurrency.monitor.Monitor;
+import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 /**
  * State and goal must be mutable objects that are never re-assigned
  */
-public class EvolvingState<S, G> implements DaemonAction, EvolvingStateController<S, G> {
+public class EvolvingState<S, G> implements StateSolver, EvolvingStateController<S, G> {
 
     public interface Transitions<S, G> {
 
@@ -30,7 +30,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
 
     private final Transitions<S, G> transitions;
 
-    protected final Daemon daemon;
+    protected final Monitor monitor;
 
     private final StateTimers<S> runnableStateTimers;
 
@@ -50,7 +50,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         this.state = state;
         this.goal = initialGoal;
         this.transitions = transitions;
-        daemon = new Daemon(this, threadName + "/EvolvingState");
+        monitor = new Monitor(this, threadName + "/EvolvingState");
         runnableStateTimers = new StateTimers<>(state, threadName + "/EvolvingState/RunnableStateTimers");
         evolveStateTimers = new StateTimers<>(state, threadName + "/EvolvingState/EvolveStateTimers");
         evolveTask = this::evolve;
@@ -59,7 +59,7 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
     }
 
     public void evolve() {
-        daemon.stateChange();
+        monitor.stateChange();
     }
 
     public synchronized S state() {
@@ -171,10 +171,10 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
     }
 
     public void blockUntilGoalReached(long timeToRecheck) {
-        daemon.blockUntilStateIsSolved();
+        monitor.blockUntilStateIsSolved();
         while (!transitions.hasReachedGoal(state(), goal())) {
             ThreadUtil.safeSleep(timeToRecheck);
-            daemon.blockUntilStateIsSolved();
+            monitor.blockUntilStateIsSolved();
         }
     }
 
@@ -182,8 +182,8 @@ public class EvolvingState<S, G> implements DaemonAction, EvolvingStateControlle
         evolveStateTimers.stop();
         runnableStateTimers.stop();
         stateHooks.stop();
-        daemon.blockUntilStateIsSolved();
-        daemon.stop();
+        monitor.blockUntilStateIsSolved();
+        monitor.stop();
         alive.set(false);
     }
 }

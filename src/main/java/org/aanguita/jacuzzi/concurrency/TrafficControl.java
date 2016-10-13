@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.concurrency.execution_control;
+package org.aanguita.jacuzzi.concurrency;
 
 import java.util.concurrent.Semaphore;
 

@@ -1,7 +1,6 @@
-package org.aanguita.jacuzzi.concurrency.task_executor;
+package org.aanguita.jacuzzi.concurrency;
 
-import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.concurrency_controller.ConcurrencyController;
+import org.aanguita.jacuzzi.concurrency.controller.ConcurrencyController;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
 
 import java.util.Arrays;

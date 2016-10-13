@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.lists;
 
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.numeric.NumericUtil;
 
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.numeric.range;
 
-import org.aanguita.jacuzzi.concurrency.execution_control.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.TrafficControl;
 
 import java.io.Serializable;
 import java.util.ArrayList;

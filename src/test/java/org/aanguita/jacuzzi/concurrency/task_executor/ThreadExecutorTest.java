@@ -1,5 +1,6 @@
 package org.aanguita.jacuzzi.concurrency.task_executor;
 
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.junit.Test;
 

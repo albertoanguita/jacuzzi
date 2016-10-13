@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.concurrency.execution_control.test;
 
-import org.aanguita.jacuzzi.concurrency.execution_control.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.TrafficControl;
 
 /**
  *

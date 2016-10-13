@@ -2,8 +2,8 @@ package org.aanguita.jacuzzi.plan.resource_delivery;
 
 import org.aanguita.jacuzzi.concurrency.timer.TimerAction;
 import org.aanguita.jacuzzi.concurrency.timer.Timer;
-import org.aanguita.jacuzzi.queues.event_processing.MessageHandler;
-import org.aanguita.jacuzzi.queues.event_processing.MessageProcessor;
+import org.aanguita.jacuzzi.queues.processor.MessageHandler;
+import org.aanguita.jacuzzi.queues.processor.MessageProcessor;
 
 import java.util.HashMap;
 import java.util.List;

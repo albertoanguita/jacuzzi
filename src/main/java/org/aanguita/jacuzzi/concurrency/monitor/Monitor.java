@@ -1,8 +1,8 @@
-package org.aanguita.jacuzzi.concurrency.daemon;
+package org.aanguita.jacuzzi.concurrency.monitor;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.execution_control.TrafficControl;
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.log.ErrorLog;
 
 import java.util.Arrays;
@@ -10,32 +10,32 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * This class implements a Daemon which is waiting for events and asynchronously performs actions upon such events.
+ * This class implements a Monitor which is waiting for events and asynchronously performs actions upon such events.
  * <p/>
- * The events modify a "wish state". The daemon always tries to satisfy that wish
+ * The events modify a "wish state". The monitor always tries to satisfy that wish
  */
-public class Daemon {
+public class Monitor {
 
     private static class DaemonTask implements Runnable {
 
-        private final Daemon daemon;
+        private final Monitor monitor;
 
-        private DaemonTask(Daemon daemon) {
-            this.daemon = daemon;
+        private DaemonTask(Monitor monitor) {
+            this.monitor = monitor;
         }
 
         @Override
         public void run() {
             boolean finished = false;
             while (!finished) {
-                if (!daemon.alive.get()) {
-                    // the daemon was stopped -> ignore action and request finish
-                    finished = daemon.requestKillDaemonThread();
+                if (!monitor.alive.get()) {
+                    // the monitor was stopped -> ignore action and request finish
+                    finished = monitor.requestKillDaemonThread();
                 } else {
-                    finished = daemon.executeAction();
+                    finished = monitor.executeAction();
                     if (finished) {
                         // check if we can really finish (if there are unresolved state changes, we must keep working)
-                        finished = daemon.requestKillDaemonThread();
+                        finished = monitor.requestKillDaemonThread();
                     }
                 }
             }
@@ -43,9 +43,9 @@ public class Daemon {
     }
 
     /**
-     * DaemonAction implementation for resolving state changes
+     * StateSolver implementation for resolving state changes
      */
-    private final DaemonAction daemonAction;
+    private final StateSolver stateSolver;
 
     /**
      * Future object for the currently running thread (or null if no thread is running)
@@ -58,7 +58,7 @@ public class Daemon {
     private final AtomicBoolean stateChangeFlag;
 
     /**
-     * Flag indicating if a daemon thread currently exists
+     * Flag indicating if a monitor thread currently exists
      */
     private final AtomicBoolean daemonThreadFlag;
 
@@ -74,12 +74,12 @@ public class Daemon {
     private final String threadExecutorClientId;
 
 
-    public Daemon(DaemonAction daemonAction) {
-        this(daemonAction, ThreadUtil.invokerName(1));
+    public Monitor(StateSolver stateSolver) {
+        this(stateSolver, ThreadUtil.invokerName(1));
     }
 
-    public Daemon(DaemonAction daemonAction, String threadName) {
-        this.daemonAction = daemonAction;
+    public Monitor(StateSolver stateSolver, String threadName) {
+        this.stateSolver = stateSolver;
         future = null;
         stateChangeFlag = new AtomicBoolean(false);
         daemonThreadFlag = new AtomicBoolean(false);
@@ -90,17 +90,17 @@ public class Daemon {
     }
 
     /**
-     * Indicates a state change that must be solved by the daemon
+     * Indicates a state change that must be solved by the monitor
      */
     public synchronized void stateChange() {
         if (alive.get()) {
             stateChangeFlag.set(true);
             blockUntilStateSolve.pause();
-            // check if we need to create a new daemon thread
+            // check if we need to create a new monitor thread
             if (!daemonThreadFlag.get()) {
                 daemonThreadFlag.set(true);
                 stateChangeFlag.set(false);
-                future = ThreadExecutor.submit(new DaemonTask(this), threadName + "/Daemon");
+                future = ThreadExecutor.submit(new DaemonTask(this), threadName + "/Monitor");
             }
         }
     }
@@ -127,15 +127,15 @@ public class Daemon {
     }
 
     /**
-     * Requests to kill the daemon thread. It will check for unresolved state changes
+     * Requests to kill the monitor thread. It will check for unresolved state changes
      *
-     * @return true if the daemon thread can finish, false otherwise
+     * @return true if the monitor thread can finish, false otherwise
      */
     private synchronized boolean requestKillDaemonThread() {
         // if there are no state changes active, we allow to kill the thread
         if (!stateChangeFlag.get() || !alive.get()) {
             // there are no registered state changes, the thread can finish ok
-            // or the daemon has been stopped
+            // or the monitor has been stopped
             daemonThreadFlag.set(false);
             future = null;
             blockUntilStateSolve.resume();
@@ -149,10 +149,10 @@ public class Daemon {
 
     private boolean executeAction() {
         try {
-            return daemonAction.solveState();
+            return stateSolver.solveState();
         } catch (Exception e) {
             //unexpected exception obtained. Print error and terminate
-            ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in daemon implementation", e, Arrays.toString(e.getStackTrace()));
+            ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in monitor implementation", e, Arrays.toString(e.getStackTrace()));
             stop();
             return true;
         }

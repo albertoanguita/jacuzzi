@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.concurrency.concurrency_controller.test;
+package org.aanguita.jacuzzi.concurrency.controller.test;
 
 /**
  * Class description

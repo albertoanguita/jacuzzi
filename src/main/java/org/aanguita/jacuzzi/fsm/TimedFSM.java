@@ -29,7 +29,7 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
             timer.reset();
             return true;
         } else {
-            timer.kill();
+            timer.stop();
             return false;
         }
     }
@@ -41,7 +41,7 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
             timer.reset();
             return true;
         } else {
-            timer.kill();
+            timer.stop();
             return false;
         }
     }
@@ -49,7 +49,7 @@ public class TimedFSM<T, Y> extends GenericFSM<T, Y> implements TimerAction {
     @Override
     public void stop() {
         super.stop();
-        timer.kill();
+        timer.stop();
     }
 
     @Override

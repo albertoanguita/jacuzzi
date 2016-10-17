@@ -124,7 +124,7 @@ class DownloadTask implements Runnable, TimerAction {
             cancelDownload();
             progressNotification.addNotification(new DownloadProgressItem(e));
         }
-        timer.kill();
+        timer.stop();
         if (progressNotification != null && !isCancelled) {
             progressNotification.completeTask();
         }
@@ -135,7 +135,7 @@ class DownloadTask implements Runnable, TimerAction {
     }
 
     private synchronized IOException cancelDownload() {
-        timer.kill();
+        timer.stop();
         try {
             closeChannels();
         } catch (IOException e) {

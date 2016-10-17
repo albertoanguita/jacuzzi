@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.io.serialization;
 
-import org.aanguita.jacuzzi.files.FileReaderWriter;
+import org.aanguita.jacuzzi.io.files.FileReaderWriter;
 import org.aanguita.jacuzzi.hash.CRC;
 import org.aanguita.jacuzzi.hash.CRCMismatchException;
 

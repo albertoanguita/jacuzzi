@@ -60,7 +60,7 @@ public class SpeedRegistry implements TimerAction {
 
     public synchronized void stop() {
         speedMonitor.stop();
-        timer.kill();
+        timer.stop();
     }
 
     @Override

@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.hash.hashdb;
 
-import org.aanguita.jacuzzi.files.FileReaderWriter;
-import org.aanguita.jacuzzi.files.FileUtil;
+import org.aanguita.jacuzzi.io.files.FileReaderWriter;
+import org.aanguita.jacuzzi.io.files.FileUtil;
 import org.aanguita.jacuzzi.io.serialization.VersionedObjectSerializer;
 import org.aanguita.jacuzzi.io.serialization.VersionedSerializationException;
 import org.aanguita.jacuzzi.lists.tuple.Duple;

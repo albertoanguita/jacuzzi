@@ -1,6 +1,6 @@
-package org.aanguita.jacuzzi.files.test;
+package org.aanguita.jacuzzi.io.files.test;
 
-import org.aanguita.jacuzzi.files.RandomAccess;
+import org.aanguita.jacuzzi.io.files.RandomAccess;
 
 import java.io.File;
 import java.io.IOException;

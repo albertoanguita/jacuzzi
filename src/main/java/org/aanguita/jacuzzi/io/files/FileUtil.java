@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.files;
+package org.aanguita.jacuzzi.io.files;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -19,7 +19,7 @@ public class FileUtil {
         }
     }
 
-    public static void cleanDirectory(String dir) throws IOException, InvalidPathException {
+    public static void cleanDirectory(String dir) throws IOException {
         cleanDirectory(Paths.get(dir));
     }
 

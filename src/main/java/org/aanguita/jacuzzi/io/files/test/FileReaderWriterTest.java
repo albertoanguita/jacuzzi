@@ -1,6 +1,6 @@
-package org.aanguita.jacuzzi.files.test;
+package org.aanguita.jacuzzi.io.files.test;
 
-import org.aanguita.jacuzzi.files.FileReaderWriter;
+import org.aanguita.jacuzzi.io.files.FileReaderWriter;
 
 import java.io.IOException;
 

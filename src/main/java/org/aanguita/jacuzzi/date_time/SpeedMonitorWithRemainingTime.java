@@ -131,6 +131,6 @@ public class SpeedMonitorWithRemainingTime extends SpeedMonitor {
     @Override
     public synchronized void stop() {
         super.stop();
-        remainingTimeTimer.kill();
+        remainingTimeTimer.stop();
     }
 }

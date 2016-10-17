@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.files;
+package org.aanguita.jacuzzi.io.files;
 
 import java.io.*;
 import java.nio.file.Files;

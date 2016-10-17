@@ -118,7 +118,7 @@ public class TimedQueue<T> implements TimerAction {
         if (alive.get()) {
             alive.set(false);
             if (removeTimer != null) {
-                removeTimer.kill();
+                removeTimer.stop();
             }
             if (sequentialTaskExecutor != null) {
                 sequentialTaskExecutor.shutdown();

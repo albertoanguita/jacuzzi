@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.files.test;
+package org.aanguita.jacuzzi.io.files.test;
 
 import java.io.File;
 import java.io.IOException;

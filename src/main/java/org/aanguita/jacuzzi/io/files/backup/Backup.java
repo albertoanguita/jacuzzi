@@ -1,6 +1,6 @@
-package org.aanguita.jacuzzi.files.backup;
+package org.aanguita.jacuzzi.io.files.backup;
 
-import org.aanguita.jacuzzi.files.RandomAccess;
+import org.aanguita.jacuzzi.io.files.RandomAccess;
 import org.aanguita.jacuzzi.hash.MD5;
 import org.aanguita.jacuzzi.io.serialization.Serializer;
 
@@ -11,6 +11,7 @@ import java.io.IOException;
 
 /**
  * API with file backup and CRC checking functionality
+ * todo is this used, finished?
  */
 public class Backup {
 

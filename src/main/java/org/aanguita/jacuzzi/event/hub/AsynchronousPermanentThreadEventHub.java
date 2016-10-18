@@ -1,8 +1,8 @@
 package org.aanguita.jacuzzi.event.hub;
 
 import org.aanguita.jacuzzi.lists.tuple.Duple;
-import org.aanguita.jacuzzi.queues.event_processing.MessageHandler;
-import org.aanguita.jacuzzi.queues.event_processing.MessageProcessor;
+import org.aanguita.jacuzzi.queues.processor.MessageHandler;
+import org.aanguita.jacuzzi.queues.processor.MessageProcessor;
 
 import java.util.List;
 

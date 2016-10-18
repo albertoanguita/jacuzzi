@@ -35,7 +35,7 @@ public class Backup {
         MD5 md5 = new MD5();
         byte[] crc = md5.digest(file);
         byte[] crcExtension = Serializer.addArrays(separator.getBytes(), crc);
-        RandomAccess.append(file, crcExtension);
+        RandomAccess.append2(file.toPath(), crcExtension);
         if (!checkEmbeddedCRC(file, separator)) {
             // remove CRC and start again
             removeEmbeddedCRC(file, separator);

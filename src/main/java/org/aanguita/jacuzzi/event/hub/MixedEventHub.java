@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.event.hub;
 
-import org.aanguita.jacuzzi.concurrency.task_executor.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 
 import java.util.Collection;

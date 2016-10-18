@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.event.hub;
 
-import org.aanguita.jacuzzi.concurrency.daemon.DaemonQueue;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
+import org.aanguita.jacuzzi.queues.OnDemandQueueProcessor;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
  */
 class AsynchronousShortLivedThreadEventHub extends QueuedEventHub {
 
-    private final DaemonQueue<Publication> publicationDaemonQueue;
+    private final OnDemandQueueProcessor<Publication> publicationDaemonQueue;
 
     @Override
     public EventHubFactory.Type getType() {
@@ -19,7 +19,7 @@ class AsynchronousShortLivedThreadEventHub extends QueuedEventHub {
 
     AsynchronousShortLivedThreadEventHub(String name) {
         super(name);
-        publicationDaemonQueue = new DaemonQueue<>(publication -> invokeSubscribers(publication.receivers, false, publication.channel, publication.messages));
+        publicationDaemonQueue = new OnDemandQueueProcessor<>(publication -> invokeSubscribers(publication.receivers, false, publication.channel, publication.messages));
     }
 
     @Override

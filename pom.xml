@@ -29,6 +29,9 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
+          <compilerArgs>
+            <arg>-profile compact1</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
       <plugin>
@@ -114,16 +117,16 @@
     	<artifactId>commons-collections4</artifactId>
     	<version>4.0</version>
     </dependency>
-    <dependency>
-      <groupId>net.sf.saxon</groupId>
-      <artifactId>Saxon-HE</artifactId>
-      <version>9.6.0-5</version>
-    </dependency>
-    <dependency>
-    	<groupId>xerces</groupId>
-    	<artifactId>xercesImpl</artifactId>
-    	<version>2.11.0</version>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>net.sf.saxon</groupId>-->
+      <!--<artifactId>Saxon-HE</artifactId>-->
+      <!--<version>9.6.0-5</version>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+    	<!--<groupId>xerces</groupId>-->
+    	<!--<artifactId>xercesImpl</artifactId>-->
+    	<!--<version>2.11.0</version>-->
+    <!--</dependency>-->
     <dependency>
         <groupId>org.javalite</groupId>
         <artifactId>activejdbc</artifactId>

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- *
+ * todo is this used???
  */
 public class DoubleElementArrayList<T, Y> implements Cloneable, Serializable {
 

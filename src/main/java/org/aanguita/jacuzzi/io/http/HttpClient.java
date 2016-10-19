@@ -13,6 +13,8 @@ import java.io.InputStreamReader;
 
 /**
  * Simple Http Client based on Apache implementation
+ *
+ * @deprecated use http client from javalite: http://javalite.io/http
  */
 public class HttpClient {
 

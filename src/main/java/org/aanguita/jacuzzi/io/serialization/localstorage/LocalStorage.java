@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.io.serialization.localstorage;
 
-import org.aanguita.jacuzzi.concurrency.LockMap;
 import org.aanguita.jacuzzi.io.serialization.activejdbcsupport.ActiveJDBCController;
+import org.aanguita.jacuzzi.objects.ObjectMapPool;
 import org.aanguita.jacuzzi.objects.Util;
 import org.javalite.activejdbc.DB;
 
@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -84,7 +85,7 @@ public class LocalStorage {
 
     private final Map<String, Date> dateItems;
 
-    private static final LockMap<String> locks = new LockMap<>();
+    private static final ObjectMapPool<String, Lock> locks = new ObjectMapPool<>(s -> new ReentrantLock());
 
     public LocalStorage(String path) {
         this.path = path;
@@ -282,7 +283,7 @@ public class LocalStorage {
     }
 
     private Lock getLock(String name) {
-        return locks.getLock(path + name);
+        return locks.getObject(path + name);
     }
 
     public String getString(String name, String... categories) {

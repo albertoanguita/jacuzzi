@@ -16,11 +16,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class Monitor {
 
-    private static class DaemonTask implements Runnable {
+    private static class MonitorTask implements Runnable {
 
         private final Monitor monitor;
 
-        private DaemonTask(Monitor monitor) {
+        private MonitorTask(Monitor monitor) {
             this.monitor = monitor;
         }
 
@@ -100,7 +100,7 @@ public class Monitor {
             if (!daemonThreadFlag.get()) {
                 daemonThreadFlag.set(true);
                 stateChangeFlag.set(false);
-                future = ThreadExecutor.submit(new DaemonTask(this), threadName + "/Monitor");
+                future = ThreadExecutor.submit(new MonitorTask(this), threadName + "/Monitor");
             }
         }
     }

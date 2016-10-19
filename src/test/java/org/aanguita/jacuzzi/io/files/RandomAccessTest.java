@@ -29,29 +29,29 @@ public class RandomAccessTest {
             Files.delete(test);
         }
 
-        RandomAccess.write2(test, 0, zeroes);
-        RandomAccess.write2("test.dat", 0, Arrays.copyOfRange(data, 0, 3));
-        RandomAccess.write2("test.dat", 3, ByteBuffer.wrap(Arrays.copyOfRange(data, 3, 4)));
-        RandomAccess.write2(test, 4, Arrays.copyOfRange(data, 4, 6));
-        RandomAccess.write2(test, 6, ByteBuffer.wrap(Arrays.copyOfRange(data, 6, 12)));
+        RandomAccess.write(test, 0, zeroes);
+        RandomAccess.write("test.dat", 0, Arrays.copyOfRange(data, 0, 3));
+        RandomAccess.write("test.dat", 3, ByteBuffer.wrap(Arrays.copyOfRange(data, 3, 4)));
+        RandomAccess.write(test, 4, Arrays.copyOfRange(data, 4, 6));
+        RandomAccess.write(test, 6, ByteBuffer.wrap(Arrays.copyOfRange(data, 6, 12)));
 
         assertArrayEquals(data, Files.readAllBytes(test));
 
-        assertArrayEquals(data, RandomAccess.read2("test.dat"));
-        assertArrayEquals(data, RandomAccess.read2(test));
-        assertArrayEquals(Arrays.copyOfRange(data, 5, 12), RandomAccess.read2("test.dat", 5));
-        assertArrayEquals(Arrays.copyOfRange(data, 5, 12), RandomAccess.read2(test, 5));
+        assertArrayEquals(data, RandomAccess.read("test.dat"));
+        assertArrayEquals(data, RandomAccess.read(test));
+        assertArrayEquals(Arrays.copyOfRange(data, 5, 12), RandomAccess.read("test.dat", 5));
+        assertArrayEquals(Arrays.copyOfRange(data, 5, 12), RandomAccess.read(test, 5));
 
-        assertArrayEquals(Arrays.copyOfRange(data, 0, 2), RandomAccess.read2("test.dat", 0, 2));
-        assertArrayEquals(Arrays.copyOfRange(data, 2, 7), RandomAccess.read2(test, 2, 5));
-        assertArrayEquals(Arrays.copyOfRange(data, 7, 8), RandomAccess.read2("test.dat", 7, 1));
-        assertArrayEquals(Arrays.copyOfRange(data, 8, 12), RandomAccess.read2(test, 8, 4));
+        assertArrayEquals(Arrays.copyOfRange(data, 0, 2), RandomAccess.read("test.dat", 0, 2));
+        assertArrayEquals(Arrays.copyOfRange(data, 2, 7), RandomAccess.read(test, 2, 5));
+        assertArrayEquals(Arrays.copyOfRange(data, 7, 8), RandomAccess.read("test.dat", 7, 1));
+        assertArrayEquals(Arrays.copyOfRange(data, 8, 12), RandomAccess.read(test, 8, 4));
 
         byte[] appendedArray = {21, 22, 23, 24};
-        RandomAccess.append2("test.dat", Arrays.copyOfRange(appendedArray, 0, 1));
-        RandomAccess.append2(test, Arrays.copyOfRange(appendedArray, 1, 2));
-        RandomAccess.append2("test.dat", ByteBuffer.wrap(Arrays.copyOfRange(appendedArray, 2, 3)));
-        RandomAccess.append2(test, ByteBuffer.wrap(Arrays.copyOfRange(appendedArray, 3, 4)));
+        RandomAccess.append("test.dat", Arrays.copyOfRange(appendedArray, 0, 1));
+        RandomAccess.append(test, Arrays.copyOfRange(appendedArray, 1, 2));
+        RandomAccess.append("test.dat", ByteBuffer.wrap(Arrays.copyOfRange(appendedArray, 2, 3)));
+        RandomAccess.append(test, ByteBuffer.wrap(Arrays.copyOfRange(appendedArray, 3, 4)));
 
         byte[] totalArray = new byte[16];
         System.arraycopy(data, 0, totalArray, 0, 12);

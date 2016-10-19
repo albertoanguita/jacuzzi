@@ -2,8 +2,8 @@ package org.aanguita.jacuzzi.hash;
 
 import org.aanguita.jacuzzi.notification.ProgressNotification;
 import org.aanguita.jacuzzi.numeric.NumericUtil;
+import org.apache.commons.codec.binary.Hex;
 
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import java.io.*;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -157,11 +157,17 @@ public class HashFunction {
         return asHex(digest(f));
     }
 
-    public static String asHex(byte[] data) {
-        return new HexBinaryAdapter().marshal(data);
+    private static String asHex(byte[] data) {
+//        return new HexBinaryAdapter().marshal(data);
+        return Hex.encodeHexString(data);
     }
 
-    public static byte[] asBinary(String str) {
-        return new HexBinaryAdapter().unmarshal(str);
-    }
+//    public static byte[] asBinary(String str) {
+////        return new HexBinaryAdapter().unmarshal(str);
+//        try {
+//            return Hex.decodeHex(str.toCharArray());
+//        } catch (DecoderException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

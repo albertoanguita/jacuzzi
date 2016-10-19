@@ -3,13 +3,18 @@ package org.aanguita.jacuzzi.queues;
 import org.aanguita.jacuzzi.concurrency.monitor.Monitor;
 import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A queue of events handled by a monitor processor
  */
 public class OnDemandQueueProcessor<T> implements StateSolver {
+
+    java.rmi.AccessException accessException;
 
     /**
      * Default capacity for the event queue
@@ -24,18 +29,29 @@ public class OnDemandQueueProcessor<T> implements StateSolver {
 
     private final ArrayBlockingQueue<T> eventQueue;
 
-    private final Monitor monitor;
+    private final List<Monitor> monitors;
 
     private final Consumer<T> consumer;
 
-    public OnDemandQueueProcessor(Consumer<T> daemonQueueAction) {
-        this(daemonQueueAction, DEFAULT_QUEUE_CAPACITY);
+    public OnDemandQueueProcessor(Consumer<T> messageConsumer) {
+        this(messageConsumer, DEFAULT_QUEUE_CAPACITY);
     }
 
-    public OnDemandQueueProcessor(Consumer<T> daemonQueueAction, int queueCapacity) {
+    public OnDemandQueueProcessor(Consumer<T> messageConsumer, int queueCapacity) {
+        this(messageConsumer, queueCapacity, 1);
+    }
+
+    public OnDemandQueueProcessor(Consumer<T> messageConsumer, int queueCapacity, int maxThreads) {
+        if (maxThreads < 1) {
+            throw new IllegalArgumentException("maxThreads must be a positive integer, received " + maxThreads);
+        }
         eventQueue = new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
-        monitor = new Monitor(this);
-        this.consumer = daemonQueueAction;
+        monitors = initializeMonitors(maxThreads);
+        this.consumer = messageConsumer;
+    }
+
+    private List<Monitor> initializeMonitors(int numMonitors) {
+        return IntStream.range(0, numMonitors).mapToObj(i -> new Monitor(this)).collect(Collectors.toList());
     }
 
     public void addEvent(T event) {
@@ -45,19 +61,37 @@ public class OnDemandQueueProcessor<T> implements StateSolver {
             // avoid interrupts
             addEvent(event);
         }
-        monitor.stateChange();
+        wakeUpAMonitor();
+    }
+
+    private void wakeUpAMonitor() {
+        // attempt to wake the first sleeping monitor. If all are working, notify the first one
+        for (Monitor monitor : monitors) {
+            if (monitor.isStateSolved()) {
+                // wake up this one!
+                monitor.stateChange();
+                return;
+            }
+        }
+        // all are working
+        monitors.get(0).stateChange();
     }
 
     @Override
     public boolean solveState() {
-        if (!eventQueue.isEmpty()) {
-            try {
-                consumer.accept(eventQueue.take());
-            } catch (InterruptedException e) {
-                // ignore, solve state in next iteration
-            }
-            return false;
+        T message;
+        synchronized (this) {
+            message = eventQueue.poll();
         }
-        return true;
+        if (message != null) {
+            consumer.accept(message);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public void stop() {
+        monitors.forEach(Monitor::stop);
     }
 }

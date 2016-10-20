@@ -1,5 +1,7 @@
 package org.aanguita.jacuzzi.numeric.logical;
 
+import java.util.Arrays;
+
 /**
  * Class with static methods implementing several logical operations
  */

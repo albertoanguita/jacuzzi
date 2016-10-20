@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.plan.resource_delivery;
 
-import org.aanguita.jacuzzi.date_time.SpeedLimiter;
+import org.aanguita.jacuzzi.time.SpeedLimiter;
 import org.aanguita.jacuzzi.queues.processor.FinishReadingMessagesException;
 import org.aanguita.jacuzzi.queues.processor.MessageReader;
 

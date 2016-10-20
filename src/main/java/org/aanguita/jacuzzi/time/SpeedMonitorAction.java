@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.date_time;
+package org.aanguita.jacuzzi.time;
 
 /**
  *

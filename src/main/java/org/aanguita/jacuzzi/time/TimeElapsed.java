@@ -1,9 +1,11 @@
-package org.aanguita.jacuzzi.date_time;
+package org.aanguita.jacuzzi.time;
 
 import java.io.Serializable;
 
 /**
  * A simple class for measuring time deltas
+ * <p>
+ * The class is not thread-safe. If used in concurrent environments, proper synchronization must be set up
  */
 public class TimeElapsed implements Serializable {
 
@@ -13,16 +15,16 @@ public class TimeElapsed implements Serializable {
         startTimer();
     }
 
-    public synchronized long startTimer() {
+    public long startTimer() {
         time = System.currentTimeMillis();
         return time;
     }
 
-    public synchronized long measureTime() {
+    public long measureTime() {
         return measureTime(false);
     }
 
-    public synchronized long measureTime(boolean restartTimer) {
+    public long measureTime(boolean restartTimer) {
         long currentTime = System.currentTimeMillis();
         long measure = currentTime - time;
         if (restartTimer) {

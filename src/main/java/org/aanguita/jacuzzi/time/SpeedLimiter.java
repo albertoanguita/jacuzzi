@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.date_time;
+package org.aanguita.jacuzzi.time;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
@@ -7,6 +7,8 @@ import org.aanguita.jacuzzi.lists.tuple.Duple;
  * This class adapts the behaviour of the SpeedMonitor class to implement a SpeedLimiter that acts as a limiter in the
  * speed of some process. Through this class we do not read the speed of a process, but rather limit it (with the
  * method setSpeed). The method addProgress will halt the necessary time to ensure the assigned speed is not surpassed.
+ *
+ * todo remove hierarchy
  */
 public class SpeedLimiter extends SpeedMonitor {
 

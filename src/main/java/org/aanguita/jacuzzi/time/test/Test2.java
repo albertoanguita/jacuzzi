@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.date_time.test;
+package org.aanguita.jacuzzi.time.test;
 
 /**
  * Class description

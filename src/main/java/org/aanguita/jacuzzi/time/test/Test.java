@@ -1,6 +1,6 @@
-package org.aanguita.jacuzzi.date_time.test;
+package org.aanguita.jacuzzi.time.test;
 
-import org.aanguita.jacuzzi.date_time.TimeElapsed;
+import org.aanguita.jacuzzi.time.TimeElapsed;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

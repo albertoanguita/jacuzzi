@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.date_time;
+package org.aanguita.jacuzzi.time;
 
 /**
  * Registers the time at which some events happen. Allows to calculate (given some parameters) if the last event

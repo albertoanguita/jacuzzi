@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.date_time;
+package org.aanguita.jacuzzi.time;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
@@ -14,29 +14,34 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class contains logic and methods that allow measuring the speed of a process. The progress of a process is
- * measured by the quantity achieved (a long). The measure process can be set up to consider a specific amount of
- * past time (for example, average speed in the last 10 minutes).
+ * measured by a quantity achieved (a long).
+ * <p>
+ * The speed monitor is configured with an amount of time. Accumulated progress is stored for this time only
+ * (older progress is discarded).
+ * <p>
+ * The monitor can be configured to asynchronously produce a report when the speed raises above certain threshold,
+ * or decreases below another threshold. The threshold values can be modified at any time.
  */
 public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface<Long> {
 
     /**
      * Time mark when measure process was initiated
      */
-    protected final long initialTimeMark;
+    private final long initialTimeMark;
 
     /**
      * This variable indicates whether we are currently still within the time designated to measure (e.g. time to
      * measure is 10 seconds and the object was created 5 seconds ago). It is only useful in the average speed
      * calculation
      */
-    protected boolean outOfInitialRange;
+    private boolean outOfInitialRange;
 
     /**
      * This list represents the progressed quantities, together with their time marks. The first element is always
      * the oldest one. By rule, no elements older than the millisToStore value are stored (if an average speed
      * measure for longer than that is asked, it is extrapolated)
      */
-    protected TimedQueue<Long> progress;
+    protected final TimedQueue<Long> progress;
 
     /**
      * This field stores the maxSize of the currently stored elements (the sum of their sizes). Storing this value
@@ -48,7 +53,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
      * The registered speed monitor (if any). null if no monitor is registered. This monitor will have to be invoked
      * when the speed is out of some specified range
      */
-    private SpeedMonitorAction speedMonitorAction;
+    private final SpeedMonitorAction speedMonitorAction;
 
     /**
      * Range of speeds to check (values outside this range will provoke notifications)
@@ -59,7 +64,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
      * Time allowed to pass between the detection of a speed anomaly and its corresponding notification). If 0, it is
      * directly notified without elapse of time
      */
-    private int millisAllowedOutOfSpeedRange;
+    private final int millisAllowedOutOfSpeedRange;
 
     /**
      * Timer for reporting above speed situations
@@ -74,12 +79,12 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
     /**
      * Value indicating if we just reported an above speed situation (to avoid redundant notifications)
      */
-    private boolean justReportedAboveSpeed;
+    private final AtomicBoolean justReportedAboveSpeed;
 
     /**
      * Value indicating if we just reported an below speed situation (to avoid redundant notifications)
      */
-    private boolean justReportedBelowSpeed;
+    private final AtomicBoolean justReportedBelowSpeed;
 
     private final AtomicBoolean alive;
 
@@ -109,8 +114,8 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             reportSpeedAboveTimer = null;
             reportSpeedBelowTimer = null;
         }
-        justReportedAboveSpeed = false;
-        justReportedBelowSpeed = false;
+        justReportedAboveSpeed = new AtomicBoolean(false);
+        justReportedBelowSpeed = new AtomicBoolean(false);
         alive = new AtomicBoolean(true);
         threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");
     }
@@ -158,17 +163,15 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
     @Override
     public synchronized Long wakeUp(Timer timer) {
         if (timer == reportSpeedAboveTimer) {
-            justReportedAboveSpeed = true;
+            justReportedAboveSpeed.set(true);
             double speed = getAverageSpeed();
-            SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, true, speed);
-            ThreadExecutor.submit(spmTask);
+            ThreadExecutor.submit(() -> speedMonitorAction.speedAboveRange(speed));
             // kill the timer
             return 0L;
         } else if (timer == reportSpeedBelowTimer) {
-            justReportedBelowSpeed = true;
+            justReportedBelowSpeed.set(true);
             Double speed = getAverageSpeed();
-            SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, false, speed);
-            ThreadExecutor.submit(spmTask);
+            ThreadExecutor.submit(() -> speedMonitorAction.speedBelowRange(speed));
             // kill the timer
             return 0L;
         }
@@ -200,20 +203,19 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             // speed has raised: we must check if either just entered above limit, or we escaped from below limit
             if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.LEFT) {
                 // above limit
-                if (!justReportedAboveSpeed) {
+                if (!justReportedAboveSpeed.get()) {
                     if (millisAllowedOutOfSpeedRange >= 0) {
                         if (reportSpeedAboveTimer.isStopped()) {
                             //reportSpeedAboveTimer = new Timer<ComplexTimerEvent>(millisAllowedOutOfSpeedRange, this, ComplexTimerEvent.SPEED_ABOVE_LIMIT);
                             reportSpeedAboveTimer.reset();
                         }
                     } else {
-                        justReportedAboveSpeed = true;
-                        SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, true, speed);
-                        ThreadExecutor.submit(spmTask);
+                        justReportedAboveSpeed.set(true);
+                        ThreadExecutor.submit(() -> speedMonitorAction.speedAboveRange(speed));
                     }
                 }
             } else {
-                justReportedAboveSpeed = false;
+                justReportedAboveSpeed.set(false);
             }
             if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.CONTAINS || speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.LEFT) {
                 // we are in the OK range or upper, check if we just left the below range
@@ -223,19 +225,18 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             }
         } else {
             if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.RIGHT) {
-                if (!justReportedBelowSpeed) {
+                if (!justReportedBelowSpeed.get()) {
                     if (millisAllowedOutOfSpeedRange >= 0) {
                         if (reportSpeedBelowTimer.isStopped()) {
                             reportSpeedBelowTimer.reset();
                         }
                     } else {
-                        justReportedBelowSpeed = true;
-                        SpeedOutOfRangeTask spmTask = new SpeedOutOfRangeTask(speedMonitorAction, false, speed);
-                        ThreadExecutor.submit(spmTask);
+                        justReportedBelowSpeed.set(true);
+                        ThreadExecutor.submit(() -> speedMonitorAction.speedBelowRange(speed));
                     }
                 }
             } else {
-                justReportedBelowSpeed = false;
+                justReportedBelowSpeed.set(false);
             }
             if (speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.CONTAINS || speedMonitorRange.compareTo(speed.longValue()) == Range.ValueComparison.RIGHT) {
                 // we are in the OK range or lower, check if we just left the above range

@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.plan.resource_delivery.test;
 
-import org.aanguita.jacuzzi.date_time.TimeElapsed;
+import org.aanguita.jacuzzi.time.TimeElapsed;
 import org.aanguita.jacuzzi.plan.resource_delivery.TargetAndResource;
 import org.aanguita.jacuzzi.queues.processor.MessageHandler;
 

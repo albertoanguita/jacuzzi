@@ -1,7 +1,7 @@
-package org.aanguita.jacuzzi.date_time.test;
+package org.aanguita.jacuzzi.time.test;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.date_time.SpeedRegistry;
+import org.aanguita.jacuzzi.time.SpeedRegistry;
 
 /**
  * Created by Alberto on 15/10/2015.

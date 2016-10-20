@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.date_time;
+package org.aanguita.jacuzzi.time;
 
 import org.aanguita.jacuzzi.concurrency.timer.Timer;
 import org.junit.Test;

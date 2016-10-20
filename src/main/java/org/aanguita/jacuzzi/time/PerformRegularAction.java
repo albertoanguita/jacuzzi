@@ -1,7 +1,11 @@
-package org.aanguita.jacuzzi.date_time;
+package org.aanguita.jacuzzi.time;
 
 /**
  * A class that passively reminds us of performing some action (every regular time, or after certain number of tries)
+ * <p>
+ * The class is configured to report after a given amount of events, or after a time elapsed between events. The
+ * client must invoke a method indicating that an event has taken place. As a result, the client will be informed
+ * if such event has fired the report
  */
 public class PerformRegularAction {
 

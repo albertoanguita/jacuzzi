@@ -2,7 +2,7 @@ package org.aanguita.jacuzzi.network;
 
 import org.aanguita.jacuzzi.concurrency.timer.Timer;
 import org.aanguita.jacuzzi.concurrency.timer.TimerAction;
-import org.aanguita.jacuzzi.date_time.SpeedMonitor;
+import org.aanguita.jacuzzi.time.SpeedMonitor;
 import org.aanguita.jacuzzi.notification.ProgressNotification;
 
 import java.io.BufferedInputStream;

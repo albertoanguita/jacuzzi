@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.fsm.test;
 
-import org.aanguita.jacuzzi.fsm.GenericFSMAction;
+import org.aanguita.jacuzzi.fsm.FSMAction;
 
 /**
  * Class description
@@ -9,7 +9,7 @@ import org.aanguita.jacuzzi.fsm.GenericFSMAction;
  * Date: 09-mar-2010<br>
  * Last Modified: 09-mar-2010
  */
-public class TestAction implements GenericFSMAction<String, Integer> {
+public class TestAction implements FSMAction<String, Integer> {
 
     @Override
     public String processInput(String currentState, Integer input) {
@@ -29,7 +29,7 @@ public class TestAction implements GenericFSMAction<String, Integer> {
         }
     }
 
-    public String init() {
+    public String initialState() {
         System.out.println("acción inicial");
         return "cero";
     }

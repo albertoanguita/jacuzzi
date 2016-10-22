@@ -29,9 +29,9 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
-          <compilerArgs>
-            <arg>-profile compact1</arg>
-          </compilerArgs>
+          <compilerArguments>
+            <profile>compact2</profile>
+          </compilerArguments>
         </configuration>
       </plugin>
       <plugin>

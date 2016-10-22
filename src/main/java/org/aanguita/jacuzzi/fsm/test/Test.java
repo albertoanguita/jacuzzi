@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.fsm.test;
 
-import org.aanguita.jacuzzi.fsm.GenericFSM;
+import org.aanguita.jacuzzi.fsm.FSM;
 
 /**
  * Class description
@@ -14,21 +14,21 @@ public class Test {
     public static void main(String args[]) {
 
 
-        GenericFSM<String, Integer> g1 = new GenericFSM<>(new TestAction());
-        GenericFSM<String, Integer> g2 = g1;
+        FSM<String, Integer> g1 = new FSM<>(new TestAction());
+        FSM<String, Integer> g2 = g1;
         System.out.println(g1.equals(g2));
 
 
-        GenericFSM<String, Integer> genericFSM = new GenericFSM<>(new TestAction());
+        FSM<String, Integer> FSM = new FSM<>(new TestAction());
 
         boolean active = true;
         int i = 1;
         while (active) {
-            active = genericFSM.newInput(i);
+            active = FSM.newInput(i);
             i += 2;
             System.out.println("active: " + active);
         }
 
-        System.out.println("Estado final: " + genericFSM.getCurrentState());
+        System.out.println("Estado final: " + FSM.getCurrentState());
     }
 }

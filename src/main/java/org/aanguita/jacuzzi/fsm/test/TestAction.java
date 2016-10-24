@@ -40,12 +40,7 @@ public class TestAction implements FSMAction<String, Integer> {
     }
 
     @Override
-    public void stopped() {
-        System.out.println("timer stopped");
-    }
-
-    @Override
-    public void raisedUnhandledException(Exception e) {
+    public void raisedUnhandledException(Throwable e) {
         e.printStackTrace();
     }
 }

@@ -2,8 +2,8 @@ package org.aanguita.jacuzzi.hash.hashdb.test;
 
 import org.aanguita.jacuzzi.hash.HashCode128;
 import org.aanguita.jacuzzi.hash.HashObject128;
+import org.apache.commons.codec.binary.Hex;
 
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -31,8 +31,8 @@ class Object128 implements HashObject128 {
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("MD5");
             byte[] hash = messageDigest.digest((Object128.class.toString() + str).getBytes());
-            System.out.println(new HexBinaryAdapter().marshal(hash));
-            return new HashCode128(new HexBinaryAdapter().marshal(hash));
+            System.out.println(Hex.encodeHexString(hash));
+            return new HashCode128(Hex.encodeHexString(hash));
         } catch (NoSuchAlgorithmException e) {
             // cannot happen
             return null;

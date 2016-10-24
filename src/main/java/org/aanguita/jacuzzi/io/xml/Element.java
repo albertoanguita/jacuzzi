@@ -1,7 +1,6 @@
 package org.aanguita.jacuzzi.io.xml;
 
 import org.aanguita.jacuzzi.hash.MD5;
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
 
@@ -171,8 +170,9 @@ public class Element {
             md5.update(attribute.getValue());
         }
         List<String> childrenHashes = new ArrayList<>();
+        List<String> ignoreTagsList = Arrays.asList(ignoreTags);
         for (Element child : children) {
-            if (!ArrayUtils.contains(ignoreTags, child.name)) {
+            if (!ignoreTagsList.contains(child.name)) {
                 childrenHashes.add(child.getHash(length));
             }
         }

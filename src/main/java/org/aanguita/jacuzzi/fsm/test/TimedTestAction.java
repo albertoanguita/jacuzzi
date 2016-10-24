@@ -15,4 +15,9 @@ public class TimedTestAction extends TestAction implements TimedFSMAction<String
     public void timedOut(String currentState) {
         System.out.println("Time out!");
     }
+
+    @Override
+    public void stopped() {
+        System.out.println("timer stopped");
+    }
 }

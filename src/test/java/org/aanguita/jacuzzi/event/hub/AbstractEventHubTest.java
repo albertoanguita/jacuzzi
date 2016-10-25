@@ -21,7 +21,7 @@ public class AbstractEventHubTest {
 
     @Before
     public void setUp() throws Exception {
-        eventHub = EventHubFactory.getEventHub("test", EventHubFactory.Type.ASYNCHRONOUS_PERMANENT_THREAD);
+        eventHub = EventHubFactory.createEventHub("test", EventHubFactory.Type.ASYNCHRONOUS_PERMANENT_THREAD);
         mockedSubscriberAll = mock(EventHubSubscriber.class);
         mockedSubscriberSome = mock(EventHubSubscriber.class);
         mockedSubscriberOne = mock(EventHubSubscriber.class);

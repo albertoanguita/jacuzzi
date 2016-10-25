@@ -20,18 +20,27 @@ public class ObjectMapPoolAdvancedCreator<K, T, V> {
         objectPool = new ConcurrentHashMap<>();
     }
 
-    public V getObject(K key, T creationParameter) {
+    public V createObject(K key, T creationParameter) {
         V myObject = objectPool.get(key);
         if (myObject == null) {
             synchronized (this) {
                 myObject = objectPool.get(key);
                 if (myObject == null) {
-                    objectPool.put(key, objectCreator.apply(new Duple<K, T>(key, creationParameter)));
-                    myObject = objectPool.get(key);
+                    objectPool.put(key, objectCreator.apply(new Duple<>(key, creationParameter)));
+                    return objectPool.get(key);
                 }
             }
         }
-        return myObject;
+        throw new IllegalArgumentException("Creating an already existing object: " + key);
+    }
+
+    public V getObject(K key) {
+        V myObject = objectPool.get(key);
+        if (myObject != null) {
+            return myObject;
+        } else {
+            throw new IllegalArgumentException("Requesting a non-existing object: " + key);
+        }
     }
 
     public boolean containsKey(K key) {

@@ -14,14 +14,18 @@ public class EventHubFactory {
         ASYNCHRONOUS_PERMANENT_THREAD
     }
 
-    private static ObjectMapPoolAdvancedCreator<String, Type, EventHub> instances = new ObjectMapPoolAdvancedCreator<>(
-            stringTypeDuple -> createEventHub(stringTypeDuple.element1, stringTypeDuple.element2));
+    private static ObjectMapPoolAdvancedCreator<String, Type, EventHub> eventHubs = new ObjectMapPoolAdvancedCreator<>(
+            stringTypeDuple -> create(stringTypeDuple.element1, stringTypeDuple.element2));
 
-    public static EventHub getEventHub(String name, Type type) {
-        return instances.getObject(name, type);
+    public static EventHub createEventHub(String name, Type type) {
+        return eventHubs.createObject(name, type);
     }
 
-    private static EventHub createEventHub(String name, Type type) {
+    public static EventHub getEventHub(String name) {
+        return eventHubs.getObject(name);
+    }
+
+    private static EventHub create(String name, Type type) {
         switch (type) {
 
             case SYNCHRONOUS:

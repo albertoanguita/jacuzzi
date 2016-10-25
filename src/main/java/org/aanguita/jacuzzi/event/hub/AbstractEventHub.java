@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 /**
  * This class provides named event hubs. An event hub allows publishing messages with some tags, while other classes can subscribe from specific
- * tags and receive the corresponding notifications. In esence, this class provides an observer pattern implementation, allowing very decoupled
+ * tags and receive the corresponding notifications. In essence, this class provides an observer pattern implementation, allowing very decoupled
  * code to use it.
  * <p>
  * This class provides static methods for creating event hubs. It also maintains a coherent pool of named event hubs, so these can be retrieved

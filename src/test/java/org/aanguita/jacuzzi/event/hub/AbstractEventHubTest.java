@@ -25,12 +25,9 @@ public class AbstractEventHubTest {
         mockedSubscriberAll = mock(EventHubSubscriber.class);
         mockedSubscriberSome = mock(EventHubSubscriber.class);
         mockedSubscriberOne = mock(EventHubSubscriber.class);
-        when(mockedSubscriberAll.getId()).thenReturn("all");
-        when(mockedSubscriberSome.getId()).thenReturn("some");
-        when(mockedSubscriberOne.getId()).thenReturn("one");
-        eventHub.subscribe(mockedSubscriberAll, "*");
-        eventHub.subscribe(mockedSubscriberSome, "test/?");
-        eventHub.subscribe(mockedSubscriberOne, "test/one");
+        eventHub.subscribe("all", mockedSubscriberAll, "*");
+        eventHub.subscribe("some", mockedSubscriberSome, "test/?");
+        eventHub.subscribe("one", mockedSubscriberOne, "test/one");
     }
 
     @After

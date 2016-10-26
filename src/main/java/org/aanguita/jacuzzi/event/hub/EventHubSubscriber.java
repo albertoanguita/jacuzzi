@@ -6,7 +6,5 @@ package org.aanguita.jacuzzi.event.hub;
  */
 public interface EventHubSubscriber {
 
-    String getId();
-
     void event(String channel, Object... messages);
 }

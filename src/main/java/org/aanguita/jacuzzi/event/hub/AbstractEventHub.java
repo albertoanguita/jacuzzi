@@ -4,6 +4,8 @@ import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 
@@ -113,10 +115,10 @@ abstract class AbstractEventHub implements EventHub {
 
     private static class ChannelCache {
 
-        private final Map<Channel, List<Duple<EventHubSubscriber, Boolean>>> cachedExpressions;
+        private final ConcurrentMap<Channel, List<Duple<EventHubSubscriber, Boolean>>> cachedExpressions;
 
         private ChannelCache() {
-            cachedExpressions = new HashMap<>();
+            cachedExpressions = new ConcurrentHashMap<>();
         }
 
         private void invalidate() {
@@ -137,6 +139,10 @@ abstract class AbstractEventHub implements EventHub {
 
         private List<Duple<EventHubSubscriber, Boolean>> getSubscribersForExpression(Channel channel) {
             return cachedExpressions.get(channel);
+        }
+
+        private Set<String> cachedChannels() {
+            return cachedExpressions.keySet().stream().map(channel -> channel.original).collect(Collectors.toSet());
         }
     }
 
@@ -165,15 +171,15 @@ abstract class AbstractEventHub implements EventHub {
     @Override
     public void publish(String channel, boolean inBackground, Object... messages) {
         Channel parsedChannel = new Channel(channel);
-        List<Duple<EventHubSubscriber, Boolean>> subscribers = findSubscribers(parsedChannel);
-        publish(subscribers, channel, inBackground, messages);
+        List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground = findSubscribers(parsedChannel);
+        publish(subscribersAndBackground, channel, inBackground, messages);
     }
 
-    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribers, String channel, boolean inBackground, Object... messages) {
+    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground, String channel, boolean inBackground, Object... messages) {
         if (inBackground) {
-            ThreadExecutor.submit(() -> invokeSubscribers(subscribers, true, channel, messages));
+            ThreadExecutor.submit(() -> invokeSubscribers(subscribersAndBackground, true, channel, messages));
         } else {
-            invokeSubscribers(subscribers, false, channel, messages);
+            invokeSubscribers(subscribersAndBackground, false, channel, messages);
         }
     }
 
@@ -255,6 +261,11 @@ abstract class AbstractEventHub implements EventHub {
             subscribers.get(subscriberId).unsubscribe(channelExpressions);
         }
         channelCache.invalidate();
+    }
+
+    @Override
+    public Set<String> cachedChannels() {
+        return channelCache.cachedChannels();
     }
 
     /**

@@ -1,5 +1,7 @@
 package org.aanguita.jacuzzi.event.hub;
 
+import java.util.Set;
+
 /**
  * Created by Alberto on 07/10/2016.
  */
@@ -18,6 +20,8 @@ public interface EventHub {
     void subscribe(String subscriberId, EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions);
 
     void unsubscribe(String subscriberId, String... channelExpressions);
+
+    Set<String> cachedChannels();
 
     void close();
 }

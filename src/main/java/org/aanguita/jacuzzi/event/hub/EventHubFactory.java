@@ -10,7 +10,7 @@ public class EventHubFactory {
     public enum Type {
         SYNCHRONOUS,
         MIXED,
-        ASYNCHRONOUS_SHORT_LIVED_THREAD,
+        ASYNCHRONOUS_EVENTUAL_THREAD,
         ASYNCHRONOUS_PERMANENT_THREAD
     }
 
@@ -32,8 +32,8 @@ public class EventHubFactory {
                 return new SynchronousEventHub(name);
             case MIXED:
                 return new MixedEventHub(name);
-            case ASYNCHRONOUS_SHORT_LIVED_THREAD:
-                return new AsynchronousShortLivedThreadEventHub(name);
+            case ASYNCHRONOUS_EVENTUAL_THREAD:
+                return new AsynchronousEventualThreadEventHub(name);
             case ASYNCHRONOUS_PERMANENT_THREAD:
                 return new AsynchronousPermanentThreadEventHub(name);
             default:

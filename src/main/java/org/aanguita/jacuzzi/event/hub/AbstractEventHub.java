@@ -4,7 +4,10 @@ import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
+
 
 /**
  * This class provides named event hubs. An event hub allows publishing messages with some tags, while other classes can subscribe from specific
@@ -19,56 +22,29 @@ import java.util.stream.Collectors;
  */
 abstract class AbstractEventHub implements EventHub {
 
-    private static class ParsedChannel {
+    private static class Channel {
 
-        protected static final String ONE_LEVEL_WILDCARD = "?";
+        private static final String ONE_LEVEL_WILDCARD = "?";
 
-        protected static final String MULTILEVEL_WILDCARD = "*";
+        private static final String MULTILEVEL_WILDCARD = "*";
 
-        protected final List<String> levels;
+        private final String original;
 
-        public static ParsedChannel parseChannel(String channel) {
-            ParsedChannel parsedChannel = new ParsedChannel(channel);
-            for (String level : parsedChannel.levels) {
-                if (level.equals(ONE_LEVEL_WILDCARD) || level.equals(MULTILEVEL_WILDCARD)) {
-                    throw new IllegalArgumentException("Levels of a channel cannot match a wildcard: " + level);
-                }
-            }
-            return parsedChannel;
-        }
+        private final List<String> levels;
 
-        private ParsedChannel(String channel) {
+        private Channel(String channel) {
+            original = channel;
             levels = new ArrayList<>(Arrays.asList(channel.split("/")));
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            ParsedChannel that = (ParsedChannel) o;
-
-            return levels.equals(that.levels);
-        }
-    }
-
-    private static class ParsedChannelExpression extends ParsedChannel {
-
-        private final boolean inBackground;
-
-        public ParsedChannelExpression(String channel, boolean inBackground) {
-            super(channel);
-            this.inBackground = inBackground;
-        }
-
-        public boolean expressionMatchesChannel(ParsedChannel parsedChannel) {
+        private boolean matches(Channel channel) {
             int index = 0;
             int thisSize = levels.size();
-            int otherSize = parsedChannel.levels.size();
+            int otherSize = channel.levels.size();
             while (index < thisSize && index < otherSize) {
-                if (levels.get(index).equals(MULTILEVEL_WILDCARD)) {
+                if (levels.get(index).equals(Channel.MULTILEVEL_WILDCARD)) {
                     return true;
-                } else if (levels.get(index).equals(ONE_LEVEL_WILDCARD) || levels.get(index).equals(parsedChannel.levels.get(index))) {
+                } else if (levels.get(index).equals(Channel.ONE_LEVEL_WILDCARD) || levels.get(index).equals(channel.levels.get(index))) {
                     index++;
                 } else {
                     return false;
@@ -76,34 +52,97 @@ abstract class AbstractEventHub implements EventHub {
             }
             return true;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Channel channel = (Channel) o;
+
+            return original.equals(channel.original);
+        }
+
+        @Override
+        public int hashCode() {
+            return original.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return "Channel{" + original + '}';
+        }
     }
 
     private static class SubscriberAndChannelExpressions {
 
         private final EventHubSubscriber subscriber;
 
-        private final Set<ParsedChannelExpression> channelExpressions;
+        private final Set<Channel> synchronousChannels;
 
-        public SubscriberAndChannelExpressions(EventHubSubscriber subscriber) {
+        private final Set<Channel> asynchronousChannels;
+
+        private SubscriberAndChannelExpressions(EventHubSubscriber subscriber) {
             this.subscriber = subscriber;
-            channelExpressions = new HashSet<>();
+            synchronousChannels = new HashSet<>();
+            asynchronousChannels = new HashSet<>();
         }
 
-        public SubscriberAndChannelExpressions(EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
+        private SubscriberAndChannelExpressions(EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
             this(subscriber);
             subscribe(inBackground, channelExpressions);
         }
 
         private void subscribe(boolean inBackground, String... channelExpressions) {
-            this.channelExpressions.addAll(Arrays.stream(channelExpressions)
-                    .map(channel -> new ParsedChannelExpression(channel, inBackground))
-                    .collect(Collectors.toList()));
+            Set<Channel> newChannels = Arrays.stream(channelExpressions)
+                    .map(Channel::new)
+                    .collect(Collectors.toSet());
+            if (inBackground) {
+                asynchronousChannels.addAll(newChannels);
+            } else {
+                synchronousChannels.addAll(newChannels);
+            }
         }
 
         private void unsubscribe(String... channelExpressions) {
-            this.channelExpressions.removeAll(Arrays.stream(channelExpressions)
-                    .map(channel -> new ParsedChannelExpression(channel, false))
-                    .collect(Collectors.toList()));
+            Set<Channel> oldChannels = Arrays.stream(channelExpressions)
+                    .map(Channel::new)
+                    .collect(Collectors.toSet());
+            synchronousChannels.removeAll(oldChannels);
+            asynchronousChannels.removeAll(oldChannels);
+        }
+    }
+
+    private static class ChannelCache {
+
+        private final ConcurrentMap<Channel, List<Duple<EventHubSubscriber, Boolean>>> cachedExpressions;
+
+        private ChannelCache() {
+            cachedExpressions = new ConcurrentHashMap<>();
+        }
+
+        private void invalidate() {
+            cachedExpressions.clear();
+        }
+
+        private boolean containsChannel(Channel channel) {
+            return cachedExpressions.containsKey(channel);
+        }
+
+        private void initChannel(Channel channel) {
+            cachedExpressions.put(channel, new ArrayList<>());
+        }
+
+        private void addSubscriber(Channel channel, EventHubSubscriber eventHubSubscriber, boolean inBackground) {
+            cachedExpressions.get(channel).add(new Duple<>(eventHubSubscriber, inBackground));
+        }
+
+        private List<Duple<EventHubSubscriber, Boolean>> getSubscribersForExpression(Channel channel) {
+            return cachedExpressions.get(channel);
+        }
+
+        private Set<String> cachedChannels() {
+            return cachedExpressions.keySet().stream().map(channel -> channel.original).collect(Collectors.toSet());
         }
     }
 
@@ -111,11 +150,12 @@ abstract class AbstractEventHub implements EventHub {
 
     private final Map<String, SubscriberAndChannelExpressions> subscribers;
 
-
+    private final ChannelCache channelCache;
 
     AbstractEventHub(String name) {
         this.name = name;
         subscribers = new HashMap<>();
+        channelCache = new ChannelCache();
     }
 
     @Override
@@ -130,16 +170,16 @@ abstract class AbstractEventHub implements EventHub {
 
     @Override
     public void publish(String channel, boolean inBackground, Object... messages) {
-        ParsedChannel parsedChannel = ParsedChannel.parseChannel(channel);
-        List<Duple<EventHubSubscriber, Boolean>> subscribers = findSubscribers(parsedChannel);
-        publish(subscribers, channel, inBackground, messages);
+        Channel parsedChannel = new Channel(channel);
+        List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground = findSubscribers(parsedChannel);
+        publish(subscribersAndBackground, channel, inBackground, messages);
     }
 
-    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribers, String channel, boolean inBackground, Object... messages) {
+    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground, String channel, boolean inBackground, Object... messages) {
         if (inBackground) {
-            ThreadExecutor.submit(() -> invokeSubscribers(subscribers, true, channel, messages));
+            ThreadExecutor.submit(() -> invokeSubscribers(subscribersAndBackground, true, channel, messages));
         } else {
-            invokeSubscribers(subscribers, false, channel, messages);
+            invokeSubscribers(subscribersAndBackground, false, channel, messages);
         }
     }
 
@@ -167,54 +207,71 @@ abstract class AbstractEventHub implements EventHub {
         return haveThreadAvailable;
     }
 
-    protected synchronized List<Duple<EventHubSubscriber, Boolean>> findSubscribers(ParsedChannel parsedChannel) {
-        List<Duple<EventHubSubscriber, Boolean>> foundSubscribers = new ArrayList<>();
-        for (SubscriberAndChannelExpressions subscriberAndChannelExpressions : subscribers.values()) {
-            Duple<Boolean, Boolean> expressionsMatchChannel = expressionsMatchChannel(subscriberAndChannelExpressions.channelExpressions, parsedChannel);
-            if (expressionsMatchChannel.element1) {
-                foundSubscribers.add(new Duple<>(subscriberAndChannelExpressions.subscriber, expressionsMatchChannel.element2));
-            }
-        }
-        return foundSubscribers;
-    }
-
-    private Duple<Boolean, Boolean> expressionsMatchChannel(Set<ParsedChannelExpression> channelExpressions, ParsedChannel parsedChannel) {
-        boolean oneExpressionMatches = false;
-        for (ParsedChannelExpression channelExpression : channelExpressions) {
-            if (channelExpression.expressionMatchesChannel(parsedChannel)) {
-                oneExpressionMatches = true;
-                if (channelExpression.inBackground) {
-                    return new Duple<>(true, true);
+    private synchronized List<Duple<EventHubSubscriber, Boolean>> findSubscribers(Channel channel) {
+        List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground = new ArrayList<>();
+        if (channelCache.containsChannel(channel)) {
+            // use the cache
+            return channelCache.getSubscribersForExpression(channel);
+        } else {
+            // set the cache for this channel
+            channelCache.initChannel(channel);
+            for (SubscriberAndChannelExpressions subscriber : subscribers.values()) {
+                Duple<Boolean, Boolean> expressionsMatchChannel = subscriberMatchesChannel(subscriber, channel);
+                if (expressionsMatchChannel.element1) {
+                    subscribersAndBackground.add(new Duple<>(subscriber.subscriber, expressionsMatchChannel.element2));
+                    channelCache.addSubscriber(channel, subscriber.subscriber, expressionsMatchChannel.element2);
                 }
             }
         }
-        return new Duple<>(oneExpressionMatches, false);
+        return subscribersAndBackground;
     }
 
-    @Override
-    public synchronized void subscribe(EventHubSubscriber subscriber, String... channelExpressions) {
-        subscribe(subscriber, false, channelExpressions);
-    }
-
-    @Override
-    public synchronized void subscribe(EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
-        if (!subscribers.containsKey(subscriber.getId())) {
-            subscribers.put(subscriber.getId(), new SubscriberAndChannelExpressions(subscriber, inBackground, channelExpressions));
+    private Duple<Boolean, Boolean> subscriberMatchesChannel(SubscriberAndChannelExpressions subscriber, Channel channel) {
+        if (expressionsMatchChannel(subscriber.asynchronousChannels, channel)) {
+            return new Duple<>(true, true);
+        } else if (expressionsMatchChannel(subscriber.synchronousChannels, channel)) {
+            return new Duple<>(true, false);
         } else {
-            subscribers.get(subscriber.getId()).subscribe(inBackground, channelExpressions);
+            return new Duple<>(false, false);
         }
     }
 
+    private boolean expressionsMatchChannel(Set<Channel> channels, Channel channel) {
+        return channels.stream().anyMatch(aChannel -> aChannel.matches(channel));
+    }
+
     @Override
-    public synchronized void unsubscribe(EventHubSubscriber subscriber, String... channelExpressions) {
-        if (subscribers.containsKey(subscriber.getId())) {
-            subscribers.get(subscriber.getId()).unsubscribe(channelExpressions);
+    public synchronized void subscribe(String subscriberId, EventHubSubscriber subscriber, String... channelExpressions) {
+        subscribe(subscriberId, subscriber, false, channelExpressions);
+    }
+
+    @Override
+    public synchronized void subscribe(String subscriberId, EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
+        if (!subscribers.containsKey(subscriberId)) {
+            subscribers.put(subscriberId, new SubscriberAndChannelExpressions(subscriber, inBackground, channelExpressions));
+        } else {
+            subscribers.get(subscriberId).subscribe(inBackground, channelExpressions);
         }
+        channelCache.invalidate();
+    }
+
+    @Override
+    public synchronized void unsubscribe(String subscriberId, String... channelExpressions) {
+        if (subscribers.containsKey(subscriberId)) {
+            subscribers.get(subscriberId).unsubscribe(channelExpressions);
+        }
+        channelCache.invalidate();
+    }
+
+    @Override
+    public Set<String> cachedChannels() {
+        return channelCache.cachedChannels();
     }
 
     /**
      * Override if some resources need to be closed/cleaned up
      */
     @Override
-    public void close() {}
+    public void close() {
+    }
 }

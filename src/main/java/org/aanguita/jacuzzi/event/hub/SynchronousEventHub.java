@@ -19,8 +19,8 @@ class SynchronousEventHub extends AbstractEventHub {
     }
 
     @Override
-    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribers, String channel, boolean inBackground, Object... messages) {
-        invokeSubscribers(subscribers, false, channel, messages);
+    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground, String channel, boolean inBackground, Object... messages) {
+        super.publish(subscribersAndBackground, channel, false, messages);
     }
 
     @Override

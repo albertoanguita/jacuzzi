@@ -54,3 +54,5 @@ fabric.properties
 modules.xml
 .idea/
 *.ipr
+
+target/

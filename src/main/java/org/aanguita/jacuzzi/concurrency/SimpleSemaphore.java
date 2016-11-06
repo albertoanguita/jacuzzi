@@ -3,11 +3,14 @@ package org.aanguita.jacuzzi.concurrency;
 import java.util.concurrent.Semaphore;
 
 /**
- * This class provides simple stop/let go functionality to threads. Controller has two methods for opening or closing
- * access. Access threads invoke a method that is non-blocking (returns immediately) if access is open, and is blocking
- * if access is closed (until a controller thread opens access again)
+ * This class provides simple stop/let go functionality to threads. SimpleSemaphore has two methods for opening or
+ * closing access. Access threads invoke a method that is non-blocking (returns immediately) if access is open, and
+ * is blocking if access is closed (until a controller thread opens access again)
+ * <p>
+ * The simple semaphore does not maintain the number of available permits or acquired stops. It just acts as an
+ * open/close barrier
  */
-public class TrafficControl {
+public class SimpleSemaphore {
 
     /**
      * Semaphore used to control the execution flow
@@ -19,11 +22,11 @@ public class TrafficControl {
      */
     private boolean paused;
 
-    public TrafficControl() {
+    public SimpleSemaphore() {
         this(false);
     }
 
-    public TrafficControl(boolean fairness) {
+    public SimpleSemaphore(boolean fairness) {
         semaphore = new Semaphore(1, fairness);
         paused = false;
     }

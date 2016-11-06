@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.concurrency.controller;
 
-import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 import org.aanguita.jacuzzi.concurrency.monitor.Monitor;
 import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 import org.aanguita.jacuzzi.maps.ObjectCount;
@@ -29,13 +29,13 @@ public class ConcurrencyController implements StateSolver {
 
         private final int priority;
 
-        private final TrafficControl trafficControl;
+        private final SimpleSemaphore simpleSemaphore;
 
         private QueueElement(String activity, int priority) {
             this.activity = activity;
             this.priority = priority;
-            trafficControl = new TrafficControl();
-            trafficControl.pause();
+            simpleSemaphore = new SimpleSemaphore();
+            simpleSemaphore.pause();
         }
 
         private String getActivity() {
@@ -53,11 +53,11 @@ public class ConcurrencyController implements StateSolver {
         }
 
         private void waitForPermissionToContinue() {
-            trafficControl.access();
+            simpleSemaphore.access();
         }
 
         private void allowContinue() {
-            trafficControl.resume();
+            simpleSemaphore.resume();
         }
     }
 

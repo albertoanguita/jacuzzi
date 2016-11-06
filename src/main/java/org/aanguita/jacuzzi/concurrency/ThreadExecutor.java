@@ -115,7 +115,6 @@ public class ThreadExecutor {
 
     private static ExecutorService executorService;
 
-    //private static final ObjectCount<String> registeredClients = new ObjectCount<>();
     private static final Map<String, ClientData> registeredClients = new HashMap<>();
 
     public static synchronized String registerClient() {

@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.numeric.range;
 
-import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class RangeQueue<T extends Range<Y>, Y extends Number & Comparable<Y>> im
      * This pausable element should be paused whenever no data is available, and resumed whenever some data is
      * available
      */
-    private TrafficControl retrieveDataLock;
+    private SimpleSemaphore retrieveDataLock;
 
     public RangeQueue() {
         this(false);
@@ -32,7 +32,7 @@ public class RangeQueue<T extends Range<Y>, Y extends Number & Comparable<Y>> im
 
     public RangeQueue(boolean fair) {
         ranges = new ArrayList<>();
-        retrieveDataLock = new TrafficControl(fair);
+        retrieveDataLock = new SimpleSemaphore(fair);
         retrieveDataLock.pause();
     }
 

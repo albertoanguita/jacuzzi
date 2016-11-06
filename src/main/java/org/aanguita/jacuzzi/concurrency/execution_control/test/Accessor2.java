@@ -1,16 +1,16 @@
 package org.aanguita.jacuzzi.concurrency.execution_control.test;
 
-import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 
 /**
  *
  */
 public class Accessor2 implements Runnable {
 
-    private TrafficControl trafficControl;
+    private SimpleSemaphore simpleSemaphore;
 
-    public Accessor2(TrafficControl trafficControl) {
-        this.trafficControl = trafficControl;
+    public Accessor2(SimpleSemaphore simpleSemaphore) {
+        this.simpleSemaphore = simpleSemaphore;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class Accessor2 implements Runnable {
     }
 
     private void access(int i) {
-        trafficControl.access();
+        simpleSemaphore.access();
         System.out.println("Accessor2: access #" + i + " OK");
     }
 

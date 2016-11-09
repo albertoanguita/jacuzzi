@@ -100,7 +100,7 @@ public class Monitor {
             if (!daemonThreadFlag.get()) {
                 daemonThreadFlag.set(true);
                 stateChangeFlag.set(false);
-                future = ThreadExecutor.submit(new MonitorTask(this), threadName + "/Monitor");
+                future = ThreadExecutor.submit(new MonitorTask(this), threadName + ".Monitor");
             }
         }
     }

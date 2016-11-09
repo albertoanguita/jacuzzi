@@ -59,7 +59,7 @@ class NotificationReceiverHandler implements TimerAction {
         this.emitterID = emitterID;
         this.millis = (millis != null && millis < 1L) ? null : millis;
         if (this.millis != null) {
-            timer = new Timer(millis, this, false, threadName + "/" + NotificationProcessor.class.getName());
+            timer = new Timer(millis, this, false, threadName + "." + NotificationProcessor.class.getName());
         } else {
             timer = null;
         }

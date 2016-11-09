@@ -12,14 +12,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by Alberto on 30/10/2016.
  */
-public class GoalRunner<S> implements StateSolver, TimerAction {
+public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExecutor<S> {
 
     public interface Transitions<S> {
 
         /**
          * @param state current state
          * @param goal  current goal
-         * @return true if state is stable now. False otherwise, so more transitions must be immediately run
+         * @return the new state (null if state did not change)
          */
         S runTransition(S state, S goal);
 
@@ -46,59 +46,52 @@ public class GoalRunner<S> implements StateSolver, TimerAction {
 
     private final Timer transitionTimer;
 
-    private final StateTimers<S> stateTimers;
-
     private final StateHooks<S> stateHooks;
 
     private final SimpleSemaphore atDesiredState;
 
     private final AtomicBoolean alive;
 
-    public GoalRunner(S initialState, Transitions<S> transitions) {
+    public SimpleGoalExecutor(S initialState, Transitions<S> transitions) {
         this(initialState, transitions, ThreadUtil.invokerName(1));
     }
 
-    public GoalRunner(S initialState, Transitions<S> transitions, String threadName) {
+    public SimpleGoalExecutor(S initialState, Transitions<S> transitions, String threadName) {
         this.state = initialState;
         this.goal = initialState;
         this.transitions = transitions;
-        monitor = new Monitor(this, threadName + "/EvolvingState");
-        transitionTimer = new Timer(0, this, threadName + "/TransitionTimer");
-        stateHooks = new StateHooks<>(state, threadName + "/EvolvingState/StateHooks");
+        monitor = new Monitor(this, threadName + ".GoalExecutor");
+        transitionTimer = new Timer(0, this, threadName + ".GoalExecutor.TransitionTimer");
+        stateHooks = new StateHooks<>(state, threadName + ".GoalExecutor.StateHooks");
         atDesiredState = new SimpleSemaphore();
         setAtDesiredState();
         alive = new AtomicBoolean(true);
     }
 
-    public void evolve() {
-        monitor.stateChange();
-    }
 
-    public synchronized S state() {
+    public synchronized S getState() {
         return state;
     }
 
-    public synchronized void setState(S state) {
-        this.state = state;
-        stateHooks.setState(state);
-    }
-
-    public synchronized S goal() {
+    public synchronized S getGoal() {
         return goal;
     }
 
+    @Override
     public synchronized void setGoal(S newGoal) {
-        setGoal(newGoal, true);
-    }
-
-    public synchronized void setGoal(S newGoal, boolean evolve) {
         if (!goal.equals(newGoal)) {
             goal = newGoal;
             setAtDesiredState();
-            if (evolve) {
-                evolve();
-            }
         }
+    }
+
+    @Override
+    public synchronized boolean hasReachedGoal() {
+        return state.equals(goal);
+    }
+
+    public void evolve() {
+        monitor.stateChange();
     }
 
     private void setAtDesiredState() {
@@ -109,33 +102,34 @@ public class GoalRunner<S> implements StateSolver, TimerAction {
         }
     }
 
+    @Override
     public synchronized void addEnterStateHook(S state, Runnable task, boolean useOwnThread) {
         stateHooks.addEnterStateHook(state, task, useOwnThread);
     }
 
+    @Override
     public synchronized void removeEnterStateHook(S state, Runnable task) {
         stateHooks.removeEnterStateHook(state, task);
     }
 
+    @Override
     public synchronized void setPeriodicStateHook(S state, Runnable task, long delay) {
         stateHooks.setPeriodicStateHook(state, task, delay);
     }
 
+    @Override
     public synchronized void removePeriodicStateHook(S state) {
         stateHooks.removePeriodicStateHook(state);
     }
 
+    @Override
     public synchronized void addExitStateHook(S state, Runnable task, boolean useOwnThread) {
         stateHooks.addExitStateHook(state, task, useOwnThread);
     }
 
+    @Override
     public synchronized void removeExitStateHook(S state, Runnable task) {
         stateHooks.removeExitStateHook(state, task);
-    }
-
-    @Override
-    public synchronized boolean hasReachedGoal() {
-        return state.equals(goal);
     }
 
     @Override
@@ -144,10 +138,11 @@ public class GoalRunner<S> implements StateSolver, TimerAction {
             return true;
         }
         transitionTimer.stop();
-        S newState = transitions.runTransition(state(), goal());
-        if (newState != null) {
+        S newState = transitions.runTransition(getState(), getGoal());
+        if (newState != null && newState != state) {
             // use this value to replace the old state
             state = newState;
+            stateHooks.setState(newState);
         }
         setAtDesiredState();
         // check if we have reached the desired state
@@ -180,7 +175,6 @@ public class GoalRunner<S> implements StateSolver, TimerAction {
     }
 
     public void stop() {
-        stateTimers.stop();
         stateHooks.stop();
         monitor.stop();
         transitionTimer.stop();

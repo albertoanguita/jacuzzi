@@ -102,7 +102,7 @@ public class TimedQueue<T> implements TimerAction {
         this.millisToStore = millisToStore;
         this.timedQueueInterface = timedQueueInterface;
         if (automaticRemoval) {
-            removeTimer = new Timer(millisToStore, this, false, threadName + "/TimedQueue");
+            removeTimer = new Timer(millisToStore, this, false, threadName + ".TimedQueue");
         } else {
             removeTimer = null;
         }

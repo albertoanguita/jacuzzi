@@ -50,11 +50,11 @@ public class EvolvingState<S, G> implements StateSolver, EvolvingStateController
         this.state = state;
         this.goal = initialGoal;
         this.transitions = transitions;
-        monitor = new Monitor(this, threadName + "/EvolvingState");
-        runnableStateTimers = new StateTimers<>(state, threadName + "/EvolvingState/RunnableStateTimers");
-        evolveStateTimers = new StateTimers<>(state, threadName + "/EvolvingState/EvolveStateTimers");
+        monitor = new Monitor(this, threadName + ".EvolvingState");
+        runnableStateTimers = new StateTimers<>(state, threadName + ".EvolvingState/RunnableStateTimers");
+        evolveStateTimers = new StateTimers<>(state, threadName + ".EvolvingState/EvolveStateTimers");
         evolveTask = this::evolve;
-        stateHooks = new StateHooks<>(state, threadName + "/EvolvingState/StateHooks");
+        stateHooks = new StateHooks<>(state, threadName + ".EvolvingState/StateHooks");
         alive = new AtomicBoolean(true);
     }
 

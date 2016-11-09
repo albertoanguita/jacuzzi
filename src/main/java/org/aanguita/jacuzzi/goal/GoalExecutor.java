@@ -3,9 +3,17 @@ package org.aanguita.jacuzzi.goal;
 /**
  * Created by Alberto on 07/11/2016.
  */
-public interface Goal<S> {
+public interface GoalExecutor<S> {
+
+    S getState();
+
+    S getGoal();
 
     void setGoal(S newGoal);
+
+    boolean hasReachedGoal();
+
+    void evolve();
 
     void addEnterStateHook(S state, Runnable task, boolean useOwnThread);
 

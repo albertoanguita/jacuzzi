@@ -108,8 +108,8 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
         this.speedMonitorRange = speedMonitorRange;
         this.millisAllowedOutOfSpeedRange = millisAllowedOutOfSpeedRange;
         if (speedMonitorAction != null) {
-            reportSpeedAboveTimer = new Timer(millisAllowedOutOfSpeedRange, this, false, threadName + "/reportSpeedAboveTimer");
-            reportSpeedBelowTimer = new Timer(millisAllowedOutOfSpeedRange, this, false, threadName + "/reportSpeedBelowTimer");
+            reportSpeedAboveTimer = new Timer(millisAllowedOutOfSpeedRange, this, false, threadName + ".reportSpeedAboveTimer");
+            reportSpeedBelowTimer = new Timer(millisAllowedOutOfSpeedRange, this, false, threadName + ".reportSpeedBelowTimer");
         } else {
             reportSpeedAboveTimer = null;
             reportSpeedBelowTimer = null;

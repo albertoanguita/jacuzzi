@@ -104,7 +104,7 @@ public class Timer {
         this.timerAction = timerAction;
         active = new AtomicBoolean(false);
         remainingTimeWhenStopped = 0;
-        this.threadName = threadName + "/Timer";
+        this.threadName = threadName + ".Timer";
         if (start) {
             start(millis);
         }

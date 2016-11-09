@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.concurrency.execution_control.test;
 
-import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 
 /**
@@ -14,9 +14,9 @@ public class Test1 {
 
     public static void main(String args[]) {
 
-        TrafficControl trafficControl = new TrafficControl();
-        ThreadExecutor.submit(new Pauser(trafficControl));
-        ThreadExecutor.submit(new Accessor1(trafficControl));
-        ThreadExecutor.submit(new Accessor2(trafficControl));
+        SimpleSemaphore simpleSemaphore = new SimpleSemaphore();
+        ThreadExecutor.submit(new Pauser(simpleSemaphore));
+        ThreadExecutor.submit(new Accessor1(simpleSemaphore));
+        ThreadExecutor.submit(new Accessor2(simpleSemaphore));
     }
 }

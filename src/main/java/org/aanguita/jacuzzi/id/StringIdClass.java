@@ -25,4 +25,19 @@ public class StringIdClass {
     public String getId() {
         return id;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StringIdClass)) return false;
+
+        StringIdClass that = (StringIdClass) o;
+
+        return getId().equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
 }

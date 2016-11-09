@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.queues.processor;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ public class MessageProcessor<E> {
     /**
      * Traffic control object for pausing the message processing system
      */
-    private final TrafficControl trafficControl;
+    private final SimpleSemaphore simpleSemaphore;
 
     /**
      * Indicates if this message processor is alive. Once stopped, a message processor cannot come to live again
@@ -116,7 +116,7 @@ public class MessageProcessor<E> {
         messageHandlerThread = initializeMessageHandlerThread(messageHandler, separateThreads, name);
         messageReaderHandlerThread = initializeMessageReaderHandlerThread(messageReader, messageHandler, separateThreads, name);
         this.separateThreads = separateThreads;
-        trafficControl = new TrafficControl();
+        simpleSemaphore = new SimpleSemaphore();
         alive = new AtomicBoolean(true);
         LOGGER.debug(logInit() + ") initialized");
     }
@@ -171,13 +171,13 @@ public class MessageProcessor<E> {
 
     public void pause() {
         if (alive.get()) {
-            trafficControl.pause();
+            simpleSemaphore.pause();
             LOGGER.debug(logInit() + ") paused");
         }
     }
 
     public void resume() {
-        trafficControl.resume();
+        simpleSemaphore.resume();
         LOGGER.debug(logInit() + ") resumed");
     }
 
@@ -196,7 +196,7 @@ public class MessageProcessor<E> {
     }
 
     boolean accessTrafficControl() {
-        trafficControl.access();
+        simpleSemaphore.access();
         return alive.get();
     }
 

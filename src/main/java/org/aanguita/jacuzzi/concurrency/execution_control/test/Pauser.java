@@ -1,16 +1,16 @@
 package org.aanguita.jacuzzi.concurrency.execution_control.test;
 
-import org.aanguita.jacuzzi.concurrency.TrafficControl;
+import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 
 /**
  *
  */
 public class Pauser implements Runnable {
 
-    private TrafficControl trafficControl;
+    private SimpleSemaphore simpleSemaphore;
 
-    public Pauser(TrafficControl trafficControl) {
-        this.trafficControl = trafficControl;
+    public Pauser(SimpleSemaphore simpleSemaphore) {
+        this.simpleSemaphore = simpleSemaphore;
     }
 
     @Override
@@ -28,12 +28,12 @@ public class Pauser implements Runnable {
     }
 
     private void pause(int i) {
-        trafficControl.pause();
+        simpleSemaphore.pause();
         System.out.println("Pauser: pause #" + i + " OK");
     }
 
     private void resume(int i) {
-        trafficControl.resume();
+        simpleSemaphore.resume();
         System.out.println("Pauser: resume #" + i + " OK");
     }
 

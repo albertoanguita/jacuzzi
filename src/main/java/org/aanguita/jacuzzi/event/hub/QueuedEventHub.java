@@ -3,24 +3,22 @@ package org.aanguita.jacuzzi.event.hub;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by Alberto on 07/10/2016.
  */
 abstract class QueuedEventHub extends AbstractEventHub {
 
-    protected static class Publication {
+    protected static class QueuedPublication {
 
-        protected final String channel;
+        protected final Publication publication;
 
-        protected final Object[] messages;
+        protected final List<MatchingSubscriber> matchingSubscribers;
 
-        protected final Collection<Duple<EventHubSubscriber, Boolean>> receivers;
-
-        protected Publication(String channel, Object[] messages, Collection<Duple<EventHubSubscriber, Boolean>> receivers) {
-            this.channel = channel;
-            this.messages = messages;
-            this.receivers = receivers;
+        protected QueuedPublication(Publication publication, List<MatchingSubscriber> matchingSubscribers) {
+            this.publication = publication;
+            this.matchingSubscribers = matchingSubscribers;
         }
     }
 

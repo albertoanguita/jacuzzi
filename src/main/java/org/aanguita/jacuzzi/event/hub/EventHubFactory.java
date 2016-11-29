@@ -8,8 +8,7 @@ import org.aanguita.jacuzzi.objects.ObjectMapPoolAdvancedCreator;
 public class EventHubFactory {
 
     public enum Type {
-        SYNCHRONOUS,
-        MIXED,
+        SIMPLE,
         ASYNCHRONOUS_EVENTUAL_THREAD,
         ASYNCHRONOUS_PERMANENT_THREAD
     }
@@ -28,10 +27,8 @@ public class EventHubFactory {
     private static EventHub create(String name, Type type) {
         switch (type) {
 
-            case SYNCHRONOUS:
-                return new SynchronousEventHub(name);
-            case MIXED:
-                return new MixedEventHub(name);
+            case SIMPLE:
+                return new SimpleEventHub(name);
             case ASYNCHRONOUS_EVENTUAL_THREAD:
                 return new AsynchronousEventualThreadEventHub(name);
             case ASYNCHRONOUS_PERMANENT_THREAD:

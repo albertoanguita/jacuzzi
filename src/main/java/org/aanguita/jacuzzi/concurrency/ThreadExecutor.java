@@ -149,10 +149,6 @@ public class ThreadExecutor {
         return registeredClients;
     }
 
-    //public static ObjectCount<String> getRegisteredClients() {
-    //    return registeredClients;
-    //}
-
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task

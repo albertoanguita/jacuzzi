@@ -1,6 +1,5 @@
 package org.aanguita.jacuzzi.event.hub;
 
-import org.aanguita.jacuzzi.lists.tuple.Duple;
 import org.aanguita.jacuzzi.queues.processor.MessageHandler;
 import org.aanguita.jacuzzi.queues.processor.MessageProcessor;
 
@@ -11,7 +10,7 @@ import java.util.List;
  */
 class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
 
-    private final MessageProcessor<Publication> publicationMessageProcessor;
+    private final MessageProcessor<QueuedPublication> publicationMessageProcessor;
 
     @Override
     public EventHubFactory.Type getType() {
@@ -20,10 +19,10 @@ class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
 
     AsynchronousPermanentThreadEventHub(String name) {
         super(name);
-        publicationMessageProcessor = new MessageProcessor<>(name + "/MessageProcessor", new MessageHandler<Publication>() {
+        publicationMessageProcessor = new MessageProcessor<>(name + ".MessageProcessor", new MessageHandler<QueuedPublication>() {
             @Override
-            public void handleMessage(Publication publication) {
-                invokeSubscribers(publication.receivers, false, publication.channel, publication.messages);
+            public void handleMessage(QueuedPublication queuedPublication) {
+                invokeSubscribers(queuedPublication.matchingSubscribers, false, queuedPublication.publication);
             }
 
             @Override
@@ -35,9 +34,9 @@ class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
     }
 
     @Override
-    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribers, String channel, boolean inBackground, Object... messages) {
+    protected void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication, boolean inBackground) {
         try {
-            publicationMessageProcessor.addMessage(new Publication(channel, messages, subscribers));
+            publicationMessageProcessor.addMessage(new QueuedPublication(publication, matchingSubscribers));
         } catch (InterruptedException e) {
             // ignore, cannot happen
         }
@@ -45,6 +44,7 @@ class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
 
     @Override
     public void close() {
+        super.close();
         publicationMessageProcessor.stop();
     }
 }

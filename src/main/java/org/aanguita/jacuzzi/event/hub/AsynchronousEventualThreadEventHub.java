@@ -1,6 +1,5 @@
 package org.aanguita.jacuzzi.event.hub;
 
-import org.aanguita.jacuzzi.lists.tuple.Duple;
 import org.aanguita.jacuzzi.queues.OnDemandQueueProcessor;
 
 import java.util.List;
@@ -10,7 +9,7 @@ import java.util.List;
  */
 class AsynchronousEventualThreadEventHub extends QueuedEventHub {
 
-    private final OnDemandQueueProcessor<Publication> onDemandQueueProcessor;
+    private final OnDemandQueueProcessor<QueuedPublication> onDemandQueueProcessor;
 
     @Override
     public EventHubFactory.Type getType() {
@@ -19,11 +18,17 @@ class AsynchronousEventualThreadEventHub extends QueuedEventHub {
 
     AsynchronousEventualThreadEventHub(String name) {
         super(name);
-        onDemandQueueProcessor = new OnDemandQueueProcessor<>(publication -> invokeSubscribers(publication.receivers, false, publication.channel, publication.messages));
+        onDemandQueueProcessor = new OnDemandQueueProcessor<>(queuedPublication -> invokeSubscribers(queuedPublication.matchingSubscribers, false, queuedPublication.publication));
     }
 
     @Override
-    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribers, String channel, boolean inBackground, Object... messages) {
-        onDemandQueueProcessor.addEvent(new Publication(channel, messages, subscribers));
+    protected void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication, boolean inBackground) {
+        onDemandQueueProcessor.addEvent(new QueuedPublication(publication, matchingSubscribers));
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        onDemandQueueProcessor.stop();
     }
 }

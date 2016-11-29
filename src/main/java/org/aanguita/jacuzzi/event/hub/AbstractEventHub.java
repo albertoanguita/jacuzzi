@@ -1,12 +1,11 @@
 package org.aanguita.jacuzzi.event.hub;
 
 import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
+import org.aanguita.jacuzzi.concurrency.ThreadUtil;
+import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 
 /**
@@ -22,140 +21,22 @@ import java.util.stream.Collectors;
  */
 abstract class AbstractEventHub implements EventHub {
 
-    private static class Channel {
-
-        private static final String ONE_LEVEL_WILDCARD = "?";
-
-        private static final String MULTILEVEL_WILDCARD = "*";
-
-        private final String original;
-
-        private final List<String> levels;
-
-        private Channel(String channel) {
-            original = channel;
-            levels = new ArrayList<>(Arrays.asList(channel.split("/")));
-        }
-
-        private boolean matches(Channel channel) {
-            int index = 0;
-            int thisSize = levels.size();
-            int otherSize = channel.levels.size();
-            while (index < thisSize && index < otherSize) {
-                if (levels.get(index).equals(Channel.MULTILEVEL_WILDCARD)) {
-                    return true;
-                } else if (levels.get(index).equals(Channel.ONE_LEVEL_WILDCARD) || levels.get(index).equals(channel.levels.get(index))) {
-                    index++;
-                } else {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Channel channel = (Channel) o;
-
-            return original.equals(channel.original);
-        }
-
-        @Override
-        public int hashCode() {
-            return original.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return "Channel{" + original + '}';
-        }
-    }
-
-    private static class SubscriberAndChannelExpressions {
-
-        private final EventHubSubscriber subscriber;
-
-        private final Set<Channel> synchronousChannels;
-
-        private final Set<Channel> asynchronousChannels;
-
-        private SubscriberAndChannelExpressions(EventHubSubscriber subscriber) {
-            this.subscriber = subscriber;
-            synchronousChannels = new HashSet<>();
-            asynchronousChannels = new HashSet<>();
-        }
-
-        private SubscriberAndChannelExpressions(EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
-            this(subscriber);
-            subscribe(inBackground, channelExpressions);
-        }
-
-        private void subscribe(boolean inBackground, String... channelExpressions) {
-            Set<Channel> newChannels = Arrays.stream(channelExpressions)
-                    .map(Channel::new)
-                    .collect(Collectors.toSet());
-            if (inBackground) {
-                asynchronousChannels.addAll(newChannels);
-            } else {
-                synchronousChannels.addAll(newChannels);
-            }
-        }
-
-        private void unsubscribe(String... channelExpressions) {
-            Set<Channel> oldChannels = Arrays.stream(channelExpressions)
-                    .map(Channel::new)
-                    .collect(Collectors.toSet());
-            synchronousChannels.removeAll(oldChannels);
-            asynchronousChannels.removeAll(oldChannels);
-        }
-    }
-
-    private static class ChannelCache {
-
-        private final ConcurrentMap<Channel, List<Duple<EventHubSubscriber, Boolean>>> cachedExpressions;
-
-        private ChannelCache() {
-            cachedExpressions = new ConcurrentHashMap<>();
-        }
-
-        private void invalidate() {
-            cachedExpressions.clear();
-        }
-
-        private boolean containsChannel(Channel channel) {
-            return cachedExpressions.containsKey(channel);
-        }
-
-        private void initChannel(Channel channel) {
-            cachedExpressions.put(channel, new ArrayList<>());
-        }
-
-        private void addSubscriber(Channel channel, EventHubSubscriber eventHubSubscriber, boolean inBackground) {
-            cachedExpressions.get(channel).add(new Duple<>(eventHubSubscriber, inBackground));
-        }
-
-        private List<Duple<EventHubSubscriber, Boolean>> getSubscribersForExpression(Channel channel) {
-            return cachedExpressions.get(channel);
-        }
-
-        private Set<String> cachedChannels() {
-            return cachedExpressions.keySet().stream().map(channel -> channel.original).collect(Collectors.toSet());
-        }
-    }
-
     private final String name;
 
-    private final Map<String, SubscriberAndChannelExpressions> subscribers;
+    private final Map<String, SubscriberData> subscribers;
 
-    private final ChannelCache channelCache;
+    private final Cache channelCache;
+
+    private final PublicationRepository publicationRepository;
+
+    private final String threadExecutorClientId;
 
     AbstractEventHub(String name) {
         this.name = name;
         subscribers = new HashMap<>();
-        channelCache = new ChannelCache();
+        channelCache = new Cache();
+        publicationRepository = new PublicationRepository();
+        threadExecutorClientId = ThreadExecutor.registerClient(name + ".EventHub");
     }
 
     @Override
@@ -165,94 +46,113 @@ abstract class AbstractEventHub implements EventHub {
 
     @Override
     public void publish(String channel, Object... messages) {
-        publish(channel, false, messages);
+        publish(channel, 0L, false, messages);
     }
 
     @Override
-    public void publish(String channel, boolean inBackground, Object... messages) {
+    public void publish(String channel, Long keepMillis, boolean inBackground, Object... messages) {
+        long timestamp = System.currentTimeMillis();
         Channel parsedChannel = new Channel(channel);
-        List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground = findSubscribers(parsedChannel);
-        publish(subscribersAndBackground, channel, inBackground, messages);
+        Publication publication = new Publication(getName(), parsedChannel, timestamp, messages);
+        List<MatchingSubscriber> subscribersAndBackground = findSubscribers(parsedChannel);
+        publish(subscribersAndBackground, publication, inBackground);
+        publicationRepository.storePublication(publication, keepMillis);
     }
 
-    protected void publish(List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground, String channel, boolean inBackground, Object... messages) {
-        if (inBackground) {
-            ThreadExecutor.submit(() -> invokeSubscribers(subscribersAndBackground, true, channel, messages));
-        } else {
-            invokeSubscribers(subscribersAndBackground, false, channel, messages);
-        }
-    }
-
-    protected void invokeSubscribers(Collection<Duple<EventHubSubscriber, Boolean>> subscribers, boolean haveThreadAvailable, String channel, Object... messages) {
-        for (Duple<EventHubSubscriber, Boolean> eventHubSubscriber : subscribers) {
-            haveThreadAvailable = invokeSubscriber(eventHubSubscriber, haveThreadAvailable, channel, messages);
-        }
-    }
-
-    protected boolean invokeSubscriber(Duple<EventHubSubscriber, Boolean> eventHubSubscriber, boolean haveThreadAvailable, String channel, Object... messages) {
-        if (eventHubSubscriber.element2) {
-            // this subscriber wants a thread for his own
-            if (haveThreadAvailable) {
-                // use the available thread
-                eventHubSubscriber.element1.event(channel, messages);
-                haveThreadAvailable = false;
-            } else {
-                // create a new thread only for him
-                ThreadExecutor.submit(() -> eventHubSubscriber.element1.event(channel, messages));
-            }
-        } else {
-            // do not spawn a new thread
-            eventHubSubscriber.element1.event(channel, messages);
-        }
-        return haveThreadAvailable;
-    }
-
-    private synchronized List<Duple<EventHubSubscriber, Boolean>> findSubscribers(Channel channel) {
-        List<Duple<EventHubSubscriber, Boolean>> subscribersAndBackground = new ArrayList<>();
+    private synchronized List<MatchingSubscriber> findSubscribers(Channel channel) {
+        List<MatchingSubscriber> subscribersAndBackground = new ArrayList<>();
         if (channelCache.containsChannel(channel)) {
             // use the cache
             return channelCache.getSubscribersForExpression(channel);
         } else {
             // set the cache for this channel
-            channelCache.initChannel(channel);
-            for (SubscriberAndChannelExpressions subscriber : subscribers.values()) {
-                Duple<Boolean, Boolean> expressionsMatchChannel = subscriberMatchesChannel(subscriber, channel);
-                if (expressionsMatchChannel.element1) {
-                    subscribersAndBackground.add(new Duple<>(subscriber.subscriber, expressionsMatchChannel.element2));
-                    channelCache.addSubscriber(channel, subscriber.subscriber, expressionsMatchChannel.element2);
+            List<MatchingSubscriber> unorderedMatchingSubscribers = new ArrayList<>();
+            for (SubscriberData subscriberData : subscribers.values()) {
+                Duple<Integer, Boolean> expressionsMatchChannel = subscriberMatchesChannel(subscriberData, channel);
+                if (expressionsMatchChannel != null) {
+                    subscribersAndBackground.add(new MatchingSubscriber(subscriberData.getSubscriber(), expressionsMatchChannel.element1, expressionsMatchChannel.element2));
+                    unorderedMatchingSubscribers.add(new MatchingSubscriber(subscriberData.getSubscriber(), expressionsMatchChannel.element1, expressionsMatchChannel.element2));
                 }
             }
+            channelCache.addChannel(channel, unorderedMatchingSubscribers);
         }
         return subscribersAndBackground;
     }
 
-    private Duple<Boolean, Boolean> subscriberMatchesChannel(SubscriberAndChannelExpressions subscriber, Channel channel) {
-        if (expressionsMatchChannel(subscriber.asynchronousChannels, channel)) {
-            return new Duple<>(true, true);
-        } else if (expressionsMatchChannel(subscriber.synchronousChannels, channel)) {
-            return new Duple<>(true, false);
+    protected abstract void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication, boolean inBackground);
+
+    protected void invokeSubscribers(List<MatchingSubscriber> matchingSubscribers, boolean haveThreadAvailable, Publication publication) {
+        for (int i = 0; i < matchingSubscribers.size() - 1; i++) {
+            invokeSubscriber(matchingSubscribers.get(i), false, publication);
+        }
+        invokeSubscriber(matchingSubscribers.get(matchingSubscribers.size() - 1), haveThreadAvailable, publication);
+    }
+
+    private void invokeSubscriber(MatchingSubscriber matchingSubscriber, boolean haveThreadAvailable, Publication publication) {
+        if (matchingSubscriber.isInBackground()) {
+            // this subscriber wants a thread for his own
+            if (haveThreadAvailable) {
+                // use the available thread
+                matchingSubscriber.getEventHubSubscriber().event(publication);
+            } else {
+                // create a new thread only for him
+                ThreadExecutor.submit(() -> matchingSubscriber.getEventHubSubscriber().event(publication));
+            }
         } else {
-            return new Duple<>(false, false);
+            // do not spawn a new thread
+            matchingSubscriber.getEventHubSubscriber().event(publication);
         }
     }
 
-    private boolean expressionsMatchChannel(Set<Channel> channels, Channel channel) {
-        return channels.stream().anyMatch(aChannel -> aChannel.matches(channel));
+    private static Duple<Integer, Boolean> subscriberMatchesChannel(SubscriberData subscriber, Channel channel) {
+        Integer channelMatchPriority = expressionWithHighestPriorityMatch(subscriber.getAsynchronousChannels(), channel);
+        if (channelMatchPriority != null) {
+            return new Duple<>(channelMatchPriority, true);
+        } else {
+            channelMatchPriority = expressionWithHighestPriorityMatch(subscriber.getSynchronousChannels(), channel);
+            if (channelMatchPriority != null) {
+                return new Duple<>(channelMatchPriority, false);
+            } else {
+                return null;
+            }
+        }
+    }
+
+    private static Integer expressionWithHighestPriorityMatch(Set<Duple<Channel, Integer>> channels, Channel channel) {
+        Optional<Duple<Channel, Integer>> optional = channels.stream().filter(aChannelWithPriority -> aChannelWithPriority.element1.matches(channel)).max((o1, o2) -> o1.element2.compareTo(o2.element2));
+        return optional.isPresent() ? optional.get().element2 : null;
+    }
+
+    @Override
+    public synchronized void subscribe(EventHubSubscriber subscriber, String... channelExpressions) {
+        subscribe(null, subscriber, 0, false, channelExpressions);
     }
 
     @Override
     public synchronized void subscribe(String subscriberId, EventHubSubscriber subscriber, String... channelExpressions) {
-        subscribe(subscriberId, subscriber, false, channelExpressions);
+        subscribe(subscriberId, subscriber, 0, false, channelExpressions);
     }
 
     @Override
-    public synchronized void subscribe(String subscriberId, EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions) {
+    public synchronized void subscribe(String subscriberId, EventHubSubscriber subscriber, int priority, boolean inBackground, String... channelExpressions) {
+        if (subscriberId == null) {
+            subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
+        }
         if (!subscribers.containsKey(subscriberId)) {
-            subscribers.put(subscriberId, new SubscriberAndChannelExpressions(subscriber, inBackground, channelExpressions));
+            subscribers.put(subscriberId, new SubscriberData(subscriberId, subscriber, priority, inBackground, channelExpressions));
         } else {
-            subscribers.get(subscriberId).subscribe(inBackground, channelExpressions);
+            subscribers.get(subscriberId).subscribe(priority, inBackground, channelExpressions);
         }
         channelCache.invalidate();
+        ThreadExecutor.submit(() -> publicationRepository.getStoredPublications(channelExpressions).forEach(subscriber::event));
+    }
+
+    private String assignSubscriberId(String idProposal) {
+        if (!subscribers.containsKey(idProposal)) {
+            return idProposal;
+        } else {
+            return idProposal + "-" + AlphaNumFactory.getStaticId();
+        }
     }
 
     @Override
@@ -261,6 +161,11 @@ abstract class AbstractEventHub implements EventHub {
             subscribers.get(subscriberId).unsubscribe(channelExpressions);
         }
         channelCache.invalidate();
+    }
+
+    @Override
+    public List<Publication> getStoredPublications(String... channelExpressions) {
+        return publicationRepository.getStoredPublications(channelExpressions);
     }
 
     @Override
@@ -273,5 +178,6 @@ abstract class AbstractEventHub implements EventHub {
      */
     @Override
     public void close() {
+        ThreadExecutor.shutdownClient(threadExecutorClientId);
     }
 }

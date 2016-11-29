@@ -1,5 +1,6 @@
 package org.aanguita.jacuzzi.event.hub;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -13,13 +14,17 @@ public interface EventHub {
 
     void publish(String channel, Object... messages);
 
-    void publish(String channel, boolean inBackground, Object... messages);
+    void publish(String channel, Long keepMillis, boolean inBackground, Object... messages);
+
+    void subscribe(EventHubSubscriber subscriber, String... channelExpressions);
 
     void subscribe(String subscriberId, EventHubSubscriber subscriber, String... channelExpressions);
 
-    void subscribe(String subscriberId, EventHubSubscriber subscriber, boolean inBackground, String... channelExpressions);
+    void subscribe(String subscriberId, EventHubSubscriber subscriber, int priority, boolean inBackground, String... channelExpressions);
 
     void unsubscribe(String subscriberId, String... channelExpressions);
+
+    List<Publication> getStoredPublications(String... channelExpressions);
 
     Set<String> cachedChannels();
 

@@ -124,7 +124,6 @@ public class ThreadExecutor {
     public static synchronized String registerClient(String clientName) {
         String clientId = AlphaNumFactory.getStaticId();
         registeredClients.put(clientId, new ClientData(clientName, Thread.currentThread().getStackTrace()));
-        //registeredClients.addObject(clientName);
         if (registeredClients.size() == 1) {
             // we must activate the executor service now
             executorService = Executors.newCachedThreadPool();
@@ -138,7 +137,6 @@ public class ThreadExecutor {
         } else {
             throw new IllegalArgumentException("No registered client: " + clientId);
         }
-        //registeredClients.subtractObject(clientName);
         if (registeredClients.isEmpty()) {
             // no registered clients at this moment -> shutdown the service
             executorService.shutdown();
@@ -343,7 +341,6 @@ public class ThreadExecutor {
             String threadName,
             ConcurrencyController concurrencyController,
             String concurrentActivity) {
-//        innerThreadFactory.setNextName(threadName);
         return executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName), result);
     }
 }

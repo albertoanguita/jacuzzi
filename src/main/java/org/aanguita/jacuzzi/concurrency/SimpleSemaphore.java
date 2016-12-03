@@ -1,6 +1,9 @@
 package org.aanguita.jacuzzi.concurrency;
 
+import org.aanguita.jacuzzi.id.AlphaNumFactory;
+
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeoutException;
 
 /**
  * This class provides simple stop/let go functionality to threads. SimpleSemaphore has two methods for opening or
@@ -11,6 +14,20 @@ import java.util.concurrent.Semaphore;
  * open/close barrier
  */
 public class SimpleSemaphore {
+
+    private static class OnTimeout implements Runnable {
+
+        private final Thread threadToInterrupt;
+
+        private OnTimeout(Thread threadToInterrupt) {
+            this.threadToInterrupt = threadToInterrupt;
+        }
+
+        @Override
+        public void run() {
+            threadToInterrupt.interrupt();
+        }
+    }
 
     /**
      * Semaphore used to control the execution flow
@@ -72,5 +89,26 @@ public class SimpleSemaphore {
     public void access() {
         semaphore.acquireUninterruptibly();
         semaphore.release();
+    }
+
+    /**
+     * This method makes the invoking thread access the pausable element. If the element is currently paused, the
+     * thread will be blocked until some other thread resumes the element. If the element is not paused, this method
+     * will return immediately.
+     * <p/>
+     * If fairness is used, upon resume, blocked accesses will be executed in order of arrival
+     */
+    public void access(long timeout) throws TimeoutException {
+        try {
+            String alertName = this.getClass().getName() + "-" + AlphaNumFactory.getStaticId();
+            TimeAlerts.addAlert(alertName, timeout, new OnTimeout(Thread.currentThread()));
+            semaphore.acquire(1);
+            TimeAlerts.removeAlert(alertName);
+        } catch (InterruptedException e) {
+            // timeout was fired.
+            throw new TimeoutException();
+        } finally {
+            semaphore.release();
+        }
     }
 }

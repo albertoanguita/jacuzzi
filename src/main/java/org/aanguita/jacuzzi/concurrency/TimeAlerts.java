@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.concurrency;
 
-import org.aanguita.jacuzzi.concurrency.timer.Timer;
-import org.aanguita.jacuzzi.concurrency.timer.TimerAction;
+import org.aanguita.jacuzzi.concurrency.timer.ParametrizedTimer;
+import org.aanguita.jacuzzi.concurrency.timer.ParametrizedTimerAction;
 
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by Alberto on 03/12/2016.
  */
-public class TimeAlerts implements TimerAction {
+public class TimeAlerts implements ParametrizedTimerAction<String> {
 
     private static class Alert {
 
@@ -50,7 +50,7 @@ public class TimeAlerts implements TimerAction {
 
     private String nextAlert;
 
-    private final Timer timer;
+    private ParametrizedTimer<String> timer;
 
     private String threadExecutorClientId;
 
@@ -64,7 +64,7 @@ public class TimeAlerts implements TimerAction {
     private TimeAlerts() {
         activeAlerts = new ConcurrentHashMap<>();
         alertQueue = new PriorityQueue<>();
-        timer = new Timer(0, this, false, this.getClass().getName());
+        timer = null;
     }
 
     public static synchronized void addAlert(String alertName, long millis, Runnable runnable) {
@@ -87,14 +87,6 @@ public class TimeAlerts implements TimerAction {
         activateTimer();
     }
 
-    private synchronized void activateTimer() {
-        timer.stop();
-        if (!activeAlerts.isEmpty()) {
-            timer.reset(alertQueue.peek().millis);
-            nextAlert = alertQueue.peek().name;
-        }
-    }
-
     public static synchronized void removeAlert(String alertName) {
         instance.removeAlertInstance(alertName);
     }
@@ -107,6 +99,16 @@ public class TimeAlerts implements TimerAction {
         checkEmptyAlerts();
     }
 
+    private synchronized void activateTimer() {
+        if (timer != null) {
+            timer.stop();
+        }
+        if (!activeAlerts.isEmpty()) {
+            nextAlert = alertQueue.peek().name;
+            timer = new ParametrizedTimer<>(alertQueue.peek().millis, this, nextAlert, true, this.getClass().getName());
+        }
+    }
+
     private void checkEmptyAlerts() {
         if (activeAlerts.isEmpty()) {
             ThreadExecutor.shutdownClient(threadExecutorClientId);
@@ -114,10 +116,12 @@ public class TimeAlerts implements TimerAction {
     }
 
     @Override
-    public Long wakeUp(Timer timer) {
-        ThreadExecutor.submit(activeAlerts.get(nextAlert).runnable, this.getClass().getName() + "." + nextAlert);
-        removeAlert(nextAlert);
-        activateTimer();
-        return null;
+    public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alert) {
+        if (alert.equals(nextAlert)) {
+            ThreadExecutor.submit(activeAlerts.get(alert).runnable, this.getClass().getName() + "." + alert);
+            removeAlertInstance(nextAlert);
+            activateTimer();
+        }
+        return 0L;
     }
 }

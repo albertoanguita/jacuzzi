@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -52,8 +53,12 @@ public class ConcurrencyController implements StateSolver {
             return o.priority - priority;
         }
 
-        private void waitForPermissionToContinue() {
-            simpleSemaphore.access();
+        private void waitForPermissionToContinue(Long timeout) throws TimeoutException {
+            if (timeout == null) {
+                simpleSemaphore.access();
+            } else {
+                simpleSemaphore.access(timeout);
+            }
         }
 
         private void allowContinue() {
@@ -146,6 +151,15 @@ public class ConcurrencyController implements StateSolver {
         }
     }
 
+    public final boolean beginActivity(String activity) {
+        try {
+            return beginActivity(activity, null);
+        } catch (TimeoutException e) {
+            // ignore, cannot happen
+            return false;
+        }
+    }
+
     /**
      * Request permission for performing a registered activity. This call will block until the conditions for
      * performing such condition are fulfilled. This activity will have
@@ -156,7 +170,7 @@ public class ConcurrencyController implements StateSolver {
      *
      * @param activity type of activity that the client pretends to execute
      */
-    public final boolean beginActivity(String activity) {
+    public final boolean beginActivity(String activity, Long timeout) throws TimeoutException {
         // the procedure is:
         // - place the executor in the priority blocking queue (by means of providing his identifier)
         // - block him
@@ -180,7 +194,7 @@ public class ConcurrencyController implements StateSolver {
 
         // block this executor in these lines of code -> it will be liberated when other thread
         // releases it from its block (queueElement.allowContinue())
-        beginRegisteredActivity(queueElement);
+        beginRegisteredActivity(queueElement, timeout);
         logger.accept(formatStateLog("activity proceeds with execution", activity));
 
         return true;
@@ -205,12 +219,10 @@ public class ConcurrencyController implements StateSolver {
         // it causes no issues because this method does not block upon any condition
         // also, this way we ensure that the monitor is not stopped in the middle of this function by
         // the stopAndWaitForFinalization method
-        //synchronized (this) {
         if (!alive.get() && !activity.equals(STOP_ACTIVITY)) {
             // we are no longer alive -> no activity can be registered
             return null;
         }
-        //}
         QueueElement queueElement = new QueueElement(activity, getActivityPriority(activity));
         activityRequestsQueue.put(queueElement);
         monitor.stateChange();
@@ -225,8 +237,8 @@ public class ConcurrencyController implements StateSolver {
         }
     }
 
-    private void beginRegisteredActivity(QueueElement queueElement) {
-        queueElement.waitForPermissionToContinue();
+    private void beginRegisteredActivity(QueueElement queueElement, Long timeout) throws TimeoutException {
+        queueElement.waitForPermissionToContinue(timeout);
     }
 
 

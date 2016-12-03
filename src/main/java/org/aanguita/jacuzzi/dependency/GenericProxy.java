@@ -1,11 +1,15 @@
 package org.aanguita.jacuzzi.dependency;
 
 import com.sun.scenario.effect.impl.prism.PrImage;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.concurrency.controller.ConcurrencyController;
 import org.aanguita.jacuzzi.concurrency.controller.ConcurrencyControllerAction;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * This interface provides access to the methods of registered dependencies
@@ -33,20 +37,17 @@ public class GenericProxy implements Proxy {
         return proxyName;
     }
 
-    Object call(String methodName, Long timeout, Object... params) {
-        try {
-            Method method = object.getClass().getMethod(methodName);
-            return method.invoke(object, params);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+    Object call(String methodName, Long timeout, Object... params) throws TimeoutException, Exception {
+        return null;
     }
 
-    void call(String methodName, Long timeout, Runnable onSuccess, Runnable onError, Object... params) {
-
+    void call(String methodName, Long timeout, Consumer<Object> onSuccess, Consumer<Exception> onError, Object... params) {
+        try {
+            Method method = object.getClass().getMethod(methodName);
+            Object result = method.invoke(object, params);
+            ThreadExecutor.submit(() -> onSuccess.accept(result));
+        } catch (Exception e) {
+            ThreadExecutor.submit(() -> onError.accept(e));
+        }
     }
 }

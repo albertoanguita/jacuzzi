@@ -16,6 +16,14 @@ import java.util.function.Consumer;
  */
 public class GenericProxy implements Proxy {
 
+    private static class OnSynchSuccess implements Consumer<Object> {
+
+        @Override
+        public void accept(Object o) {
+
+        }
+    }
+
     private final String proxyName;
 
     private final Object object;
@@ -37,17 +45,21 @@ public class GenericProxy implements Proxy {
         return proxyName;
     }
 
-    Object call(String methodName, Long timeout, Object... params) throws TimeoutException, Exception {
+    Object call(String methodName, Long timeout, Object... params) throws TimeoutException {
         return null;
     }
 
-    void call(String methodName, Long timeout, Consumer<Object> onSuccess, Consumer<Exception> onError, Object... params) {
+    void call(String methodName, Long timeout, Consumer<Object> onSuccess, Consumer<Exception> onError, Object... params) throws TimeoutException {
         try {
-            Method method = object.getClass().getMethod(methodName);
-            Object result = method.invoke(object, params);
-            ThreadExecutor.submit(() -> onSuccess.accept(result));
-        } catch (Exception e) {
+            if (concurrencyController.beginActivity(methodName, timeout)) {
+                Method method = object.getClass().getMethod(methodName);
+                Object result = method.invoke(object, params);
+                ThreadExecutor.submit(() -> onSuccess.accept(result));
+            }
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             ThreadExecutor.submit(() -> onError.accept(e));
+        } finally {
+            concurrencyController.endActivity(methodName);
         }
     }
 }

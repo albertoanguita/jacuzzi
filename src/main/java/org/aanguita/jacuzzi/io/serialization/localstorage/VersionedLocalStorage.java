@@ -5,8 +5,9 @@ import java.io.IOException;
 /**
  * A local storage with a built-in function for storing a user-given version of the stored data. An interface is
  * provided for facilitating updates to the stored data
+ * todo delete
  */
-public class VersionedLocalStorage extends LocalStorage {
+public class VersionedLocalStorage extends DBLocalStorage {
 
     public static final String VERSION_KEY = "@@@version@@@";
 
@@ -24,7 +25,7 @@ public class VersionedLocalStorage extends LocalStorage {
     }
 
     public static VersionedLocalStorage createNew(String path, String version) throws IOException {
-        LocalStorage.createNew(path);
+        DBLocalStorage.createNew(path);
         VersionedLocalStorage vls = new VersionedLocalStorage(path);
         vls.updateVersion(version);
         return vls;

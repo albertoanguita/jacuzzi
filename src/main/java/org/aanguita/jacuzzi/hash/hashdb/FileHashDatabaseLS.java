@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.hash.hashdb;
 
 import org.aanguita.jacuzzi.hash.HashFunction;
-import org.aanguita.jacuzzi.io.serialization.localstorage.LocalStorage;
+import org.aanguita.jacuzzi.io.serialization.localstorage.DBLocalStorage;
 import org.aanguita.jacuzzi.io.serialization.localstorage.Updater;
 import org.aanguita.jacuzzi.io.serialization.localstorage.VersionedLocalStorage;
 
@@ -67,7 +67,7 @@ public class FileHashDatabaseLS extends FileHashDatabase implements Updater {
         }
     }
 
-    public LocalStorage getLocalStorage() {
+    public DBLocalStorage getLocalStorage() {
         return localStorage;
     }
 

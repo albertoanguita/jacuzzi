@@ -64,9 +64,9 @@ public class LocalStorageTest {
         dateList.add(date2);
         dateList.add(date3);
 
-        LocalStorage ls = LocalStorage.createNew("localStorage.db");
+        DBLocalStorage ls = DBLocalStorage.createNew("localStorage.db");
 
-        Assert.assertEquals(LocalStorage.CURRENT_VERSION, ls.getLocalStorageVersion());
+        Assert.assertEquals(DBLocalStorage.CURRENT_VERSION, ls.getLocalStorageVersion());
         Assert.assertTrue((new Date().getTime() - ls.getCreationDate().getTime()) < 500);
 
 

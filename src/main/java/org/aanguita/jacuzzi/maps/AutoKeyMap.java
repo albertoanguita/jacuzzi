@@ -67,7 +67,7 @@ public class AutoKeyMap<K, V, E extends Throwable> implements Serializable {
         return key;
     }
 
-    public V put(K key, V value) throws E {
+    public V put(K key, V value) {
         return map.put(key, value);
     }
 

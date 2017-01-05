@@ -1,19 +1,23 @@
 package org.aanguita.jacuzzi.hash.hashdb;
 
 import org.aanguita.jacuzzi.hash.HashFunction;
-import org.aanguita.jacuzzi.io.serialization.localstorage.DBLocalStorage;
-import org.aanguita.jacuzzi.io.serialization.localstorage.Updater;
-import org.aanguita.jacuzzi.io.serialization.localstorage.VersionedLocalStorage;
+import org.aanguita.jacuzzi.io.serialization.localstorage.LocalStorage;
+import org.aanguita.jacuzzi.lists.tuple.Duple;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A file hash database with embedded and transparent local storage
+ *
+ * todo check
  */
-public class FileHashDatabaseLS extends FileHashDatabase implements Updater {
+public class FileHashDatabaseLS {
 
     private static final String VERSION_0_1 = "VERSION_0.1";
 
@@ -27,53 +31,77 @@ public class FileHashDatabaseLS extends FileHashDatabase implements Updater {
 
     private static final String HASH_CATEGORY = "@@@hash@@@";
 
-    private final VersionedLocalStorage localStorage;
+    private final FileHashDatabase fileHashDatabase;
 
-    public FileHashDatabaseLS(String localStoragePath) throws IOException {
-        super();
-        localStorage = loadLocalStorage(localStoragePath);
+    private final LocalStorage localStorage;
+
+//    public FileHashDatabaseLS(String localStoragePath) throws IOException {
+//        fileHashDatabase = new FileHashDatabase();
+//        localStorage = loadLocalStorage(localStoragePath);
+//    }
+//
+//    public FileHashDatabaseLS(String localStoragePath, boolean storeAbsolutePaths) throws IOException {
+//        fileHashDatabase = new FileHashDatabase(storeAbsolutePaths);
+//        localStorage = loadLocalStorage(localStoragePath);
+//    }
+
+    public FileHashDatabaseLS(LocalStorage localStorage, HashFunction hashFunction, boolean storeAbsolutePaths) throws IOException {
+        fileHashDatabase = new FileHashDatabase(hashFunction, storeAbsolutePaths);
+        this.localStorage = localStorage;
     }
 
-    public FileHashDatabaseLS(String localStoragePath, boolean storeAbsolutePaths) throws IOException {
-        super(storeAbsolutePaths);
-        localStorage = loadLocalStorage(localStoragePath);
-    }
-
-    public FileHashDatabaseLS(String localStoragePath, HashFunction hashFunction, boolean storeAbsolutePaths) throws IOException {
-        super(hashFunction, storeAbsolutePaths);
-        localStorage = loadLocalStorage(localStoragePath);
-    }
-
-    private VersionedLocalStorage loadLocalStorage(String localStoragePath) throws IOException {
-        if (Files.exists(Paths.get(localStoragePath))) {
-            VersionedLocalStorage localStorage = new VersionedLocalStorage(localStoragePath, this, CURRENT_VERSION);
-            try {
-                hashFunction = new HashFunction(localStorage.getString(HASH_FUNCTION_ALGORITHM_KEY), localStorage.getInteger(HASH_FUNCTION_LENGTH_KEY));
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException("Invalid algorithm for hash function: " + localStorage.getString(HASH_FUNCTION_ALGORITHM_KEY));
-            }
-            storeAbsolutePaths = localStorage.getBoolean(STORE_ABSOLUTE_PATHS_KEY);
-            for (String key : localStorage.keys(HASH_CATEGORY)) {
-                // this is a file hash -> extract the hash and the path and load
-                filesMap.put(key, new AnnotatedFile(localStorage.getString(key, HASH_CATEGORY), storeAbsolutePaths));
-            }
-            return localStorage;
-        } else {
-            VersionedLocalStorage localStorage = VersionedLocalStorage.createNew(localStoragePath, CURRENT_VERSION);
-            localStorage.setString(HASH_FUNCTION_ALGORITHM_KEY, hashFunction.getAlgorithm());
-            localStorage.setInteger(HASH_FUNCTION_LENGTH_KEY, hashFunction.getHashLength());
-            localStorage.setBoolean(STORE_ABSOLUTE_PATHS_KEY, storeAbsolutePaths);
-            return localStorage;
+    public FileHashDatabaseLS(LocalStorage localStorage) throws IOException {
+        this.localStorage = localStorage;
+        HashFunction hashFunction;
+        boolean storeAbsolutePaths;
+        Map<String, FileHashDatabase.AnnotatedFile> filesMap = new HashMap<>();
+        try {
+            hashFunction = new HashFunction(localStorage.getString(HASH_FUNCTION_ALGORITHM_KEY), localStorage.getInteger(HASH_FUNCTION_LENGTH_KEY));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Invalid algorithm for hash function: " + localStorage.getString(HASH_FUNCTION_ALGORITHM_KEY));
         }
+        storeAbsolutePaths = localStorage.getBoolean(STORE_ABSOLUTE_PATHS_KEY);
+        for (String key : localStorage.keys(HASH_CATEGORY)) {
+            // this is a file hash -> extract the hash and the path and load
+            filesMap.put(key, new FileHashDatabase.AnnotatedFile(localStorage.getString(key, HASH_CATEGORY), storeAbsolutePaths));
+        }
+        fileHashDatabase = new FileHashDatabase(hashFunction, storeAbsolutePaths);
+        fileHashDatabase.addEntries(filesMap);
     }
 
-    public DBLocalStorage getLocalStorage() {
+//    private LocalStorage loadLocalStorage(String localStoragePath) throws IOException {
+//        if (Files.exists(Paths.get(localStoragePath))) {
+//            LocalStorage localStorage = LocalStorageFactory.openPropertiesLocalStorage(localStoragePath);
+//            try {
+//                hashFunction = new HashFunction(localStorage.getString(HASH_FUNCTION_ALGORITHM_KEY), localStorage.getInteger(HASH_FUNCTION_LENGTH_KEY));
+//            } catch (NoSuchAlgorithmException e) {
+//                throw new RuntimeException("Invalid algorithm for hash function: " + localStorage.getString(HASH_FUNCTION_ALGORITHM_KEY));
+//            }
+//            storeAbsolutePaths = localStorage.getBoolean(STORE_ABSOLUTE_PATHS_KEY);
+//            for (String key : localStorage.keys(HASH_CATEGORY)) {
+//                // this is a file hash -> extract the hash and the path and load
+//                filesMap.put(key, new AnnotatedFile(localStorage.getString(key, HASH_CATEGORY), storeAbsolutePaths));
+//            }
+//            return localStorage;
+//        } else {
+//            LocalStorage localStorage = LocalStorageFactory.createPropertiesLocalStorage(localStoragePath, ".", ",", false);
+//            localStorage.setString(HASH_FUNCTION_ALGORITHM_KEY, fileHashDatabase.getHashFunction().getAlgorithm());
+//            localStorage.setInteger(HASH_FUNCTION_LENGTH_KEY, fileHashDatabase.getHashFunction().getHashLength());
+//            localStorage.setBoolean(STORE_ABSOLUTE_PATHS_KEY, fileHashDatabase.isStoreAbsolutePaths());
+//            return localStorage;
+//        }
+//    }
+
+    public LocalStorage getLocalStorage() {
         return localStorage;
     }
 
-    @Override
-    public void clear() {
-        super.clear();
+    public List<String> getRepairedFiles() {
+        return fileHashDatabase.getRepairedFiles();
+    }
+
+    public void clear() throws IOException {
+        fileHashDatabase.clear();
         String hashAlgorithm = localStorage.getString(HASH_FUNCTION_ALGORITHM_KEY);
         Integer hashLength = localStorage.getInteger(HASH_FUNCTION_LENGTH_KEY);
         boolean storeAbsolutePaths = localStorage.getBoolean(STORE_ABSOLUTE_PATHS_KEY);
@@ -83,30 +111,45 @@ public class FileHashDatabaseLS extends FileHashDatabase implements Updater {
         localStorage.setBoolean(STORE_ABSOLUTE_PATHS_KEY, storeAbsolutePaths);
     }
 
-    @Override
+    public int size() {
+        return fileHashDatabase.size();
+    }
+
+    public boolean containsKey(String key) {
+        return fileHashDatabase.containsKey(key);
+    }
+
+    public boolean containsPath(String path) throws IOException {
+        return fileHashDatabase.containsPath(path);
+    }
+
+    public Duple<Boolean, String> containsSimilarFile(String path) throws IOException {
+        return fileHashDatabase.containsSimilarFile(path);
+    }
+
+    public String getFilePath(String key) {
+        return fileHashDatabase.getFilePath(key);
+    }
+
+    public File getFile(String key) throws FileNotFoundException {
+        return fileHashDatabase.getFile(key);
+    }
+
     public String put(String path) throws IOException {
-        String hash = super.put(path);
-        localStorage.setString(hash, getFilePath(hash), HASH_CATEGORY);
+        String hash = fileHashDatabase.put(path);
+        localStorage.setString(hash, fileHashDatabase.getFilePath(hash), HASH_CATEGORY);
         return hash;
     }
 
-
-    @Override
-    public String remove(String key) {
-        String path = super.remove(key);
+    public String remove(String key) throws IOException {
+        String path = fileHashDatabase.remove(key);
         localStorage.removeItem(key, HASH_CATEGORY);
         return path;
     }
 
-    @Override
     public String removeValue(String path) throws IOException {
-        String hash = super.removeValue(path);
+        String hash = fileHashDatabase.removeValue(path);
         localStorage.removeItem(hash, HASH_CATEGORY);
         return hash;
-    }
-
-    @Override
-    public String update(VersionedLocalStorage versionedLocalStorage, String storedVersion) {
-        throw new RuntimeException();
     }
 }

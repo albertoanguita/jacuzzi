@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by Alberto on 08/04/2016.
+ *
  */
 public class LocalStorageTest {
 
@@ -19,7 +19,16 @@ public class LocalStorageTest {
 
     @Test
     public void test() throws IOException {
+        LocalStorage ls;
+//        ls = LocalStorageFactory.createDBLocalStorage("localStorage.db", ".", ",", true, true);
+//        test(ls);
+//        ls = LocalStorageFactory.createDBLocalStorage("localStorage.db", ".", ",", false, true);
+//        test(ls);
+        ls = LocalStorageFactory.createPropertiesLocalStorage("localStorage.properties", ".", ",", true);
+        test(ls);
+    }
 
+    private void test(LocalStorage ls) throws IOException {
         List<String> stringList = new ArrayList<>();
         stringList.add("hello1");
         stringList.add("hello2");
@@ -64,11 +73,10 @@ public class LocalStorageTest {
         dateList.add(date2);
         dateList.add(date3);
 
-        DBLocalStorage ls = DBLocalStorage.createNew("localStorage.db");
+        Assert.assertEquals("1.0", ls.getLocalStorageVersion());
+        Assert.assertTrue((new Date().getTime() - ls.getCreationDate().getTime()) < 1000);
 
-        Assert.assertEquals(DBLocalStorage.CURRENT_VERSION, ls.getLocalStorageVersion());
-        Assert.assertTrue((new Date().getTime() - ls.getCreationDate().getTime()) < 500);
-
+        Assert.assertEquals(0, ls.itemCount());
 
         ls.setString("string", "hello");
         ls.setString("stringNull", null);
@@ -94,7 +102,7 @@ public class LocalStorageTest {
 
 
         Assert.assertEquals(21, ls.itemCount());
-        List<String> keys = Arrays.asList("string", "stringNull", "enum", "bool", "byte", "short", "int", "long", "float", "double", "date", "stringList", "enumList", "booleanList", "byteList", "shortList", "integerList", "longList", "floatList", "doubleList", "dateList");
+        Set<String> keys = new HashSet<>(Arrays.asList("string", "stringNull", "enum", "bool", "byte", "short", "int", "long", "float", "double", "date", "stringList", "enumList", "booleanList", "byteList", "shortList", "integerList", "longList", "floatList", "doubleList", "dateList"));
         Assert.assertEquals(keys, ls.keys());
         Assert.assertTrue(ls.containsItem("string"));
         Assert.assertTrue(ls.containsItem("stringNull"));
@@ -142,7 +150,7 @@ public class LocalStorageTest {
 
         ls.removeItem("stringNull");
         Assert.assertEquals(20, ls.itemCount());
-        keys = Arrays.asList("string", "enum", "bool", "byte", "short", "int", "long", "float", "double", "date", "stringList", "enumList", "booleanList", "byteList", "shortList", "integerList", "longList", "floatList", "doubleList", "dateList");
+        keys = new HashSet<>(Arrays.asList("string", "enum", "bool", "byte", "short", "int", "long", "float", "double", "date", "stringList", "enumList", "booleanList", "byteList", "shortList", "integerList", "longList", "floatList", "doubleList", "dateList"));
         Assert.assertEquals(keys, ls.keys());
         Assert.assertFalse(ls.containsItem("stringNull"));
 
@@ -152,9 +160,9 @@ public class LocalStorageTest {
 
         Assert.assertEquals(23, ls.itemCount());
         Assert.assertEquals(keys, ls.keys());
-        List<String> cat1Keys = Arrays.asList("string", "int");
-        List<String> cat2Keys = Collections.singletonList("boolean");
-        Set<String> cat1 = new HashSet<>(Collections.singletonList("cat1"));
+        Set<String> cat1Keys = new HashSet<>(Arrays.asList("string", "int"));
+        Set<String> cat2Keys = new HashSet<>(Collections.singletonList("boolean"));
+        Set<String> cat1 = new HashSet<>(Arrays.asList("cat1", "localStorageMetadata"));
         Set<String> cat2 = new HashSet<>(Collections.singletonList("cat2"));
         Assert.assertEquals(cat1Keys, ls.keys("cat1"));
         Assert.assertEquals(cat2Keys, ls.keys("cat1", "cat2"));

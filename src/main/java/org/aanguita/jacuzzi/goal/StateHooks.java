@@ -5,6 +5,7 @@ import org.aanguita.jacuzzi.concurrency.timer.Timer;
 import org.aanguita.jacuzzi.event.hub.EventHub;
 import org.aanguita.jacuzzi.event.hub.EventHubFactory;
 import org.aanguita.jacuzzi.event.hub.EventHubSubscriber;
+import org.aanguita.jacuzzi.event.hub.Publication;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.aanguita.jacuzzi.id.StringIdClass;
 
@@ -28,7 +29,7 @@ public class StateHooks<S> {
         }
 
         @Override
-        public void event(String channel, Object... messages) {
+        public void event(Publication publication) {
             hook.run();
         }
 
@@ -117,7 +118,7 @@ public class StateHooks<S> {
 
     public synchronized void addEnterStateHook(S state, Runnable task, boolean useOwnThread) {
         HookSubscriber hookSubscriber = addStateHook(state, task, registeredEnterStateHooks);
-        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, useOwnThread, getEnterChannel(state));
+        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, 0, useOwnThread, getEnterChannel(state));
     }
 
     public synchronized void removeEnterStateHook(S state, Runnable task) {
@@ -139,7 +140,7 @@ public class StateHooks<S> {
 
     public synchronized void addExitStateHook(S state, Runnable task, boolean useOwnThread) {
         HookSubscriber hookSubscriber = addStateHook(state, task, registeredExitStateHooks);
-        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, useOwnThread, getExitChannel(state));
+        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, 0, useOwnThread, getExitChannel(state));
     }
 
     public synchronized void removeExitStateHook(S state, Runnable task) {

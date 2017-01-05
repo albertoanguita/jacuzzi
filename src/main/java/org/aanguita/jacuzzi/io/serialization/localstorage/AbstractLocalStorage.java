@@ -1,25 +1,27 @@
 package org.aanguita.jacuzzi.io.serialization.localstorage;
 
-import org.aanguita.jacuzzi.objects.ObjectMapPool;
+import org.aanguita.jacuzzi.lists.StringListKey;
 import org.aanguita.jacuzzi.objects.Util;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by Alberto on 05/12/2016.
  */
 public abstract class AbstractLocalStorage implements LocalStorage {
 
-    private static final String METADATA_CATEGORY = "localStorageMetadata";
-    private static final String METADATA_LOCAL_STORAGE_VERSION = "version";
-    private static final String METADATA_CREATION_DATE = "creationDate";
+    protected static final String METADATA_CATEGORY = "localStorageMetadata";
+    private static final String LOCAL_STORAGE_VERSION = "version";
+    private static final String CREATION_DATE = "creationDate";
+    private static final String LIST_SEPARATOR = "listSeparator";
+    private static final String USE_CACHE = "useCache";
     private static final String CURRENT_VERSION = "1.0";
-
 
 
     /**
@@ -27,66 +29,119 @@ public abstract class AbstractLocalStorage implements LocalStorage {
      */
     protected final String path;
 
-    private final String categorySeparator;
-
     private final String listSeparator;
+
+    private final boolean useCache;
 
     private final Map<String, String> cachedEntries;
 
-    private static final ObjectMapPool<String, Lock> locks = new ObjectMapPool<>(s -> new ReentrantLock());
-
-    protected AbstractLocalStorage(String path, String categorySeparator, String listSeparator, boolean createNew) {
-        this.path = path;
-        this.categorySeparator = categorySeparator;
-        this.listSeparator = listSeparator;
-        cachedEntries = Collections.synchronizedMap(new HashMap<>());
-        if (createNew) {
-            setMetadata();
+    protected AbstractLocalStorage(String path) throws FileNotFoundException {
+        if (!new File(path).exists()) {
+            throw new FileNotFoundException("Cannot find localStorage file in given path: " + path);
         }
+        this.path = path;
+        this.listSeparator = getString(LIST_SEPARATOR, METADATA_CATEGORY);
+        this.useCache = getBoolean(USE_CACHE, METADATA_CATEGORY);
+        cachedEntries = Collections.synchronizedMap(new HashMap<>());
     }
 
-    private void setMetadata() {
-        setString(METADATA_LOCAL_STORAGE_VERSION, CURRENT_VERSION, METADATA_CATEGORY);
-        setLong(METADATA_CREATION_DATE, System.currentTimeMillis(), METADATA_CATEGORY);
+    protected AbstractLocalStorage(String path, String listSeparator, boolean useCache, boolean overwrite) throws IOException {
+        if (new File(path).exists()) {
+            if (!overwrite) {
+                throw new FileAlreadyExistsException("File " + path + " already exists. Requested local storage creation with no overwrite");
+            } else {
+                new File(path).delete();
+            }
+        }
+        this.path = path;
+        this.listSeparator = listSeparator;
+        this.useCache = useCache;
+        cachedEntries = Collections.synchronizedMap(new HashMap<>());
+    }
+
+    protected void setMetadata() throws IOException {
+        setString(LOCAL_STORAGE_VERSION, CURRENT_VERSION, METADATA_CATEGORY);
+        setLong(CREATION_DATE, System.currentTimeMillis(), METADATA_CATEGORY);
+        setString(LIST_SEPARATOR, listSeparator, METADATA_CATEGORY);
+        setBoolean(USE_CACHE, useCache, METADATA_CATEGORY);
     }
 
     public String getPath() {
         return path;
     }
 
+    @Override
     public String getLocalStorageVersion() {
-        return getString(METADATA_LOCAL_STORAGE_VERSION, METADATA_CATEGORY);
+        return getString(LOCAL_STORAGE_VERSION, METADATA_CATEGORY);
     }
 
+    @Override
     public Date getCreationDate() {
-        Long date = getLong(METADATA_CREATION_DATE, METADATA_CATEGORY);
+        Long date = getLong(CREATION_DATE, METADATA_CATEGORY);
         return date != null ? new Date(date) : null;
     }
 
+    @Override
+    public String getListSeparator() {
+        return listSeparator;
+    }
+
+    @Override
+    public boolean isUseCache() {
+        return useCache;
+    }
+
+    @Override
+    public int itemCount() {
+        return itemCountAux() - keys(METADATA_CATEGORY).size();
+    }
+
+    protected abstract int itemCountAux();
+
     public boolean containsItem(String name, String... categories) {
-        return getString(name, categories) != null;
+        return useCache ? cachedEntries.containsKey(generateCacheKey(name, categories)) : containsKey(name, categories);
     }
 
-    public void removeItem(String name, String... categories) {
-        setString(name, null, categories);
+    protected abstract boolean containsKey(String name, String... categories);
+
+    public void removeItem(String name, String... categories) throws IOException {
+        String cacheKey = generateCacheKey(name, categories);
+        if (useCache && cachedEntries.containsKey(cacheKey)) {
+            cachedEntries.remove(cacheKey);
+            removeItemAux(name, categories);
+        } else {
+            removeItemAux(name, categories);
+        }
+//        setString(name, null, categories);
     }
 
-    public void clear() {
+    protected abstract void removeItemAux(String name, String... categories) throws IOException;
+
+    public final void clear() {
         cachedEntries.clear();
+        clearFile();
     }
+
+    protected abstract void clearFile();
 
     private <E> E loadCache(String name, E value) {
-        cachedEntries.put(name, value != null ? value.toString() : null);
+        if (useCache) {
+            cachedEntries.put(name, value != null ? value.toString() : null);
+        }
         return value;
     }
 
     protected abstract String getStoredValue(String name, String[] categories);
 
-    protected abstract void writeValue(String name, Object value);
+    protected abstract void writeValue(String name, String value, String... categories) throws IOException;
 
-    private boolean setAux(String name, Object value, Object storedValue) {
-        if (value == null || !Util.equals(value, storedValue)) {
-            writeValue(name, loadCache(name, value));
+    private boolean setAux(String name, String value, String... categories) throws IOException {
+        String cacheKey = generateCacheKey(name, categories);
+        if (!useCache ||
+                !cachedEntries.containsKey(cacheKey) ||
+                (cachedEntries.containsKey(cacheKey) && !Util.equals(value, cachedEntries.get(cacheKey)))) {
+            writeValue(name, value, categories);
+            loadCache(cacheKey, value);
             return true;
         } else {
             return false;
@@ -94,160 +149,135 @@ public abstract class AbstractLocalStorage implements LocalStorage {
     }
 
     public String getString(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return cachedEntries.get(name);
+        String key = generateCacheKey(name, categories);
+        if (cachedEntries.containsKey(key)) {
+            return cachedEntries.get(key);
         } else {
-            return loadCache(name, getStoredValue(name, categories));
+            return loadCache(key, getStoredValue(name, categories));
         }
     }
 
-    public boolean setString(String name, String value, String... categories) {
-        name = generateStringKey(name, categories);
-        String storedValue = getString(name);
-        return setAux(name, value, storedValue);
+    public boolean setString(String name, String value, String... categories) throws IOException {
+        return setAux(name, value, categories);
     }
 
     public Boolean getBoolean(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return Boolean.parseBoolean(cachedEntries.get(name));
+        String key = generateCacheKey(name, categories);
+        if (cachedEntries.containsKey(key)) {
+            return Boolean.parseBoolean(cachedEntries.get(key));
         } else {
             String value = getStoredValue(name, categories);
-            loadCache(name, value);
+            loadCache(key, value);
             return value != null ? Boolean.parseBoolean(value) : null;
         }
     }
 
-    public boolean setBoolean(String name, Boolean value, String... categories) {
-        name = generateStringKey(name, categories);
-        Boolean storedValue = getBoolean(name);
-        return setAux(name, value, storedValue);
+    public boolean setBoolean(String name, Boolean value, String... categories) throws IOException {
+        return setAux(name, value != null ? value.toString() : null, categories);
     }
 
     public Byte getByte(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return Byte.parseByte(cachedEntries.get(name));
+        String key = generateCacheKey(name, categories);
+        if (cachedEntries.containsKey(key)) {
+            return Byte.parseByte(cachedEntries.get(key));
         } else {
             String value = getStoredValue(name, categories);
-            loadCache(name, value);
+            loadCache(key, value);
             return value != null ? Byte.parseByte(value) : null;
         }
     }
 
-    public boolean setByte(String name, Byte value, String... categories) {
-        name = generateStringKey(name, categories);
-        Byte storedValue = getByte(name);
-        return setAux(name, value, storedValue);
+    public boolean setByte(String name, Byte value, String... categories) throws IOException {
+        return setAux(name, value != null ? value.toString() : null, categories);
     }
 
     public Short getShort(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return Short.parseShort(cachedEntries.get(name));
+        String key = generateCacheKey(name, categories);
+        if (cachedEntries.containsKey(key)) {
+            return Short.parseShort(cachedEntries.get(key));
         } else {
             String value = getStoredValue(name, categories);
-            loadCache(name, value);
+            loadCache(key, value);
             return value != null ? Short.parseShort(value) : null;
         }
     }
 
-    public boolean setShort(String name, Short value, String... categories) {
-        name = generateStringKey(name, categories);
-        Short storedValue = getShort(name);
-        return setAux(name, value, storedValue);
+    public boolean setShort(String name, Short value, String... categories) throws IOException {
+        return setAux(name, value != null ? value.toString() : null, categories);
     }
 
     public Integer getInteger(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return Integer.parseInt(cachedEntries.get(name));
+        String key = generateCacheKey(name, categories);
+        if (cachedEntries.containsKey(key)) {
+            return Integer.parseInt(cachedEntries.get(key));
         } else {
             String value = getStoredValue(name, categories);
-            loadCache(name, value);
+            loadCache(key, value);
             return value != null ? Integer.parseInt(value) : null;
         }
     }
 
-    public boolean setInteger(String name, Integer value, String... categories) {
-        name = generateStringKey(name, categories);
-        Integer storedValue = getInteger(name);
-        return setAux(name, value, storedValue);
+    public boolean setInteger(String name, Integer value, String... categories) throws IOException {
+        return setAux(name, value != null ? value.toString() : null, categories);
     }
 
     public Long getLong(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return Long.parseLong(cachedEntries.get(name));
+        String key = generateCacheKey(name, categories);
+        if (cachedEntries.containsKey(key)) {
+            return Long.parseLong(cachedEntries.get(key));
         } else {
             String value = getStoredValue(name, categories);
-            loadCache(name, value);
+            loadCache(key, value);
             return value != null ? Long.parseLong(value) : null;
         }
     }
 
-    public boolean setLong(String name, Long value, String... categories) {
-        name = generateStringKey(name, categories);
-        Long storedValue = getLong(name);
-        return setAux(name, value, storedValue);
+    public boolean setLong(String name, Long value, String... categories) throws IOException {
+        return setAux(name, value != null ? value.toString() : null, categories);
     }
 
     public Float getFloat(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return Float.parseFloat(cachedEntries.get(name));
+        String key = generateCacheKey(name, categories);
+        if (cachedEntries.containsKey(key)) {
+            return Float.parseFloat(cachedEntries.get(key));
         } else {
             String value = getStoredValue(name, categories);
-            loadCache(name, value);
+            loadCache(key, value);
             return value != null ? Float.parseFloat(value) : null;
         }
     }
 
-    public boolean setFloat(String name, Float value, String... categories) {
-        name = generateStringKey(name, categories);
-        Float storedValue = getFloat(name);
-        return setAux(name, value, storedValue);
+    public boolean setFloat(String name, Float value, String... categories) throws IOException {
+        return setAux(name, value != null ? value.toString() : null, categories);
     }
 
     public Double getDouble(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return Double.parseDouble(cachedEntries.get(name));
+        String key = generateCacheKey(name, categories);
+        if (cachedEntries.containsKey(key)) {
+            return Double.parseDouble(cachedEntries.get(key));
         } else {
             String value = getStoredValue(name, categories);
-            loadCache(name, value);
+            loadCache(key, value);
             return value != null ? Double.parseDouble(value) : null;
         }
     }
 
-    public boolean setDouble(String name, Double value, String... categories) {
-        name = generateStringKey(name, categories);
-        Double storedValue = getDouble(name);
-        return setAux(name, value, storedValue);
+    public boolean setDouble(String name, Double value, String... categories) throws IOException {
+        return setAux(name, value != null ? value.toString() : null, categories);
     }
 
     public Date getDate(String name, String... categories) {
-        name = generateStringKey(name, categories);
-        if (cachedEntries.containsKey(name)) {
-            return new Date(Long.parseLong(cachedEntries.get(name)));
-        } else {
-            String value = getStoredValue(name, categories);
-            loadCache(name, value);
-            return value != null ? new Date(Long.parseLong(value)) : null;
-        }
+        Long value = getLong(name, categories);
+        return value != null ? new Date(value) : null;
     }
 
-    public boolean setDate(String name, Date value, String... categories) {
-        name = generateStringKey(name, categories);
-        Date storedValue = getDate(name);
-        return setAux(name, value, storedValue);
+    public boolean setDate(String name, Date value, String... categories) throws IOException {
+        return setLong(name, value != null ? value.getTime() : null, categories);
     }
 
     public <E> E getEnum(String name, Class<E> enum_, String... categories) {
-        name = generateStringKey(name, categories);
         try {
-            String str = getString(name);
+            String str = getString(name, categories);
             if (str != null) {
                 Method valueOf = enum_.getMethod("valueOf", String.class);
                 return (E) valueOf.invoke(null, str);
@@ -261,10 +291,9 @@ public abstract class AbstractLocalStorage implements LocalStorage {
     }
 
     public <E> boolean setEnum(String name, Class<E> enum_, E value, String... categories) {
-        name = generateStringKey(name, categories);
         try {
             Method getName = enum_.getMethod("name");
-            return setString(name, (String) getName.invoke(value));
+            return setString(name, (String) getName.invoke(value), categories);
         } catch (Exception e) {
             // cannot happen
             throw new RuntimeException("Fatal error in the implementation of local storage: method 'name' not found in " + enum_.getClass().toString() + ". Cause: " + e.getMessage());
@@ -275,7 +304,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return deserializeList(getString(name, categories));
     }
 
-    public void setStringList(String name, List<String> list, String... categories) {
+    public void setStringList(String name, List<String> list, String... categories) throws IOException {
         setList(name, list, categories);
     }
 
@@ -284,7 +313,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return stringList != null ? stringList.stream().map(Boolean::parseBoolean).collect(Collectors.toList()) : null;
     }
 
-    public void setBooleanList(String name, List<Boolean> list, String... categories) {
+    public void setBooleanList(String name, List<Boolean> list, String... categories) throws IOException {
         setList(name, list, categories);
     }
 
@@ -293,7 +322,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return stringList != null ? stringList.stream().map(Byte::parseByte).collect(Collectors.toList()) : null;
     }
 
-    public void setByteList(String name, List<Byte> list, String... categories) {
+    public void setByteList(String name, List<Byte> list, String... categories) throws IOException {
         setList(name, list, categories);
     }
 
@@ -302,7 +331,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return stringList != null ? stringList.stream().map(Short::parseShort).collect(Collectors.toList()) : null;
     }
 
-    public void setShortList(String name, List<Short> list, String... categories) {
+    public void setShortList(String name, List<Short> list, String... categories) throws IOException {
         setList(name, list, categories);
     }
 
@@ -311,7 +340,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return stringList != null ? stringList.stream().map(Integer::parseInt).collect(Collectors.toList()) : null;
     }
 
-    public void setIntegerList(String name, List<Integer> list, String... categories) {
+    public void setIntegerList(String name, List<Integer> list, String... categories) throws IOException {
         setList(name, list, categories);
     }
 
@@ -320,7 +349,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return stringList != null ? stringList.stream().map(Long::parseLong).collect(Collectors.toList()) : null;
     }
 
-    public void setLongList(String name, List<Long> list, String... categories) {
+    public void setLongList(String name, List<Long> list, String... categories) throws IOException {
         setList(name, list, categories);
     }
 
@@ -329,7 +358,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return stringList != null ? stringList.stream().map(Float::parseFloat).collect(Collectors.toList()) : null;
     }
 
-    public void setFloatList(String name, List<Float> list, String... categories) {
+    public void setFloatList(String name, List<Float> list, String... categories) throws IOException {
         setList(name, list, categories);
     }
 
@@ -338,7 +367,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return stringList != null ? stringList.stream().map(Double::parseDouble).collect(Collectors.toList()) : null;
     }
 
-    public void setDoubleList(String name, List<Double> list, String... categories) {
+    public void setDoubleList(String name, List<Double> list, String... categories) throws IOException {
         setList(name, list, categories);
     }
 
@@ -347,7 +376,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         return stringList != null ? stringList.stream().map(s -> new Date(Long.parseLong(s))).collect(Collectors.toList()) : null;
     }
 
-    public void setDateList(String name, List<Date> list, String... categories) {
+    public void setDateList(String name, List<Date> list, String... categories) throws IOException {
         setLongList(name, list.stream().map(Date::getTime).collect(Collectors.toList()), categories);
     }
 
@@ -368,7 +397,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         }
     }
 
-    public <E> void setEnumList(String name, Class<E> enum_, List<E> list, String... categories) {
+    public <E> void setEnumList(String name, Class<E> enum_, List<E> list, String... categories) throws IOException {
         try {
             Method getName = enum_.getMethod("name");
             List<String> stringList = list.stream().map(v -> {
@@ -385,7 +414,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         }
     }
 
-    private void setList(String name, List<?> list, String... categories) {
+    private void setList(String name, List<?> list, String... categories) throws IOException {
         setString(name, serializeList(list), categories);
     }
 
@@ -416,9 +445,9 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         }
     }
 
-    protected String generateStringKey(String name, String... categories) {
-        StringBuilder catBuilder = new StringBuilder();
-        Stream.of(categories).forEach(cat -> catBuilder.append(cat).append(categorySeparator));
-        return catBuilder.append(name).toString();
+    private String generateCacheKey(String name, String... categories) {
+        List<String> keys = new ArrayList<>(Arrays.asList(categories));
+        keys.add(name);
+        return StringListKey.toString(keys, null);
     }
 }

@@ -2,9 +2,9 @@ package org.aanguita.jacuzzi.hash.hashdb;
 
 import org.aanguita.jacuzzi.hash.HashFunction;
 import org.aanguita.jacuzzi.hash.MD5;
+import org.aanguita.jacuzzi.io.serialization.*;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 import org.aanguita.jacuzzi.maps.AutoKeyMap;
-import org.aanguita.jacuzzi.io.serialization.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -59,18 +59,6 @@ public class FileHashDatabase implements VersionedObject {
         }
     }
 
-//    protected static class AnnotatedFolder implements Serializable {
-//
-//        final String path;
-//
-//        final List<String> fileNames;
-//
-//        protected AnnotatedFolder(String path, List<String> fileNames, boolean storeAbsolutePaths) {
-//            this.path = storeAbsolutePaths ? new File(path).getAbsolutePath() : path;
-//            this.fileNames = fileNames;
-//        }
-//    }
-
     protected static class FileKeyGenerator implements AutoKeyMap.KeyGenerator<String, AnnotatedFile, IOException>, Serializable {
 
         private transient HashFunction hashFunction;
@@ -93,36 +81,6 @@ public class FileHashDatabase implements VersionedObject {
         }
     }
 
-//    protected static class FolderKeyGenerator implements AutoKeyMap.KeyGenerator<String, AnnotatedFolder, IOException>, Serializable {
-//
-//        private transient HashFunction hashFunction;
-//
-//        public FolderKeyGenerator(HashFunction hashFunction) {
-//            this.hashFunction = hashFunction;
-//        }
-//
-//        public void setHashFunction(HashFunction hashFunction) {
-//            this.hashFunction = hashFunction;
-//        }
-//
-//        @Override
-//        public String generateKey(AnnotatedFolder value) throws IOException {
-//            if (!new File(value.path).isDirectory()) {
-//                throw new FileNotFoundException();
-//            }
-//            HashFunction totalHash = new SHA_256();
-//            for (String fileName : value.fileNames) {
-//                File file = new File(value.path, fileName);
-//                if (!file.isFile()) {
-//                    throw new FileNotFoundException();
-//                }
-//                String fileHash = hashFunction.digestAsHex(file);
-//                totalHash.update(fileHash);
-//            }
-//            return totalHash.digestAsHex();
-//        }
-//    }
-
     private static final String VERSION_0_1 = "VERSION_0.1";
 
     private static final String CURRENT_VERSION = VERSION_0_1;
@@ -130,8 +88,6 @@ public class FileHashDatabase implements VersionedObject {
     protected HashFunction hashFunction;
 
     protected AutoKeyMap<String, AnnotatedFile, IOException> filesMap;
-
-//    protected AutoKeyMap<String, AnnotatedFolder, IOException> foldersMap;
 
     protected boolean storeAbsolutePaths;
 
@@ -161,9 +117,22 @@ public class FileHashDatabase implements VersionedObject {
     protected FileHashDatabase(HashFunction hashFunction, FileKeyGenerator fileKeyGenerator, boolean storeAbsolutePaths) {
         this.hashFunction = hashFunction;
         filesMap = new AutoKeyMap<>(fileKeyGenerator);
-//        foldersMap = new AutoKeyMap<>(folderKeyGenerator);
         this.storeAbsolutePaths = storeAbsolutePaths;
         this.repairedFiles = new ArrayList<>();
+    }
+
+    public void addEntries(Map<String, AnnotatedFile> entries) {
+        for (Map.Entry<String, AnnotatedFile> entry : entries.entrySet()) {
+            filesMap.put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    public HashFunction getHashFunction() {
+        return hashFunction;
+    }
+
+    public boolean isStoreAbsolutePaths() {
+        return storeAbsolutePaths;
     }
 
     public List<String> getRepairedFiles() {
@@ -180,7 +149,6 @@ public class FileHashDatabase implements VersionedObject {
 
     public void clear() {
         filesMap.clear();
-//        foldersMap.clear();
     }
 
     public int size() {
@@ -198,10 +166,6 @@ public class FileHashDatabase implements VersionedObject {
     public Duple<Boolean, String> containsSimilarFile(String path) throws IOException {
         return filesMap.containsSimilarValue(new AnnotatedFile(path, storeAbsolutePaths));
     }
-
-//    public boolean containsValue(String folderPath, List<String> fileNames) throws IOException {
-//        return foldersMap.containsValue(new AnnotatedFolder(folderPath, fileNames, storeAbsolutePaths));
-//    }
 
     public Map<String, String> performFileAnalysis(boolean deep) {
         Map<String, String> wrongEntries = new HashMap<>();
@@ -243,39 +207,9 @@ public class FileHashDatabase implements VersionedObject {
         }
     }
 
-//    public Duple<String, List<String>> getFolderPaths(String key) {
-//        if (foldersMap.containsKey(key)) {
-//            return new Duple<>(foldersMap.get(key).path, foldersMap.get(key).fileNames);
-//        } else {
-//            return null;
-//        }
-//    }
-//
-//    public List<File> getFolderFiles(String key) throws FileNotFoundException {
-//        Duple<String, List<String>> folder = getFolderPaths(key);
-//        if (folder == null) {
-//            throw new FileNotFoundException();
-//        } else {
-//            List<File> folderFiles = new ArrayList<>();
-//            for (String fileName : folder.element2) {
-//                File file = new File(folder.element1, fileName);
-//                if (!file.isFile()) {
-//                    throw new FileNotFoundException();
-//                } else {
-//                    folderFiles.add(file);
-//                }
-//            }
-//            return folderFiles;
-//        }
-//    }
-
     public String put(String path) throws IOException {
         return filesMap.put(new AnnotatedFile(path, storeAbsolutePaths));
     }
-
-//    public String put(String folderPath, List<String> fileNames) throws IOException {
-//        return foldersMap.put(new AnnotatedFolder(folderPath, fileNames, storeAbsolutePaths));
-//    }
 
     public String remove(String key) {
         if (filesMap.containsKey(key)) {
@@ -284,20 +218,11 @@ public class FileHashDatabase implements VersionedObject {
         } else {
             return null;
         }
-//        if (foldersMap.containsKey(key)) {
-//            AnnotatedFolder annotatedFolder = foldersMap.remove(key);
-//            return annotatedFolder != null ? annotatedFolder.path : null;
-//        }
-//        return null;
     }
 
     public String removeValue(String path) throws IOException {
         return filesMap.removeValue(new AnnotatedFile(path, storeAbsolutePaths));
     }
-
-//    public String removeValue(String folderPath, List<String> fileNames) throws IOException {
-//        return foldersMap.removeValue(new AnnotatedFolder(folderPath, fileNames, storeAbsolutePaths));
-//    }
 
     public static HashFunction defaultHashFunction() {
         return new MD5();
@@ -314,7 +239,6 @@ public class FileHashDatabase implements VersionedObject {
         map.put("hashFunction-algorithm", hashFunction.getAlgorithm());
         map.put("hashFunction-hashLength", hashFunction.getHashLength());
         map.put("filesMap", filesMap);
-//        map.put("foldersMap", foldersMap);
         map.put("storeAbsolutePaths", storeAbsolutePaths);
         return map;
     }
@@ -329,8 +253,6 @@ public class FileHashDatabase implements VersionedObject {
             }
             filesMap = (AutoKeyMap<String, AnnotatedFile, IOException>) attributes.get("filesMap");
             ((FileKeyGenerator) (filesMap.getKeyGenerator())).setHashFunction(hashFunction);
-//            foldersMap = (AutoKeyMap<String, AnnotatedFolder, IOException>) attributes.get("foldersMap");
-//            ((FolderKeyGenerator) (foldersMap.getKeyGenerator())).setHashFunction(hashFunction);
             storeAbsolutePaths = (boolean) attributes.get("storeAbsolutePaths");
         } else {
             throw new UnrecognizedVersionException();

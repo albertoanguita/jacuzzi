@@ -1,108 +1,51 @@
 package org.aanguita.jacuzzi.io.serialization.localstorage;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by Alberto on 05/12/2016.
  */
-public interface LocalStorage {
+public interface LocalStorage extends ReadOnlyLocalStorage {
 
-    String getLocalStorageVersion();
+    boolean setString(String name, String value, String... categories) throws IOException;
 
-    Date getCreationDate();
+    boolean setBoolean(String name, Boolean value, String... categories) throws IOException;
 
-    int itemCount();
+    boolean setByte(String name, Byte value, String... categories) throws IOException;
 
-    List<String> keys(String... categories);
+    boolean setShort(String name, Short value, String... categories) throws IOException;
 
-    Set<String> categories(String... categories);
+    boolean setInteger(String name, Integer value, String... categories) throws IOException;
 
-    boolean containsItem(String name, String... categories);
+    boolean setLong(String name, Long value, String... categories) throws IOException;
 
-    void removeItem(String name, String... categories);
+    boolean setFloat(String name, Float value, String... categories) throws IOException;
 
-    void clear();
+    boolean setDouble(String name, Double value, String... categories) throws IOException;
 
-    String getString(String name, String... categories);
-
-    boolean setString(String name, String value, String... categories);
-
-    Boolean getBoolean(String name, String... categories);
-
-    boolean setBoolean(String name, Boolean value, String... categories);
-
-    Byte getByte(String name, String... categories);
-
-    boolean setByte(String name, Byte value, String... categories);
-
-    Short getShort(String name, String... categories);
-
-    boolean setShort(String name, Short value, String... categories);
-
-    Integer getInteger(String name, String... categories);
-
-    boolean setInteger(String name, Integer value, String... categories);
-
-    Long getLong(String name, String... categories);
-
-    boolean setLong(String name, Long value, String... categories);
-
-    Float getFloat(String name, String... categories);
-
-    boolean setFloat(String name, Float value, String... categories);
-
-    Double getDouble(String name, String... categories);
-
-    boolean setDouble(String name, Double value, String... categories);
-
-    Date getDate(String name, String... categories);
-
-    boolean setDate(String name, Date value, String... categories);
-
-    <E> E getEnum(String name, Class<E> enum_, String... categories);
+    boolean setDate(String name, Date value, String... categories) throws IOException;
 
     <E> boolean setEnum(String name, Class<E> enum_, E value, String... categories);
 
-    List<String> getStringList(String name, String... categories);
+    void setStringList(String name, List<String> list, String... categories) throws IOException;
 
-    void setStringList(String name, List<String> list, String... categories);
+    void setBooleanList(String name, List<Boolean> list, String... categories) throws IOException;
 
-    List<Boolean> getBooleanList(String name, String... categories);
+    void setByteList(String name, List<Byte> list, String... categories) throws IOException;
 
-    void setBooleanList(String name, List<Boolean> list, String... categories);
+    void setShortList(String name, List<Short> list, String... categories) throws IOException;
 
-    List<Byte> getByteList(String name, String... categories);
+    void setIntegerList(String name, List<Integer> list, String... categories) throws IOException;
 
-    void setByteList(String name, List<Byte> list, String... categories);
+    void setLongList(String name, List<Long> list, String... categories) throws IOException;
 
-    List<Short> getShortList(String name, String... categories);
+    void setFloatList(String name, List<Float> list, String... categories) throws IOException;
 
-    void setShortList(String name, List<Short> list, String... categories);
+    void setDoubleList(String name, List<Double> list, String... categories) throws IOException;
 
-    List<Integer> getIntegerList(String name, String... categories);
+    void setDateList(String name, List<Date> list, String... categories) throws IOException;
 
-    void setIntegerList(String name, List<Integer> list, String... categories);
-
-    List<Long> getLongList(String name, String... categories);
-
-    void setLongList(String name, List<Long> list, String... categories);
-
-    List<Float> getFloatList(String name, String... categories);
-
-    void setFloatList(String name, List<Float> list, String... categories);
-
-    List<Double> getDoubleList(String name, String... categories);
-
-    void setDoubleList(String name, List<Double> list, String... categories);
-
-    List<Date> getDateList(String name, String... categories);
-
-    void setDateList(String name, List<Date> list, String... categories);
-
-    <E> List<E> getEnumList(String name, Class<E> enum_, String... categories);
-
-    <E> void setEnumList(String name, Class<E> enum_, List<E> list, String... categories);
-
+    <E> void setEnumList(String name, Class<E> enum_, List<E> list, String... categories) throws IOException;
 }

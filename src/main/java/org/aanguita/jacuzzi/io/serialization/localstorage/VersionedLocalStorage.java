@@ -7,43 +7,43 @@ import java.io.IOException;
  * provided for facilitating updates to the stored data
  * todo delete
  */
-public class VersionedLocalStorage extends DBLocalStorage {
+public class VersionedLocalStorage /*extends DBLocalStorage*/ {
 
-    public static final String VERSION_KEY = "@@@version@@@";
-
-    public VersionedLocalStorage(String path) throws IOException {
-        super(path);
-    }
-
-    public VersionedLocalStorage(String path, Updater updater, String currentVersion) {
-        super(path);
-        String storedVersion = getVersion();
-        while (!currentVersion.equals(storedVersion)) {
-            storedVersion = updater.update(this, storedVersion);
-        }
-        updateVersion(currentVersion);
-    }
-
-    public static VersionedLocalStorage createNew(String path, String version) throws IOException {
-        DBLocalStorage.createNew(path);
-        VersionedLocalStorage vls = new VersionedLocalStorage(path);
-        vls.updateVersion(version);
-        return vls;
-    }
-
-    public String getVersion() {
-        return getString(VERSION_KEY);
-    }
-
-    public void updateVersion(String version) {
-        setString(VERSION_KEY, version);
-    }
-
-    @Override
-    public void clear() {
-        String version = getVersion();
-        super.clear();
-        // reset the version
-        updateVersion(version);
-    }
+//    public static final String VERSION_KEY = "@@@version@@@";
+//
+//    public VersionedLocalStorage(String path) throws IOException {
+//        super(path);
+//    }
+//
+//    public VersionedLocalStorage(String path, Updater updater, String currentVersion) {
+//        super(path);
+//        String storedVersion = getVersion();
+//        while (!currentVersion.equals(storedVersion)) {
+//            storedVersion = updater.update(this, storedVersion);
+//        }
+//        updateVersion(currentVersion);
+//    }
+//
+//    public static VersionedLocalStorage createNew(String path, String version) throws IOException {
+//        DBLocalStorage.createNew(path);
+//        VersionedLocalStorage vls = new VersionedLocalStorage(path);
+//        vls.updateVersion(version);
+//        return vls;
+//    }
+//
+//    public String getVersion() {
+//        return getString(VERSION_KEY);
+//    }
+//
+//    public void updateVersion(String version) {
+//        setString(VERSION_KEY, version);
+//    }
+//
+//    @Override
+//    public void clear() {
+//        String version = getVersion();
+//        super.clear();
+//        // reset the version
+//        updateVersion(version);
+//    }
 }

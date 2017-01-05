@@ -24,7 +24,7 @@ public class DependencyFactory {
 
     public static synchronized Proxy getDependency(String proxyName) {
         if (!proxies.containsKey(proxyName)) {
-            proxies.put(proxyName, new UnregisteredGenericProxy());
+//            proxies.put(proxyName, new UnregisteredGenericProxy());
         }
         return proxies.get(proxyName);
     }

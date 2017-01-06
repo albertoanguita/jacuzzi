@@ -45,8 +45,8 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
-    public void publish(String channel, Object... messages) {
-        publish(channel, 0L, false, messages);
+    public void publish(String channel, Object message) {
+        publish(channel, 0L, false, message);
     }
 
     @Override

@@ -12,7 +12,7 @@ public interface EventHub {
 
     EventHubFactory.Type getType();
 
-    void publish(String channel, Object... messages);
+    void publish(String channel, Object message);
 
     void publish(String channel, Long keepMillis, boolean inBackground, Object... messages);
 

@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Created by Alberto on 16/11/2016.
  */
-class Channel {
+public class Channel {
 
     private static final String SEPARATOR = "/";
 
@@ -24,11 +24,11 @@ class Channel {
         levels = new ArrayList<>(Arrays.asList(channel.split(SEPARATOR)));
     }
 
-    String getOriginal() {
+    public String getOriginal() {
         return original;
     }
 
-    List<String> getLevels() {
+    public List<String> getLevels() {
         return levels;
     }
 

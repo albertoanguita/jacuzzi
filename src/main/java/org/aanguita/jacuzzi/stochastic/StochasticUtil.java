@@ -57,7 +57,7 @@ public class StochasticUtil {
         // we calculate a double random value between 0 and 1 and then translate it into the required range
         double randomDouble = randomDouble();
         randomDouble *= (double) (max - min + 1);
-        long randomValue = (long) Math.floor(randomDouble);
+        long randomValue = (long) Math.floor(randomDouble) + min;
         if (randomValue > max) {
             randomValue = max;
         }

@@ -11,7 +11,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- *
+ * todo test all types of events
  */
 public class AbstractEventHubTest {
 

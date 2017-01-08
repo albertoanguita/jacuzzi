@@ -6,8 +6,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * todo add more purge strategies (automatic with a thread, upon any event in the event hub)
- * todo optimize purge by ordering publications (use ordered queue)
+ *
  */
 public class PublicationRepository {
 
@@ -49,6 +48,7 @@ public class PublicationRepository {
     }
 
     synchronized void storePublication(Publication publication, Long keepMillis) {
+        purgePublications();
         if (mustStorePublication(keepMillis)) {
             storedStoredPublications.add(new StoredPublication(publication, keepMillis));
         }
@@ -72,11 +72,11 @@ public class PublicationRepository {
                 }
             }
         }
-        Collections.sort(matchingPublications, (o1, o2) -> (int) (o1.getTimestamp() - o2.getTimestamp()));
+        matchingPublications.sort((o1, o2) -> (int) (o1.getTimestamp() - o2.getTimestamp()));
         return matchingPublications;
     }
 
-    public void purgePublications() {
+    private void purgePublications() {
         long now = System.currentTimeMillis();
         while (!storedStoredPublications.isEmpty() && storedStoredPublications.peek().getLiveUntil() != null && storedStoredPublications.peek().getLiveUntil() < now) {
             storedStoredPublications.remove();

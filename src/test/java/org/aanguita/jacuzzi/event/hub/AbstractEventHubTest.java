@@ -1,38 +1,48 @@
 package org.aanguita.jacuzzi.event.hub;
 
+import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.*;
 
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
 /**
- * todo restore
+ *
  */
 public class AbstractEventHubTest {
 
+    private static class SubscriberMock implements EventHubSubscriber {
+
+        private final List<Publication> publications;
+
+        public SubscriberMock() {
+            publications = new ArrayList<>();
+        }
+
+        @Override
+        public void event(Publication publication) {
+            publications.add(publication);
+        }
+    }
+
     EventHub eventHub;
 
-    EventHubSubscriber mockedSubscriberAll;
+    SubscriberMock mockedSubscriberAll;
 
-    EventHubSubscriber mockedSubscriberSome;
+    SubscriberMock mockedSubscriberSome;
 
-    EventHubSubscriber mockedSubscriberOne;
+    SubscriberMock mockedSubscriberOne;
 
     @Before
     public void setUp() throws Exception {
-        eventHub = EventHubFactory.createEventHub("test", EventHubFactory.Type.ASYNCHRONOUS_PERMANENT_THREAD);
-        mockedSubscriberAll = mock(EventHubSubscriber.class);
-        mockedSubscriberSome = mock(EventHubSubscriber.class);
-        mockedSubscriberOne = mock(EventHubSubscriber.class);
-        eventHub.subscribe("all", mockedSubscriberAll, "*");
-        eventHub.subscribe("some", mockedSubscriberSome, "test/?");
-        eventHub.subscribe("one", mockedSubscriberOne, "test/one");
+        eventHub = EventHubFactory.createEventHub("test", EventHubFactory.Type.SIMPLE);
+        mockedSubscriberAll = new SubscriberMock();
+        mockedSubscriberSome = new SubscriberMock();
+        mockedSubscriberOne = new SubscriberMock();
     }
 
     @After
@@ -40,9 +50,23 @@ public class AbstractEventHubTest {
 
     }
 
+    @Test
+    public void testNoSubscribers() {
+        eventHub.publish("hello");
+        eventHub.publish("dear/hi", 5);
+        eventHub.publishMessages("dear/keep", 5000L, false, 5);
+        List<Publication> publicationList = eventHub.getStoredPublications("*/keep");
+        assertEquals(1, publicationList.size());
+        verifyMatches(publicationList.get(0), "test", "dear/keep", 5);
+        ThreadUtil.safeSleep(6000L);
+        assertTrue(eventHub.getStoredPublications("*/keep").isEmpty());
+    }
 
     @Test
-    public void test() {
+    public void testThreeSubscribers() {
+        eventHub.subscribe("all", mockedSubscriberAll, "*");
+        eventHub.subscribe("some", mockedSubscriberSome, "test/?");
+        eventHub.subscribe("one", mockedSubscriberOne, "test/one");
 
         String event1 = "hello";
         String event2 = "test/two";
@@ -58,14 +82,21 @@ public class AbstractEventHubTest {
         eventHub.publish(event3, i, b);
         Assert.assertEquals(new HashSet<>(Arrays.asList(event1, event2, event3)), eventHub.cachedChannels());
 
-//        verify(mockedSubscriberAll).event(event1);
-//        verify(mockedSubscriberAll).event(event2, i);
-//        verify(mockedSubscriberAll).event(event3, i, b);
-//        verify(mockedSubscriberSome, never()).event(event1);
-//        verify(mockedSubscriberSome).event(event2, i);
-//        verify(mockedSubscriberSome).event(event3, i, b);
-//        verify(mockedSubscriberOne, never()).event(event1);
-//        verify(mockedSubscriberOne, never()).event(event2, i);
-//        verify(mockedSubscriberOne).event(event3, i, b);
+        assertEquals(3, mockedSubscriberAll.publications.size());
+        assertEquals(2, mockedSubscriberSome.publications.size());
+        assertEquals(1, mockedSubscriberOne.publications.size());
+        verifyMatches(mockedSubscriberAll.publications.get(0), "test", "hello");
+        verifyMatches(mockedSubscriberAll.publications.get(1), "test", "test/two", 5);
+        verifyMatches(mockedSubscriberAll.publications.get(2), "test", "test/one", 5, true);
+        verifyMatches(mockedSubscriberSome.publications.get(0), "test", "test/two", 5);
+        verifyMatches(mockedSubscriberSome.publications.get(1), "test", "test/one", 5, true);
+        verifyMatches(mockedSubscriberOne.publications.get(0), "test", "test/one", 5, true);
+    }
+
+    private void verifyMatches(Publication publication, String hubName, String channel, Object... messages) {
+        assertEquals(hubName, publication.getEventHubName());
+        assertEquals(channel, publication.getChannel().getOriginal());
+        assertTrue(System.currentTimeMillis() - publication.getTimestamp() < 500L);
+        assertArrayEquals(messages, publication.getMessages());
     }
 }

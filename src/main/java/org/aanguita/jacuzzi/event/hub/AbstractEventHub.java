@@ -45,12 +45,12 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
-    public void publish(String channel, Object message) {
-        publish(channel, 0L, false, message);
+    public void publish(String channel, Object... messages) {
+        publishMessages(channel, 0L, false, messages);
     }
 
     @Override
-    public void publish(String channel, Long keepMillis, boolean inBackground, Object... messages) {
+    public void publishMessages(String channel, Long keepMillis, boolean inBackground, Object... messages) {
         long timestamp = System.currentTimeMillis();
         Channel parsedChannel = new Channel(channel);
         Publication publication = new Publication(getName(), parsedChannel, timestamp, messages);
@@ -82,10 +82,9 @@ abstract class AbstractEventHub implements EventHub {
     protected abstract void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication, boolean inBackground);
 
     protected void invokeSubscribers(List<MatchingSubscriber> matchingSubscribers, boolean haveThreadAvailable, Publication publication) {
-        for (int i = 0; i < matchingSubscribers.size() - 1; i++) {
-            invokeSubscriber(matchingSubscribers.get(i), false, publication);
+        for (int i = 0; i < matchingSubscribers.size(); i++) {
+            invokeSubscriber(matchingSubscribers.get(i), i == matchingSubscribers.size() - 1, publication);
         }
-        invokeSubscriber(matchingSubscribers.get(matchingSubscribers.size() - 1), haveThreadAvailable, publication);
     }
 
     private void invokeSubscriber(MatchingSubscriber matchingSubscriber, boolean haveThreadAvailable, Publication publication) {

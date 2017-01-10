@@ -83,7 +83,7 @@ abstract class AbstractEventHub implements EventHub {
 
     protected void invokeSubscribers(List<MatchingSubscriber> matchingSubscribers, boolean haveThreadAvailable, Publication publication) {
         for (int i = 0; i < matchingSubscribers.size(); i++) {
-            invokeSubscriber(matchingSubscribers.get(i), i == matchingSubscribers.size() - 1, publication);
+            invokeSubscriber(matchingSubscribers.get(i), i == matchingSubscribers.size() - 1 && haveThreadAvailable, publication);
         }
     }
 

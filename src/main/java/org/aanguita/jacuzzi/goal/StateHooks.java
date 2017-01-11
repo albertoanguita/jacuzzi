@@ -99,7 +99,7 @@ public class StateHooks<S> {
         registeredEnterStateHooks = new HashMap<>();
         registeredPeriodicHooks = new HashMap<>();
         registeredExitStateHooks = new HashMap<>();
-        eventHub = EventHubFactory.createEventHub(threadName + AlphaNumFactory.getStaticId(), EventHubFactory.Type.SIMPLE);
+        eventHub = EventHubFactory.createEventHub(threadName + AlphaNumFactory.getStaticId(), EventHubFactory.Type.SYNCHRONOUS);
         this.threadName = threadName;
     }
 

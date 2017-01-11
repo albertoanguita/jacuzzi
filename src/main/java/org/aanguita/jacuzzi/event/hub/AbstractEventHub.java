@@ -46,75 +46,49 @@ abstract class AbstractEventHub implements EventHub {
 
     @Override
     public void publish(String channel, Object... messages) {
-        publishMessages(channel, 0L, false, messages);
+        publish(0L, channel, messages);
     }
 
     @Override
-    public void publishMessages(String channel, Long keepMillis, boolean inBackground, Object... messages) {
+    public void publish(Long keepMillis, String channel, Object... messages) {
         long timestamp = System.currentTimeMillis();
         Channel parsedChannel = new Channel(channel);
         Publication publication = new Publication(getName(), parsedChannel, timestamp, messages);
         List<MatchingSubscriber> subscribersAndBackground = findSubscribers(parsedChannel);
-        publish(subscribersAndBackground, publication, inBackground);
+        publish(subscribersAndBackground, publication);
         publicationRepository.storePublication(publication, keepMillis);
     }
 
     private synchronized List<MatchingSubscriber> findSubscribers(Channel channel) {
-        List<MatchingSubscriber> subscribersAndBackground = new ArrayList<>();
         if (channelCache.containsChannel(channel)) {
             // use the cache
             return channelCache.getSubscribersForExpression(channel);
         } else {
-            // set the cache for this channel
-            List<MatchingSubscriber> unorderedMatchingSubscribers = new ArrayList<>();
+            // calculate the matching subscribers, and also add them to the cache for this channel
+            List<MatchingSubscriber> matchingSubscribers = new ArrayList<>();
             for (SubscriberData subscriberData : subscribers.values()) {
-                Duple<Integer, Boolean> expressionsMatchChannel = subscriberMatchesChannel(subscriberData, channel);
-                if (expressionsMatchChannel != null) {
-                    subscribersAndBackground.add(new MatchingSubscriber(subscriberData.getSubscriber(), expressionsMatchChannel.element1, expressionsMatchChannel.element2));
-                    unorderedMatchingSubscribers.add(new MatchingSubscriber(subscriberData.getSubscriber(), expressionsMatchChannel.element1, expressionsMatchChannel.element2));
+                Integer publishingPriority = subscriberMatchesChannel(subscriberData, channel);
+                if (publishingPriority != null) {
+                    matchingSubscribers.add(new MatchingSubscriber(publishingPriority, subscriberData.getSubscriberProcessor()));
                 }
             }
-            channelCache.addChannel(channel, unorderedMatchingSubscribers);
-        }
-        return subscribersAndBackground;
-    }
-
-    protected abstract void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication, boolean inBackground);
-
-    protected void invokeSubscribers(List<MatchingSubscriber> matchingSubscribers, boolean haveThreadAvailable, Publication publication) {
-        for (int i = 0; i < matchingSubscribers.size(); i++) {
-            invokeSubscriber(matchingSubscribers.get(i), i == matchingSubscribers.size() - 1 && haveThreadAvailable, publication);
+            channelCache.addChannel(channel, matchingSubscribers);
+            // the cache has ordered the matching subscribers, so we use it
+            return channelCache.getSubscribersForExpression(channel);
         }
     }
 
-    private void invokeSubscriber(MatchingSubscriber matchingSubscriber, boolean haveThreadAvailable, Publication publication) {
-        if (matchingSubscriber.isInBackground()) {
-            // this subscriber wants a thread for his own
-            if (haveThreadAvailable) {
-                // use the available thread
-                matchingSubscriber.getEventHubSubscriber().event(publication);
-            } else {
-                // create a new thread only for him
-                ThreadExecutor.submit(() -> matchingSubscriber.getEventHubSubscriber().event(publication));
-            }
-        } else {
-            // do not spawn a new thread
-            matchingSubscriber.getEventHubSubscriber().event(publication);
+    protected abstract void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication);
+
+    protected void invokeSubscribers(List<MatchingSubscriber> matchingSubscribers, Publication publication) {
+        for (MatchingSubscriber matchingSubscriber : matchingSubscribers) {
+            matchingSubscriber.publish(publication);
         }
     }
 
-    private static Duple<Integer, Boolean> subscriberMatchesChannel(SubscriberData subscriber, Channel channel) {
-        Integer channelMatchPriority = expressionWithHighestPriorityMatch(subscriber.getAsynchronousChannels(), channel);
-        if (channelMatchPriority != null) {
-            return new Duple<>(channelMatchPriority, true);
-        } else {
-            channelMatchPriority = expressionWithHighestPriorityMatch(subscriber.getSynchronousChannels(), channel);
-            if (channelMatchPriority != null) {
-                return new Duple<>(channelMatchPriority, false);
-            } else {
-                return null;
-            }
-        }
+    private static Integer subscriberMatchesChannel(SubscriberData subscriber, Channel channel) {
+        // todo useless
+        return expressionWithHighestPriorityMatch(subscriber.getChannels(), channel);
     }
 
     private static Integer expressionWithHighestPriorityMatch(Set<Duple<Channel, Integer>> channels, Channel channel) {
@@ -123,27 +97,38 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
-    public synchronized void subscribe(EventHubSubscriber subscriber, String... channelExpressions) {
-        subscribe(null, subscriber, 0, false, channelExpressions);
-    }
-
-    @Override
-    public synchronized void subscribe(String subscriberId, EventHubSubscriber subscriber, String... channelExpressions) {
-        subscribe(subscriberId, subscriber, 0, false, channelExpressions);
-    }
-
-    @Override
-    public synchronized void subscribe(String subscriberId, EventHubSubscriber subscriber, int priority, boolean inBackground, String... channelExpressions) {
+    public void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.SubscriberProcessorType subscriberProcessorType) {
         if (subscriberId == null) {
             subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
         }
-        if (!subscribers.containsKey(subscriberId)) {
-            subscribers.put(subscriberId, new SubscriberData(subscriberId, subscriber, priority, inBackground, channelExpressions));
+        if (subscribers.containsKey(subscriberId)) {
+            throw new IllegalArgumentException("Subscriber id already registered: " + subscriberId);
         } else {
-            subscribers.get(subscriberId).subscribe(priority, inBackground, channelExpressions);
+            subscribers.put(subscriberId, new SubscriberData(subscriberId, subscriber, SubscriberProcessorFactory.createSubscriberProcessor(subscriberProcessorType, subscriberId, subscriber)));
+        }
+    }
+
+    @Override
+    public synchronized void subscribe(EventHubSubscriber subscriber, EventHubFactory.SubscriberProcessorType subscriberProcessorType, String... channelExpressions) {
+        String subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
+        registerSubscriber(subscriberId, subscriber, subscriberProcessorType);
+        subscribe(subscriberId, channelExpressions);
+    }
+
+    @Override
+    public synchronized void subscribe(String subscriberId, String... channelExpressions) {
+        subscribe(subscriberId, 0, channelExpressions);
+    }
+
+    @Override
+    public synchronized void subscribe(String subscriberId, int priority, String... channelExpressions) {
+        if (!subscribers.containsKey(subscriberId)) {
+            throw new IllegalArgumentException("Attempting to subscribe an unregistered subscriber: " + subscriberId);
+        } else {
+            subscribers.get(subscriberId).subscribe(priority, channelExpressions);
         }
         channelCache.invalidate();
-        ThreadExecutor.submit(() -> publicationRepository.getStoredPublications(channelExpressions).forEach(subscriber::event));
+        ThreadExecutor.submit(() -> publicationRepository.getStoredPublications(channelExpressions).forEach(p -> subscribers.get(subscriberId).getSubscriber().event(p)));
     }
 
     private String assignSubscriberId(String idProposal) {
@@ -177,6 +162,7 @@ abstract class AbstractEventHub implements EventHub {
      */
     @Override
     public void close() {
+        subscribers.values().forEach(SubscriberData::close);
         ThreadExecutor.shutdownClient(threadExecutorClientId);
     }
 }

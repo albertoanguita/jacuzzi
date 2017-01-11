@@ -5,27 +5,21 @@ package org.aanguita.jacuzzi.event.hub;
  */
 class MatchingSubscriber {
 
-    private final EventHubSubscriber eventHubSubscriber;
-
     private final int priority;
 
-    private final boolean inBackground;
+    private final SubscriberProcessor subscriberProcessor;
 
-    MatchingSubscriber(EventHubSubscriber eventHubSubscriber, int priority, boolean inBackground) {
-        this.eventHubSubscriber = eventHubSubscriber;
+    MatchingSubscriber(int priority, SubscriberProcessor subscriberProcessor) {
         this.priority = priority;
-        this.inBackground = inBackground;
-    }
-
-    EventHubSubscriber getEventHubSubscriber() {
-        return eventHubSubscriber;
+        this.subscriberProcessor = subscriberProcessor;
     }
 
     int getPriority() {
         return priority;
     }
 
-    boolean isInBackground() {
-        return inBackground;
+    void publish(Publication publication) {
+        subscriberProcessor.publish(publication);
     }
+
 }

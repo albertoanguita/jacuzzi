@@ -22,7 +22,7 @@ class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
         publicationMessageProcessor = new MessageProcessor<>(name + ".MessageProcessor", new MessageHandler<QueuedPublication>() {
             @Override
             public void handleMessage(QueuedPublication queuedPublication) {
-                invokeSubscribers(queuedPublication.matchingSubscribers, false, queuedPublication.publication);
+                invokeSubscribers(queuedPublication.matchingSubscribers, queuedPublication.publication);
             }
 
             @Override
@@ -34,7 +34,7 @@ class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
     }
 
     @Override
-    protected void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication, boolean inBackground) {
+    protected void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication) {
         try {
             publicationMessageProcessor.addMessage(new QueuedPublication(publication, matchingSubscribers));
         } catch (InterruptedException e) {

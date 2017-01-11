@@ -39,7 +39,7 @@ public class AbstractEventHubTest {
 
     @Before
     public void setUp() throws Exception {
-        eventHub = EventHubFactory.createEventHub("test", EventHubFactory.Type.SIMPLE);
+        eventHub = EventHubFactory.createEventHub("test", EventHubFactory.Type.SYNCHRONOUS);
         mockedSubscriberAll = new SubscriberMock();
         mockedSubscriberSome = new SubscriberMock();
         mockedSubscriberOne = new SubscriberMock();
@@ -54,7 +54,7 @@ public class AbstractEventHubTest {
     public void testNoSubscribers() {
         eventHub.publish("hello");
         eventHub.publish("dear/hi", 5);
-        eventHub.publishMessages("dear/keep", 5000L, false, 5);
+        eventHub.publish(5000L, "dear/keep", 5);
         List<Publication> publicationList = eventHub.getStoredPublications("*/keep");
         assertEquals(1, publicationList.size());
         verifyMatches(publicationList.get(0), "test", "dear/keep", 5);
@@ -64,9 +64,12 @@ public class AbstractEventHubTest {
 
     @Test
     public void testThreeSubscribers() {
-        eventHub.subscribe("all", mockedSubscriberAll, "*");
-        eventHub.subscribe("some", mockedSubscriberSome, "test/?");
-        eventHub.subscribe("one", mockedSubscriberOne, "test/one");
+        eventHub.registerSubscriber("all", mockedSubscriberAll, EventHubFactory.SubscriberProcessorType.ONE_THREAD_PER_PUBLICATION);
+        eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.SubscriberProcessorType.ONE_THREAD_PER_PUBLICATION);
+        eventHub.registerSubscriber("one", mockedSubscriberOne, EventHubFactory.SubscriberProcessorType.ONE_THREAD_PER_PUBLICATION);
+        eventHub.subscribe("all", "*");
+        eventHub.subscribe("some", "test/?");
+        eventHub.subscribe("one", "test/one");
 
         String event1 = "hello";
         String event2 = "test/two";

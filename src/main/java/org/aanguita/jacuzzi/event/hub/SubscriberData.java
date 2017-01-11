@@ -16,20 +16,21 @@ class SubscriberData {
 
     private final EventHubSubscriber subscriber;
 
-    private final Set<Duple<Channel, Integer>> synchronousChannels;
+    private final SubscriberProcessor subscriberProcessor;
 
-    private final Set<Duple<Channel, Integer>> asynchronousChannels;
+    private final Set<Duple<Channel, Integer>> channels;
 
-    private SubscriberData(String subscriberId, EventHubSubscriber subscriber) {
+//    private final Set<Duple<Channel, Integer>> synchronousChannels;
+//
+//    private final Set<Duple<Channel, Integer>> asynchronousChannels;
+
+    SubscriberData(String subscriberId, EventHubSubscriber subscriber, SubscriberProcessor subscriberProcessor) {
         this.subscriberId = subscriberId;
         this.subscriber = subscriber;
-        synchronousChannels = new HashSet<>();
-        asynchronousChannels = new HashSet<>();
-    }
-
-    SubscriberData(String subscriberId, EventHubSubscriber subscriber, int priority, boolean inBackground, String... channelExpressions) {
-        this(subscriberId, subscriber);
-        subscribe(priority, inBackground, channelExpressions);
+        this.subscriberProcessor = subscriberProcessor;
+        channels = new HashSet<>();
+//        synchronousChannels = new HashSet<>();
+//        asynchronousChannels = new HashSet<>();
     }
 
     public String getSubscriberId() {
@@ -40,31 +41,46 @@ class SubscriberData {
         return subscriber;
     }
 
-    Set<Duple<Channel, Integer>> getSynchronousChannels() {
-        return synchronousChannels;
+    public SubscriberProcessor getSubscriberProcessor() {
+        return subscriberProcessor;
     }
 
-    Set<Duple<Channel, Integer>> getAsynchronousChannels() {
-        return asynchronousChannels;
+    public Set<Duple<Channel, Integer>> getChannels() {
+        return channels;
     }
 
-    void subscribe(int priority, boolean inBackground, String... channelExpressions) {
+    //    Set<Duple<Channel, Integer>> getSynchronousChannels() {
+//        return synchronousChannels;
+//    }
+//
+//    Set<Duple<Channel, Integer>> getAsynchronousChannels() {
+//        return asynchronousChannels;
+//    }
+
+    void subscribe(int priority, String... channelExpressions) {
         Set<Duple<Channel, Integer>> newChannels = Arrays.stream(channelExpressions)
                 .map(Channel::new)
                 .map(channel -> new Duple<>(channel, priority))
                 .collect(Collectors.toSet());
-        if (inBackground) {
-            asynchronousChannels.addAll(newChannels);
-        } else {
-            synchronousChannels.addAll(newChannels);
-        }
+        channels.addAll(newChannels);
+//        if (inBackground) {
+//            asynchronousChannels.addAll(newChannels);
+//        } else {
+//            synchronousChannels.addAll(newChannels);
+//        }
     }
 
     void unsubscribe(String... channelExpressions) {
         Set<Channel> oldChannels = Arrays.stream(channelExpressions)
                 .map(Channel::new)
                 .collect(Collectors.toSet());
-        synchronousChannels.removeAll(oldChannels);
-        asynchronousChannels.removeAll(oldChannels);
+        // todo fix
+        channels.removeAll(oldChannels);
+//        synchronousChannels.removeAll(oldChannels);
+//        asynchronousChannels.removeAll(oldChannels);
+    }
+
+    void close() {
+        subscriberProcessor.close();
     }
 }

@@ -18,11 +18,11 @@ class AsynchronousEventualThreadEventHub extends QueuedEventHub {
 
     AsynchronousEventualThreadEventHub(String name) {
         super(name);
-        onDemandQueueProcessor = new OnDemandQueueProcessor<>(queuedPublication -> invokeSubscribers(queuedPublication.matchingSubscribers, false, queuedPublication.publication));
+        onDemandQueueProcessor = new OnDemandQueueProcessor<>(queuedPublication -> invokeSubscribers(queuedPublication.matchingSubscribers, queuedPublication.publication));
     }
 
     @Override
-    protected void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication, boolean inBackground) {
+    protected void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication) {
         onDemandQueueProcessor.addEvent(new QueuedPublication(publication, matchingSubscribers));
     }
 

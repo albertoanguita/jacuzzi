@@ -14,13 +14,15 @@ public interface EventHub {
 
     void publish(String channel, Object... messages);
 
-    void publishMessages(String channel, Long keepMillis, boolean inBackground, Object... messages);
+    void publish(Long keepMillis, String channel, Object... messages);
 
-    void subscribe(EventHubSubscriber subscriber, String... channelExpressions);
+    void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.SubscriberProcessorType subscriberProcessorType);
 
-    void subscribe(String subscriberId, EventHubSubscriber subscriber, String... channelExpressions);
+    void subscribe(EventHubSubscriber subscriber, EventHubFactory.SubscriberProcessorType subscriberProcessorType, String... channelExpressions);
 
-    void subscribe(String subscriberId, EventHubSubscriber subscriber, int priority, boolean inBackground, String... channelExpressions);
+    void subscribe(String subscriberId, String... channelExpressions);
+
+    void subscribe(String subscriberId, int priority, String... channelExpressions);
 
     void unsubscribe(String subscriberId, String... channelExpressions);
 

@@ -118,7 +118,8 @@ public class StateHooks<S> {
 
     public synchronized void addEnterStateHook(S state, Runnable task, boolean useOwnThread) {
         HookSubscriber hookSubscriber = addStateHook(state, task, registeredEnterStateHooks);
-        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, 0, useOwnThread, getEnterChannel(state));
+        // todo restore and review
+//        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, 0, useOwnThread, getEnterChannel(state));
     }
 
     public synchronized void removeEnterStateHook(S state, Runnable task) {
@@ -140,7 +141,8 @@ public class StateHooks<S> {
 
     public synchronized void addExitStateHook(S state, Runnable task, boolean useOwnThread) {
         HookSubscriber hookSubscriber = addStateHook(state, task, registeredExitStateHooks);
-        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, 0, useOwnThread, getExitChannel(state));
+        // todo restore and review
+//        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, 0, useOwnThread, getExitChannel(state));
     }
 
     public synchronized void removeExitStateHook(S state, Runnable task) {

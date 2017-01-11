@@ -67,7 +67,7 @@ abstract class AbstractEventHub implements EventHub {
             // calculate the matching subscribers, and also add them to the cache for this channel
             List<MatchingSubscriber> matchingSubscribers = new ArrayList<>();
             for (SubscriberData subscriberData : subscribers.values()) {
-                Integer publishingPriority = subscriberMatchesChannel(subscriberData, channel);
+                Integer publishingPriority = highestPriorityMatch(subscriberData.getChannels(), channel);
                 if (publishingPriority != null) {
                     matchingSubscribers.add(new MatchingSubscriber(publishingPriority, subscriberData.getSubscriberProcessor()));
                 }
@@ -78,22 +78,17 @@ abstract class AbstractEventHub implements EventHub {
         }
     }
 
+    private static Integer highestPriorityMatch(Set<SubscriberData.ChannelWithPriority> channels, Channel channel) {
+        Optional<SubscriberData.ChannelWithPriority> optional = channels.stream().filter(aChannelWithPriority -> aChannelWithPriority.getChannel().matches(channel)).max((o1, o2) -> o2.getPriority() - o1.getPriority());
+        return optional.isPresent() ? optional.get().getPriority() : null;
+    }
+
     protected abstract void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication);
 
     protected void invokeSubscribers(List<MatchingSubscriber> matchingSubscribers, Publication publication) {
         for (MatchingSubscriber matchingSubscriber : matchingSubscribers) {
             matchingSubscriber.publish(publication);
         }
-    }
-
-    private static Integer subscriberMatchesChannel(SubscriberData subscriber, Channel channel) {
-        // todo useless
-        return expressionWithHighestPriorityMatch(subscriber.getChannels(), channel);
-    }
-
-    private static Integer expressionWithHighestPriorityMatch(Set<Duple<Channel, Integer>> channels, Channel channel) {
-        Optional<Duple<Channel, Integer>> optional = channels.stream().filter(aChannelWithPriority -> aChannelWithPriority.element1.matches(channel)).max((o1, o2) -> o1.element2.compareTo(o2.element2));
-        return optional.isPresent() ? optional.get().element2 : null;
     }
 
     @Override
@@ -164,5 +159,6 @@ abstract class AbstractEventHub implements EventHub {
     public void close() {
         subscribers.values().forEach(SubscriberData::close);
         ThreadExecutor.shutdownClient(threadExecutorClientId);
+        EventHubFactory.removeEventHub(getName());
     }
 }

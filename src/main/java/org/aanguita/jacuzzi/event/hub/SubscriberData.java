@@ -1,7 +1,5 @@
 package org.aanguita.jacuzzi.event.hub;
 
-import org.aanguita.jacuzzi.lists.tuple.Duple;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,25 +10,58 @@ import java.util.stream.Collectors;
  */
 class SubscriberData {
 
+    static class ChannelWithPriority {
+
+        private final Channel channel;
+
+        private final int priority;
+
+        private ChannelWithPriority(Channel channel) {
+            this(channel, 0);
+        }
+
+        private ChannelWithPriority(Channel channel, int priority) {
+            this.channel = channel;
+            this.priority = priority;
+        }
+
+        Channel getChannel() {
+            return channel;
+        }
+
+        int getPriority() {
+            return priority;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ChannelWithPriority that = (ChannelWithPriority) o;
+
+            return channel.equals(that.channel);
+        }
+
+        @Override
+        public int hashCode() {
+            return channel.hashCode();
+        }
+    }
+
     private final String subscriberId;
 
     private final EventHubSubscriber subscriber;
 
     private final SubscriberProcessor subscriberProcessor;
 
-    private final Set<Duple<Channel, Integer>> channels;
-
-//    private final Set<Duple<Channel, Integer>> synchronousChannels;
-//
-//    private final Set<Duple<Channel, Integer>> asynchronousChannels;
+    private final Set<ChannelWithPriority> channels;
 
     SubscriberData(String subscriberId, EventHubSubscriber subscriber, SubscriberProcessor subscriberProcessor) {
         this.subscriberId = subscriberId;
         this.subscriber = subscriber;
         this.subscriberProcessor = subscriberProcessor;
         channels = new HashSet<>();
-//        synchronousChannels = new HashSet<>();
-//        asynchronousChannels = new HashSet<>();
     }
 
     public String getSubscriberId() {
@@ -41,38 +72,26 @@ class SubscriberData {
         return subscriber;
     }
 
-    public SubscriberProcessor getSubscriberProcessor() {
+    SubscriberProcessor getSubscriberProcessor() {
         return subscriberProcessor;
     }
 
-    public Set<Duple<Channel, Integer>> getChannels() {
+    Set<ChannelWithPriority> getChannels() {
         return channels;
     }
 
-    //    Set<Duple<Channel, Integer>> getSynchronousChannels() {
-//        return synchronousChannels;
-//    }
-//
-//    Set<Duple<Channel, Integer>> getAsynchronousChannels() {
-//        return asynchronousChannels;
-//    }
-
     void subscribe(int priority, String... channelExpressions) {
-        Set<Duple<Channel, Integer>> newChannels = Arrays.stream(channelExpressions)
+        Set<ChannelWithPriority> newChannels = Arrays.stream(channelExpressions)
                 .map(Channel::new)
-                .map(channel -> new Duple<>(channel, priority))
+                .map(channel -> new ChannelWithPriority(channel, priority))
                 .collect(Collectors.toSet());
         channels.addAll(newChannels);
-//        if (inBackground) {
-//            asynchronousChannels.addAll(newChannels);
-//        } else {
-//            synchronousChannels.addAll(newChannels);
-//        }
     }
 
     void unsubscribe(String... channelExpressions) {
-        Set<Channel> oldChannels = Arrays.stream(channelExpressions)
+        Set<ChannelWithPriority> oldChannels = Arrays.stream(channelExpressions)
                 .map(Channel::new)
+                .map(ChannelWithPriority::new)
                 .collect(Collectors.toSet());
         // todo fix
         channels.removeAll(oldChannels);

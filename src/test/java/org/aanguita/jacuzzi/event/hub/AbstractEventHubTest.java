@@ -24,7 +24,7 @@ public class AbstractEventHubTest {
         }
 
         @Override
-        public void event(Publication publication) {
+        public synchronized void event(Publication publication) {
             publications.add(publication);
         }
     }
@@ -47,7 +47,7 @@ public class AbstractEventHubTest {
 
     @After
     public void tearDown() throws Exception {
-
+        eventHub.close();
     }
 
     @Test
@@ -65,8 +65,8 @@ public class AbstractEventHubTest {
     @Test
     public void testThreeSubscribers() {
         eventHub.registerSubscriber("all", mockedSubscriberAll, EventHubFactory.SubscriberProcessorType.ONE_THREAD_PER_PUBLICATION);
-        eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.SubscriberProcessorType.ONE_THREAD_PER_PUBLICATION);
-        eventHub.registerSubscriber("one", mockedSubscriberOne, EventHubFactory.SubscriberProcessorType.ONE_THREAD_PER_PUBLICATION);
+        eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.SubscriberProcessorType.ON_DEMAND_QUEUE_PROCESSOR);
+        eventHub.registerSubscriber("one", mockedSubscriberOne, EventHubFactory.SubscriberProcessorType.MESSAGE_PROCESSOR);
         eventHub.subscribe("all", "*");
         eventHub.subscribe("some", "test/?");
         eventHub.subscribe("one", "test/one");
@@ -79,27 +79,36 @@ public class AbstractEventHubTest {
 
         Assert.assertEquals(Collections.emptySet(), eventHub.cachedChannels());
         eventHub.publish(event1);
+        long time1 = System.currentTimeMillis();
+        ThreadUtil.safeSleep(100);
         Assert.assertEquals(new HashSet<>(Collections.singletonList(event1)), eventHub.cachedChannels());
         eventHub.publish(event2, i);
+        long time2 = System.currentTimeMillis();
+        ThreadUtil.safeSleep(100);
         Assert.assertEquals(new HashSet<>(Arrays.asList(event1, event2)), eventHub.cachedChannels());
         eventHub.publish(event3, i, b);
+        long time3 = System.currentTimeMillis();
+        ThreadUtil.safeSleep(100);
         Assert.assertEquals(new HashSet<>(Arrays.asList(event1, event2, event3)), eventHub.cachedChannels());
+
+
+        ThreadUtil.safeSleep(500);
 
         assertEquals(3, mockedSubscriberAll.publications.size());
         assertEquals(2, mockedSubscriberSome.publications.size());
         assertEquals(1, mockedSubscriberOne.publications.size());
-        verifyMatches(mockedSubscriberAll.publications.get(0), "test", "hello");
-        verifyMatches(mockedSubscriberAll.publications.get(1), "test", "test/two", 5);
-        verifyMatches(mockedSubscriberAll.publications.get(2), "test", "test/one", 5, true);
-        verifyMatches(mockedSubscriberSome.publications.get(0), "test", "test/two", 5);
-        verifyMatches(mockedSubscriberSome.publications.get(1), "test", "test/one", 5, true);
-        verifyMatches(mockedSubscriberOne.publications.get(0), "test", "test/one", 5, true);
+        verifyMatches(mockedSubscriberAll.publications.get(0), "test", "hello", time1);
+        verifyMatches(mockedSubscriberAll.publications.get(1), "test", "test/two", time2, 5);
+        verifyMatches(mockedSubscriberAll.publications.get(2), "test", "test/one", time3, 5, true);
+        verifyMatches(mockedSubscriberSome.publications.get(0), "test", "test/two", time1, 5);
+        verifyMatches(mockedSubscriberSome.publications.get(1), "test", "test/one", time2, 5, true);
+        verifyMatches(mockedSubscriberOne.publications.get(0), "test", "test/one", time1, 5, true);
     }
 
-    private void verifyMatches(Publication publication, String hubName, String channel, Object... messages) {
+    private void verifyMatches(Publication publication, String hubName, String channel, long time, Object... messages) {
         assertEquals(hubName, publication.getEventHubName());
         assertEquals(channel, publication.getChannel().getOriginal());
-        assertTrue(System.currentTimeMillis() - publication.getTimestamp() < 500L);
+        assertTrue(time - publication.getTimestamp() < 100L);
         assertArrayEquals(messages, publication.getMessages());
     }
 }

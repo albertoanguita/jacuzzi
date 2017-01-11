@@ -43,4 +43,8 @@ public class EventHubFactory {
                 throw new IllegalArgumentException("Invalid event hub type: " + type);
         }
     }
+
+    static void removeEventHub(String name) {
+        eventHubs.removeObject(name);
+    }
 }

@@ -103,8 +103,8 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
     }
 
     @Override
-    public synchronized void addEnterStateHook(S state, Runnable task, boolean useOwnThread) {
-        stateHooks.addEnterStateHook(state, task, useOwnThread);
+    public synchronized void addEnterStateHook(S state, Runnable task) {
+        stateHooks.addEnterStateHook(state, task);
     }
 
     @Override
@@ -123,8 +123,8 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
     }
 
     @Override
-    public synchronized void addExitStateHook(S state, Runnable task, boolean useOwnThread) {
-        stateHooks.addExitStateHook(state, task, useOwnThread);
+    public synchronized void addExitStateHook(S state, Runnable task) {
+        stateHooks.addExitStateHook(state, task);
     }
 
     @Override

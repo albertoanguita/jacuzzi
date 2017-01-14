@@ -116,10 +116,10 @@ public class StateHooks<S> {
         return registeredEnterStateHooks.get(state).channel + "-exit";
     }
 
-    public synchronized void addEnterStateHook(S state, Runnable task, boolean useOwnThread) {
+    public synchronized void addEnterStateHook(S state, Runnable task) {
         HookSubscriber hookSubscriber = addStateHook(state, task, registeredEnterStateHooks);
-        // todo restore and review
-//        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, 0, useOwnThread, getEnterChannel(state));
+        eventHub.registerSubscriber(hookSubscriber.getId(), hookSubscriber, EventHubFactory.SubscriberProcessorType.ON_DEMAND_QUEUE_PROCESSOR);
+        eventHub.subscribe(hookSubscriber.getId(), 0, getExitChannel(state));
     }
 
     public synchronized void removeEnterStateHook(S state, Runnable task) {
@@ -139,13 +139,14 @@ public class StateHooks<S> {
         }
     }
 
-    public synchronized void addExitStateHook(S state, Runnable task, boolean useOwnThread) {
+    public synchronized void addExitStateHook(S state, Runnable task) {
         HookSubscriber hookSubscriber = addStateHook(state, task, registeredExitStateHooks);
-        // todo restore and review
-//        eventHub.subscribe(hookSubscriber.getId(), hookSubscriber, 0, useOwnThread, getExitChannel(state));
+        eventHub.registerSubscriber(hookSubscriber.getId(), hookSubscriber, EventHubFactory.SubscriberProcessorType.ON_DEMAND_QUEUE_PROCESSOR);
+        eventHub.subscribe(hookSubscriber.getId(), 0, getExitChannel(state));
     }
 
     public synchronized void removeExitStateHook(S state, Runnable task) {
+        // todo unsubscribe from event hub
         removeStateHook(state, task, registeredExitStateHooks);
     }
 

@@ -15,7 +15,7 @@ public interface GoalExecutor<S> {
 
     void evolve();
 
-    void addEnterStateHook(S state, Runnable task, boolean useOwnThread);
+    void addEnterStateHook(S state, Runnable task);
 
     void removeEnterStateHook(S state, Runnable task);
 
@@ -23,7 +23,7 @@ public interface GoalExecutor<S> {
 
     void removePeriodicStateHook(S state);
 
-    void addExitStateHook(S state, Runnable task, boolean useOwnThread);
+    void addExitStateHook(S state, Runnable task);
 
     void removeExitStateHook(S state, Runnable task);
 }

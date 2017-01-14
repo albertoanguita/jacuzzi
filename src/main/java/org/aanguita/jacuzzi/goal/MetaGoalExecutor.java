@@ -36,7 +36,7 @@ public class MetaGoalExecutor<S> implements GoalExecutor<S> {
         private void run(Runnable task) {
             if (!goalExecutor.getState().equals(goal)) {
                 currentTask = task;
-                goalExecutor.addEnterStateHook(goal, task, false);
+                goalExecutor.addEnterStateHook(goal, task);
                 goalExecutor.setGoal(goal);
             } else {
                 currentTask = null;
@@ -142,8 +142,8 @@ public class MetaGoalExecutor<S> implements GoalExecutor<S> {
     }
 
     @Override
-    public void addEnterStateHook(S state, Runnable task, boolean useOwnThread) {
-        stateHooks.addEnterStateHook(state, task, useOwnThread);
+    public void addEnterStateHook(S state, Runnable task) {
+        stateHooks.addEnterStateHook(state, task);
     }
 
     @Override
@@ -162,8 +162,8 @@ public class MetaGoalExecutor<S> implements GoalExecutor<S> {
     }
 
     @Override
-    public void addExitStateHook(S state, Runnable task, boolean useOwnThread) {
-        stateHooks.addExitStateHook(state, task, useOwnThread);
+    public void addExitStateHook(S state, Runnable task) {
+        stateHooks.addExitStateHook(state, task);
     }
 
     @Override

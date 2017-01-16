@@ -93,10 +93,7 @@ class SubscriberData {
                 .map(Channel::new)
                 .map(ChannelWithPriority::new)
                 .collect(Collectors.toSet());
-        // todo fix
         channels.removeAll(oldChannels);
-//        synchronousChannels.removeAll(oldChannels);
-//        asynchronousChannels.removeAll(oldChannels);
     }
 
     void close() {

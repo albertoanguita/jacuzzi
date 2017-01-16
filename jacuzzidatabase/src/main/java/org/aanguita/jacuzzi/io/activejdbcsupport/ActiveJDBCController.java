@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.activejdbcsupport;
+package org.aanguita.jacuzzi.io.activejdbcsupport;
 
 import org.javalite.activejdbc.DB;
 

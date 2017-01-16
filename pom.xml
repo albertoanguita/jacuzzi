@@ -70,19 +70,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-          <groupId>org.javalite</groupId>
-          <artifactId>activejdbc-instrumentation</artifactId>
-          <version>1.4.11</version>
-          <executions>
-              <execution>
-                  <phase>process-classes</phase>
-                  <goals>
-                      <goal>instrument</goal>
-                  </goals>
-              </execution>
-          </executions>
-      </plugin>
     </plugins>
   </build>
   <distributionManagement>

@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.io.serialization.localstorage;
 
-import org.aanguita.jacuzzi.io.serialization.activejdbcsupport.ActiveJDBCController;
+import org.aanguita.jacuzzi.io.activejdbcsupport.ActiveJDBCController;
 import org.aanguita.jacuzzi.objects.ObjectMapPool;
 import org.javalite.activejdbc.DB;
 

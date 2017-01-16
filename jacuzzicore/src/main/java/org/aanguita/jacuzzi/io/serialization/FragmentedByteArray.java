@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * A fragmented byte array, specifically suited for primitive byte arrays
  */
 public class FragmentedByteArray {
 

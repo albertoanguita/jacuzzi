@@ -8,7 +8,7 @@ import java.util.Arrays;
 /**
  * An array which is internally stored by a list of arrays, to avoid copying each time it is extended. When its values
  * are requested, a copy of the desired range is created. This is useful only when we want to use an array that we
- * believe will grow in maxSize frequently
+ * believe will grow in size frequently
  */
 public class FragmentedArray<T> {
 

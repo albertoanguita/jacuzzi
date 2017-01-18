@@ -142,6 +142,22 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
+    public void unsubscribeAll(String subscriberId) {
+        if (subscribers.containsKey(subscriberId)) {
+            subscribers.get(subscriberId).unsubscribeAll();
+        }
+        channelCache.invalidate();
+    }
+
+    @Override
+    public void unregisterSubscriber(String subscriberId) {
+        if (subscribers.containsKey(subscriberId)) {
+            subscribers.remove(subscriberId);
+        }
+        channelCache.invalidate();
+    }
+
+    @Override
     public List<Publication> getStoredPublications(String... channelExpressions) {
         return publicationRepository.getStoredPublications(channelExpressions);
     }

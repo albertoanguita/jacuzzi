@@ -96,6 +96,10 @@ class SubscriberData {
         channels.removeAll(oldChannels);
     }
 
+    void unsubscribeAll() {
+        channels.clear();
+    }
+
     void close() {
         subscriberProcessor.close();
     }

@@ -9,10 +9,7 @@ import org.aanguita.jacuzzi.event.hub.Publication;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.aanguita.jacuzzi.id.StringIdClass;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * S must correspond to an immutable class, as its values will serve as keys in map structures
@@ -123,7 +120,8 @@ public class StateHooks<S> {
     }
 
     public synchronized void removeEnterStateHook(S state, Runnable task) {
-        removeStateHook(state, task, registeredEnterStateHooks);
+        HookSubscriber hookSubscriber = removeStateHook(state, task, registeredEnterStateHooks);
+        unsubscribeHook(hookSubscriber);
     }
 
     public synchronized void setPeriodicStateHook(S state, Runnable task, long delay) {
@@ -146,8 +144,8 @@ public class StateHooks<S> {
     }
 
     public synchronized void removeExitStateHook(S state, Runnable task) {
-        // todo unsubscribe from event hub
-        removeStateHook(state, task, registeredExitStateHooks);
+        HookSubscriber hookSubscriber = removeStateHook(state, task, registeredExitStateHooks);
+        unsubscribeHook(hookSubscriber);
     }
 
     private HookSubscriber addStateHook(S state, Runnable task, Map<S, ChannelTaskSet> registeredStates) {
@@ -159,9 +157,25 @@ public class StateHooks<S> {
         return hookSubscriber;
     }
 
-    private void removeStateHook(S state, Runnable task, Map<S, ChannelTaskSet> registeredStates) {
+    private HookSubscriber removeStateHook(S state, Runnable task, Map<S, ChannelTaskSet> registeredStates) {
         if (registeredStates.containsKey(state)) {
-            registeredStates.get(state).hooks.remove(new HookSubscriber(task));
+            for (Iterator<HookSubscriber> iterator = registeredStates.get(state).hooks.iterator(); iterator.hasNext(); ) {
+                HookSubscriber hookSubscriber = iterator.next();
+                if (hookSubscriber.hook == task) {
+                    iterator.remove();
+                    return hookSubscriber;
+                }
+            }
+            // task not found
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+    private void unsubscribeHook(HookSubscriber hookSubscriber) {
+        if (hookSubscriber != null) {
+            eventHub.unregisterSubscriber(hookSubscriber.getId());
         }
     }
 

@@ -9,14 +9,9 @@ public class EventHubFactory {
 
     public enum Type {
         SYNCHRONOUS,
-        ASYNCHRONOUS_EVENTUAL_THREAD,
-        ASYNCHRONOUS_PERMANENT_THREAD
-    }
-
-    public enum SubscriberProcessorType {
-        ONE_THREAD_PER_PUBLICATION,
-        ON_DEMAND_QUEUE_PROCESSOR,
-        MESSAGE_PROCESSOR
+        ASYNCHRONOUS,
+        ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD,
+        ASYNCHRONOUS_QUEUE_PERMANENT_THREAD
     }
 
     private static ObjectMapPoolAdvancedCreator<String, Type, EventHub> eventHubs = new ObjectMapPoolAdvancedCreator<>(
@@ -35,9 +30,11 @@ public class EventHubFactory {
 
             case SYNCHRONOUS:
                 return new SynchronousEventHub(name);
-            case ASYNCHRONOUS_EVENTUAL_THREAD:
+            case ASYNCHRONOUS:
+                return new AsynchronousEventHub(name);
+            case ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD:
                 return new AsynchronousEventualThreadEventHub(name);
-            case ASYNCHRONOUS_PERMANENT_THREAD:
+            case ASYNCHRONOUS_QUEUE_PERMANENT_THREAD:
                 return new AsynchronousPermanentThreadEventHub(name);
             default:
                 throw new IllegalArgumentException("Invalid event hub type: " + type);

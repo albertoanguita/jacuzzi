@@ -2,7 +2,6 @@ package org.aanguita.jacuzzi.event.hub;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,9 +63,9 @@ public class AbstractEventHubTest {
 
     @Test
     public void testThreeSubscribers() {
-        eventHub.registerSubscriber("all", mockedSubscriberAll, EventHubFactory.SubscriberProcessorType.ONE_THREAD_PER_PUBLICATION);
-        eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.SubscriberProcessorType.ON_DEMAND_QUEUE_PROCESSOR);
-        eventHub.registerSubscriber("one", mockedSubscriberOne, EventHubFactory.SubscriberProcessorType.MESSAGE_PROCESSOR);
+        eventHub.registerSubscriber("all", mockedSubscriberAll, EventHubFactory.Type.ASYNCHRONOUS);
+        eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
+        eventHub.registerSubscriber("one", mockedSubscriberOne, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
         eventHub.subscribe("all", "*");
         eventHub.subscribe("some", "test/?");
         eventHub.subscribe("one", "test/one");

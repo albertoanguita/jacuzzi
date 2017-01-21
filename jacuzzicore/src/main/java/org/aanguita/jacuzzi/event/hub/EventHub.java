@@ -16,9 +16,9 @@ public interface EventHub {
 
     void publish(Long keepMillis, String channel, Object... messages);
 
-    void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.SubscriberProcessorType subscriberProcessorType);
+    void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.Type type);
 
-    void subscribe(EventHubSubscriber subscriber, EventHubFactory.SubscriberProcessorType subscriberProcessorType, String... channelExpressions);
+    void subscribe(EventHubSubscriber subscriber, EventHubFactory.Type type, String... channelExpressions);
 
     void subscribe(String subscriberId, String... channelExpressions);
 

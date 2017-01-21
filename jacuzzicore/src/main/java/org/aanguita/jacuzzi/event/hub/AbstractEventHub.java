@@ -91,21 +91,21 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
-    public void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.SubscriberProcessorType subscriberProcessorType) {
+    public void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.Type type) {
         if (subscriberId == null) {
             subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
         }
         if (subscribers.containsKey(subscriberId)) {
             throw new IllegalArgumentException("Subscriber id already registered: " + subscriberId);
         } else {
-            subscribers.put(subscriberId, new SubscriberData(subscriberId, subscriber, SubscriberProcessorFactory.createSubscriberProcessor(subscriberProcessorType, subscriberId, subscriber)));
+            subscribers.put(subscriberId, new SubscriberData(subscriberId, subscriber, SubscriberProcessorFactory.createSubscriberProcessor(type, subscriberId, subscriber)));
         }
     }
 
     @Override
-    public synchronized void subscribe(EventHubSubscriber subscriber, EventHubFactory.SubscriberProcessorType subscriberProcessorType, String... channelExpressions) {
+    public synchronized void subscribe(EventHubSubscriber subscriber, EventHubFactory.Type type, String... channelExpressions) {
         String subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
-        registerSubscriber(subscriberId, subscriber, subscriberProcessorType);
+        registerSubscriber(subscriberId, subscriber, type);
         subscribe(subscriberId, channelExpressions);
     }
 

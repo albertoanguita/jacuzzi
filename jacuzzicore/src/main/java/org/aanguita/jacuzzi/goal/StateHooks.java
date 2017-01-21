@@ -115,7 +115,7 @@ public class StateHooks<S> {
 
     public synchronized void addEnterStateHook(S state, Runnable task) {
         HookSubscriber hookSubscriber = addStateHook(state, task, registeredEnterStateHooks);
-        eventHub.registerSubscriber(hookSubscriber.getId(), hookSubscriber, EventHubFactory.SubscriberProcessorType.ON_DEMAND_QUEUE_PROCESSOR);
+        eventHub.registerSubscriber(hookSubscriber.getId(), hookSubscriber, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
         eventHub.subscribe(hookSubscriber.getId(), 0, getEnterChannel(state));
     }
 
@@ -139,7 +139,7 @@ public class StateHooks<S> {
 
     public synchronized void addExitStateHook(S state, Runnable task) {
         HookSubscriber hookSubscriber = addStateHook(state, task, registeredExitStateHooks);
-        eventHub.registerSubscriber(hookSubscriber.getId(), hookSubscriber, EventHubFactory.SubscriberProcessorType.ON_DEMAND_QUEUE_PROCESSOR);
+        eventHub.registerSubscriber(hookSubscriber.getId(), hookSubscriber, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
         eventHub.subscribe(hookSubscriber.getId(), 0, getExitChannel(state));
     }
 

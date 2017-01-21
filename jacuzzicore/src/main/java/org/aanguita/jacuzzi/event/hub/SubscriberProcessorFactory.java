@@ -5,16 +5,19 @@ package org.aanguita.jacuzzi.event.hub;
  */
 public class SubscriberProcessorFactory {
 
-    static SubscriberProcessor createSubscriberProcessor(EventHubFactory.SubscriberProcessorType type, String subscriberId, EventHubSubscriber eventHubSubscriber) {
+    static SubscriberProcessor createSubscriberProcessor(EventHubFactory.Type type, String subscriberId, EventHubSubscriber eventHubSubscriber) {
         switch (type) {
 
-            case ONE_THREAD_PER_PUBLICATION:
+            case SYNCHRONOUS:
                 return new OneThreadSubscriberProcessor(subscriberId, eventHubSubscriber);
 
-            case ON_DEMAND_QUEUE_PROCESSOR:
+            case ASYNCHRONOUS:
+                return new OneThreadSubscriberProcessor(subscriberId, eventHubSubscriber);
+
+            case ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD:
                 return new OnDemandSubscriberProcessor(eventHubSubscriber);
 
-            case MESSAGE_PROCESSOR:
+            case ASYNCHRONOUS_QUEUE_PERMANENT_THREAD:
                 return new MessageProcessorSubscriberProcessor(subscriberId, eventHubSubscriber);
 
             default:

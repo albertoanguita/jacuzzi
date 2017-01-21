@@ -14,7 +14,7 @@ class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
 
     @Override
     public EventHubFactory.Type getType() {
-        return EventHubFactory.Type.ASYNCHRONOUS_PERMANENT_THREAD;
+        return EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD;
     }
 
     AsynchronousPermanentThreadEventHub(String name) {

@@ -13,7 +13,7 @@ class AsynchronousEventualThreadEventHub extends QueuedEventHub {
 
     @Override
     public EventHubFactory.Type getType() {
-        return EventHubFactory.Type.ASYNCHRONOUS_EVENTUAL_THREAD;
+        return EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD;
     }
 
     AsynchronousEventualThreadEventHub(String name) {

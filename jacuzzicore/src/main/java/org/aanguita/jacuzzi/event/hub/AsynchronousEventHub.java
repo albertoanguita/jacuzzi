@@ -1,13 +1,15 @@
 package org.aanguita.jacuzzi.event.hub;
 
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
+
 import java.util.List;
 
 /**
- * Created by Alberto on 07/10/2016.
+ * Created by Alberto on 21/01/2017.
  */
-class SynchronousEventHub extends AbstractEventHub {
+public class AsynchronousEventHub extends AbstractEventHub {
 
-    SynchronousEventHub(String name) {
+    AsynchronousEventHub(String name) {
         super(name);
     }
 
@@ -18,6 +20,6 @@ class SynchronousEventHub extends AbstractEventHub {
 
     @Override
     protected void publish(List<MatchingSubscriber> matchingSubscribers, Publication publication) {
-        invokeSubscribers(matchingSubscribers, publication);
+        ThreadExecutor.submit(() -> invokeSubscribers(matchingSubscribers, publication));
     }
 }

@@ -38,7 +38,7 @@ public class AbstractEventHubTest {
 
     @Before
     public void setUp() throws Exception {
-        eventHub = EventHubFactory.createEventHub("test", EventHubFactory.Type.SYNCHRONOUS);
+        eventHub = EventHubFactory.createEventHub("test", EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
         mockedSubscriberAll = new SubscriberMock();
         mockedSubscriberSome = new SubscriberMock();
         mockedSubscriberOne = new SubscriberMock();
@@ -56,7 +56,7 @@ public class AbstractEventHubTest {
         eventHub.publish(5000L, "dear/keep", 5);
         List<Publication> publicationList = eventHub.getStoredPublications("*/keep");
         assertEquals(1, publicationList.size());
-        verifyMatches(publicationList.get(0), "test", "dear/keep", 5);
+        verifyMatches(publicationList.get(0), "test", "dear/keep", System.currentTimeMillis(), 5);
         ThreadUtil.safeSleep(6000L);
         assertTrue(eventHub.getStoredPublications("*/keep").isEmpty());
     }

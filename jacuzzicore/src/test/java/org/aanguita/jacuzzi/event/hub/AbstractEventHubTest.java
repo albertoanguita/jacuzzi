@@ -3,7 +3,9 @@ package org.aanguita.jacuzzi.event.hub;
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.*;
 
@@ -16,15 +18,40 @@ public class AbstractEventHubTest {
 
     private static class SubscriberMock implements EventHubSubscriber {
 
+        private static int order = 0;
+
         private final List<Publication> publications;
+
+        private final Map<Publication, Integer> timestamps;
 
         public SubscriberMock() {
             publications = new ArrayList<>();
+            timestamps = new HashMap<>();
+        }
+
+        public List<Publication> getPublications() {
+            return publications;
+        }
+
+        public Map<Publication, Integer> getTimestamps() {
+            return timestamps;
+        }
+
+        public void clearPublications() {
+            publications.clear();
+            timestamps.clear();
         }
 
         @Override
         public synchronized void event(Publication publication) {
             publications.add(publication);
+            timestamps.put(publication, getOrder());
+        }
+
+        private static synchronized int getOrder() {
+            int result = order;
+            order++;
+            return result;
         }
     }
 
@@ -47,6 +74,48 @@ public class AbstractEventHubTest {
     @After
     public void tearDown() throws Exception {
         eventHub.close();
+    }
+
+    @Test
+    public void test() {
+        EventHub eventHub = EventHubFactory.createEventHub("test-asynchronous-permanent", EventHubFactory.Type.SYNCHRONOUS);
+        testPriorities(eventHub);
+    }
+
+    @Rule
+    public final ExpectedException exception = ExpectedException.none();
+
+    @Test
+    public void testNoInitialization() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage("Requesting a non-existing object: not-initialized");
+        EventHubFactory.getEventHub("not-initialized");
+    }
+
+    private void testPriorities(EventHub eventHub) {
+        SubscriberMock subscriberMock1 = new SubscriberMock();
+        SubscriberMock subscriberMock2 = new SubscriberMock();
+        SubscriberMock subscriberMock3 = new SubscriberMock();
+        eventHub.registerSubscriber("1", subscriberMock1, EventHubFactory.Type.SYNCHRONOUS);
+        eventHub.registerSubscriber("2", subscriberMock2, EventHubFactory.Type.SYNCHRONOUS);
+        eventHub.registerSubscriber("3", subscriberMock3, EventHubFactory.Type.SYNCHRONOUS);
+        eventHub.subscribe("1", 20, "test");
+        eventHub.subscribe("2", 10, "?");
+        eventHub.subscribe("3", 0, "*");
+        eventHub.publish("test", "message");
+        ThreadUtil.safeSleep(100);
+        assertTrue(subscriberMock1.getTimestamps().get(subscriberMock1.getPublications().get(0)) < subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)));
+        assertTrue(subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)) < subscriberMock3.getTimestamps().get(subscriberMock1.getPublications().get(0)));
+        eventHub.unsubscribeAll("1");
+        eventHub.unsubscribeAll("2");
+        eventHub.unsubscribeAll("3");
+        eventHub.subscribe("1", 0, "test");
+        eventHub.subscribe("2", 10, "?");
+        eventHub.subscribe("3", 20, "*");
+        eventHub.publish("test", "message");
+        ThreadUtil.safeSleep(100);
+        assertTrue(subscriberMock1.getTimestamps().get(subscriberMock1.getPublications().get(0)) > subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)));
+        assertTrue(subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)) > subscriberMock3.getTimestamps().get(subscriberMock1.getPublications().get(0)));
     }
 
     @Test
@@ -96,12 +165,12 @@ public class AbstractEventHubTest {
         assertEquals(3, mockedSubscriberAll.publications.size());
         assertEquals(2, mockedSubscriberSome.publications.size());
         assertEquals(1, mockedSubscriberOne.publications.size());
-        verifyMatches(mockedSubscriberAll.publications.get(0), "test", "hello", time1);
-        verifyMatches(mockedSubscriberAll.publications.get(1), "test", "test/two", time2, 5);
-        verifyMatches(mockedSubscriberAll.publications.get(2), "test", "test/one", time3, 5, true);
-        verifyMatches(mockedSubscriberSome.publications.get(0), "test", "test/two", time1, 5);
-        verifyMatches(mockedSubscriberSome.publications.get(1), "test", "test/one", time2, 5, true);
-        verifyMatches(mockedSubscriberOne.publications.get(0), "test", "test/one", time1, 5, true);
+        verifyMatches(mockedSubscriberAll.getPublications().get(0), "test", "hello", time1);
+        verifyMatches(mockedSubscriberAll.getPublications().get(1), "test", "test/two", time2, 5);
+        verifyMatches(mockedSubscriberAll.getPublications().get(2), "test", "test/one", time3, 5, true);
+        verifyMatches(mockedSubscriberSome.getPublications().get(0), "test", "test/two", time1, 5);
+        verifyMatches(mockedSubscriberSome.getPublications().get(1), "test", "test/one", time2, 5, true);
+        verifyMatches(mockedSubscriberOne.getPublications().get(0), "test", "test/one", time1, 5, true);
     }
 
     private void verifyMatches(Publication publication, String hubName, String channel, long time, Object... messages) {

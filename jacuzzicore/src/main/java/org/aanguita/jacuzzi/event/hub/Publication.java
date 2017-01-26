@@ -1,9 +1,11 @@
 package org.aanguita.jacuzzi.event.hub;
 
+import org.aanguita.jacuzzi.id.StringIdClass;
+
 /**
  * A publication on an event hub.
  */
-public class Publication {
+public class Publication extends StringIdClass {
 
     private final String eventHubName;
 
@@ -14,6 +16,7 @@ public class Publication {
     private final Object[] messages;
 
     Publication(String eventHubName, Channel channel, long timestamp, Object[] messages) {
+        super();
         this.eventHubName = eventHubName;
         this.channel = channel;
         this.timestamp = timestamp;

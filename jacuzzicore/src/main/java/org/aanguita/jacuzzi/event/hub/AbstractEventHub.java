@@ -3,6 +3,8 @@ package org.aanguita.jacuzzi.event.hub;
 import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -19,6 +21,8 @@ import java.util.*;
  *         21/09/2016
  */
 abstract class AbstractEventHub implements EventHub {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractEventHub.class);
 
     private final String name;
 
@@ -53,8 +57,9 @@ abstract class AbstractEventHub implements EventHub {
         long timestamp = System.currentTimeMillis();
         Channel parsedChannel = new Channel(channel);
         Publication publication = new Publication(getName(), parsedChannel, timestamp, messages);
-        List<MatchingSubscriber> subscribersAndBackground = findSubscribers(parsedChannel);
-        publish(subscribersAndBackground, publication);
+        List<MatchingSubscriber> matchingSubscribers = findSubscribers(parsedChannel);
+        logger.trace("Found matching subscribers for publication: {}", matchingSubscribers);
+        publish(matchingSubscribers, publication);
         publicationRepository.storePublication(publication, keepMillis);
     }
 

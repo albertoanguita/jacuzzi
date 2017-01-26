@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -16,15 +18,20 @@ import static org.junit.Assert.*;
  */
 public class AbstractEventHubTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(AbstractEventHubTest.class);
+
     private static class SubscriberMock implements EventHubSubscriber {
 
         private static int order = 0;
+
+        private final String name;
 
         private final List<Publication> publications;
 
         private final Map<Publication, Integer> timestamps;
 
-        public SubscriberMock() {
+        public SubscriberMock(String name) {
+            this.name = name;
             publications = new ArrayList<>();
             timestamps = new HashMap<>();
         }
@@ -44,14 +51,25 @@ public class AbstractEventHubTest {
 
         @Override
         public synchronized void event(Publication publication) {
+            int order = getOrder();
+            logger.debug(this + ": new publication: " + publication + " (order " + order + ")");
             publications.add(publication);
-            timestamps.put(publication, getOrder());
+            timestamps.put(publication, order);
         }
 
         private static synchronized int getOrder() {
             int result = order;
             order++;
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "SubscriberMock{" +
+                    "name='" + name + '\'' +
+                    ", publications=" + publications +
+                    ", timestamps=" + timestamps +
+                    '}';
         }
     }
 
@@ -66,9 +84,9 @@ public class AbstractEventHubTest {
     @Before
     public void setUp() throws Exception {
         eventHub = EventHubFactory.createEventHub("test", EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
-        mockedSubscriberAll = new SubscriberMock();
-        mockedSubscriberSome = new SubscriberMock();
-        mockedSubscriberOne = new SubscriberMock();
+        mockedSubscriberAll = new SubscriberMock("all");
+        mockedSubscriberSome = new SubscriberMock("some");
+        mockedSubscriberOne = new SubscriberMock("one");
     }
 
     @After
@@ -93,9 +111,9 @@ public class AbstractEventHubTest {
     }
 
     private void testPriorities(EventHub eventHub) {
-        SubscriberMock subscriberMock1 = new SubscriberMock();
-        SubscriberMock subscriberMock2 = new SubscriberMock();
-        SubscriberMock subscriberMock3 = new SubscriberMock();
+        SubscriberMock subscriberMock1 = new SubscriberMock("1");
+        SubscriberMock subscriberMock2 = new SubscriberMock("2");
+        SubscriberMock subscriberMock3 = new SubscriberMock("3");
         eventHub.registerSubscriber("1", subscriberMock1, EventHubFactory.Type.SYNCHRONOUS);
         eventHub.registerSubscriber("2", subscriberMock2, EventHubFactory.Type.SYNCHRONOUS);
         eventHub.registerSubscriber("3", subscriberMock3, EventHubFactory.Type.SYNCHRONOUS);
@@ -104,11 +122,15 @@ public class AbstractEventHubTest {
         eventHub.subscribe("3", 0, "*");
         eventHub.publish("test", "message");
         ThreadUtil.safeSleep(100);
+
         assertTrue(subscriberMock1.getTimestamps().get(subscriberMock1.getPublications().get(0)) < subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)));
         assertTrue(subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)) < subscriberMock3.getTimestamps().get(subscriberMock1.getPublications().get(0)));
         eventHub.unsubscribeAll("1");
         eventHub.unsubscribeAll("2");
         eventHub.unsubscribeAll("3");
+        subscriberMock1.clearPublications();
+        subscriberMock2.clearPublications();
+        subscriberMock3.clearPublications();
         eventHub.subscribe("1", 0, "test");
         eventHub.subscribe("2", 10, "?");
         eventHub.subscribe("3", 20, "*");

@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class MessageProcessor<E> {
 
-    private Logger LOGGER = LoggerFactory.getLogger(MessageProcessor.class);
+    private Logger logger = LoggerFactory.getLogger(MessageProcessor.class);
 
     /**
      * Default capacity for the event queue
@@ -118,7 +118,7 @@ public class MessageProcessor<E> {
         this.separateThreads = separateThreads;
         simpleSemaphore = new SimpleSemaphore();
         alive = new AtomicBoolean(true);
-        LOGGER.debug(logInit() + ") initialized");
+        logger.debug(logInit() + ") initialized");
     }
 
     private ArrayBlockingQueue<E> initializeMessageQueue(boolean separateThreads, int queueCapacity) {
@@ -160,7 +160,7 @@ public class MessageProcessor<E> {
         } else {
             startThread(messageReaderHandlerThread);
         }
-        LOGGER.debug(logInit() + ") started");
+        logger.debug(logInit() + ") started");
     }
 
     private synchronized void startThread(Thread thread) {
@@ -172,13 +172,13 @@ public class MessageProcessor<E> {
     public void pause() {
         if (alive.get()) {
             simpleSemaphore.pause();
-            LOGGER.debug(logInit() + ") paused");
+            logger.debug(logInit() + ") paused");
         }
     }
 
     public void resume() {
         simpleSemaphore.resume();
-        LOGGER.debug(logInit() + ") resumed");
+        logger.debug(logInit() + ") resumed");
     }
 
     /**
@@ -216,7 +216,7 @@ public class MessageProcessor<E> {
 
     public void addMessage(E message) throws InterruptedException {
         if (messageQueue != null) {
-            LOGGER.debug(logInit() + ") added message");
+            logger.debug(logInit() + ") added message");
             messageQueue.put(message);
         } else {
             throw new IllegalStateException("Tried to add a message with no queue configured");
@@ -225,7 +225,7 @@ public class MessageProcessor<E> {
 
     public E takeMessage() throws InterruptedException {
         if (messageQueue != null) {
-            LOGGER.debug(logInit() + ") removed message");
+            logger.debug(logInit() + ") removed message");
             return messageQueue.take();
         } else {
             throw new IllegalStateException("Tried to retrieve a message with no queue configured");
@@ -262,7 +262,7 @@ public class MessageProcessor<E> {
                 messageReaderHandlerThread.getMessageReader().stop();
                 messageReaderHandlerThread.interrupt();
             }
-            LOGGER.debug(logInit() + ") stopped");
+            logger.debug(logInit() + ") stopped");
         }
     }
 

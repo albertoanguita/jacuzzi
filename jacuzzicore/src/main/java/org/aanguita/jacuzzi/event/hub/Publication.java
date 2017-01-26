@@ -2,6 +2,8 @@ package org.aanguita.jacuzzi.event.hub;
 
 import org.aanguita.jacuzzi.id.StringIdClass;
 
+import java.util.Arrays;
+
 /**
  * A publication on an event hub.
  */
@@ -37,5 +39,15 @@ public class Publication extends StringIdClass {
 
     public Object[] getMessages() {
         return messages;
+    }
+
+    @Override
+    public String toString() {
+        return "Publication{" +
+                "eventHubName='" + eventHubName + '\'' +
+                ", channel=" + channel +
+                ", timestamp=" + timestamp +
+                ", messages=" + Arrays.toString(messages) +
+                '}';
     }
 }

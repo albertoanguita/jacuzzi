@@ -9,7 +9,7 @@ public class SubscriberProcessorFactory {
         switch (type) {
 
             case SYNCHRONOUS:
-                return new OneThreadSubscriberProcessor(subscriberId, eventHubSubscriber);
+                return new SynchronousSubscriberProcessor(subscriberId, eventHubSubscriber);
 
             case ASYNCHRONOUS:
                 return new OneThreadSubscriberProcessor(subscriberId, eventHubSubscriber);

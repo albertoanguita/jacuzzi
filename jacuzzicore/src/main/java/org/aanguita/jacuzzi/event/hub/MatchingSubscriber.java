@@ -22,4 +22,11 @@ class MatchingSubscriber {
         subscriberProcessor.publish(publication);
     }
 
+    @Override
+    public String toString() {
+        return "MatchingSubscriber{" +
+                "priority=" + priority +
+                ", subscriberProcessor=" + subscriberProcessor +
+                '}';
+    }
 }

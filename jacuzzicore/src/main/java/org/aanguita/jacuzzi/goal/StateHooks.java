@@ -12,6 +12,12 @@ import org.aanguita.jacuzzi.id.StringIdClass;
 import java.util.*;
 
 /**
+ * This class allows to register hook methods that must be invoked when certain state among a set of possible states
+ * is reached/left. The states are user defined.
+ *
+ * There are different types of hooks: upon entering a state, upon leaving a state, or periodical (while staying in
+ * a state). All hooks are invoked asynchronously.
+ *
  * S must correspond to an immutable class, as its values will serve as keys in map structures
  */
 public class StateHooks<S> {
@@ -133,7 +139,7 @@ public class StateHooks<S> {
     public synchronized void removePeriodicStateHook(S state) {
         if (registeredPeriodicHooks.containsKey(state)) {
             registeredPeriodicHooks.remove(state);
-            periodicHookTimer.stop();
+            checkPeriodicHook();
         }
     }
 
@@ -198,13 +204,15 @@ public class StateHooks<S> {
     }
 
     private void checkPeriodicHook() {
-        if (registeredPeriodicHooks.containsKey(state)) {
+        if (registeredPeriodicHooks.containsKey(state) && (periodicHookTimer == null || periodicHookTimer.isStopped())) {
             periodicHookTimer = new Timer(
                     registeredPeriodicHooks.get(state).delay,
                     timer -> {
                         registeredPeriodicHooks.get(state).task.run();
                         return null;
                     }, threadName);
+        } else if (!registeredPeriodicHooks.containsKey(state) && periodicHookTimer != null) {
+            periodicHookTimer.stop();
         }
     }
 

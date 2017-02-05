@@ -41,16 +41,16 @@ public class PublicationRepository {
         }
     }
 
-    private final Queue<StoredPublication> storedStoredPublications;
+    private final Queue<StoredPublication> storedPublications;
 
     PublicationRepository() {
-        storedStoredPublications = new PriorityQueue<>();
+        storedPublications = new PriorityQueue<>();
     }
 
     synchronized void storePublication(Publication publication, Long keepMillis) {
         purgePublications();
         if (mustStorePublication(keepMillis)) {
-            storedStoredPublications.add(new StoredPublication(publication, keepMillis));
+            storedPublications.add(new StoredPublication(publication, keepMillis));
         }
     }
 
@@ -64,7 +64,7 @@ public class PublicationRepository {
                 .map(Channel::new)
                 .collect(Collectors.toSet());
         List<Publication> matchingPublications = new ArrayList<>();
-        for (StoredPublication storedPublication : storedStoredPublications) {
+        for (StoredPublication storedPublication : storedPublications) {
             for (Channel channel : channels) {
                 if (channel.matches(storedPublication.getPublication().getChannel())) {
                     matchingPublications.add(storedPublication.getPublication());
@@ -78,8 +78,12 @@ public class PublicationRepository {
 
     private void purgePublications() {
         long now = System.currentTimeMillis();
-        while (!storedStoredPublications.isEmpty() && storedStoredPublications.peek().getLiveUntil() != null && storedStoredPublications.peek().getLiveUntil() < now) {
-            storedStoredPublications.remove();
+        while (!storedPublications.isEmpty() && storedPublications.peek().getLiveUntil() != null && storedPublications.peek().getLiveUntil() < now) {
+            storedPublications.remove();
         }
+    }
+
+    void clear() {
+        storedPublications.clear();
     }
 }

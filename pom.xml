@@ -4,10 +4,16 @@
 
   <groupId>org.aanguita</groupId>
   <artifactId>jacuzzi</artifactId>
-  <version>0.1.0</version>
-  <packaging>jar</packaging>
+  <version>0.2.0</version>
+  <packaging>pom</packaging>
+  <modules>
+    <module>jacuzzicore</module>
+    <module>jacuzzidatabase</module>
+    <module>jacuzziannotations</module>
+    <module>jacuzzifull</module>
+  </modules>
 
-  <name>jacuzzi</name>
+  <name>Jacuzzi</name>
   <url>https://github.com/albertoanguita/jacuzzi</url>
 
   <licenses>
@@ -64,19 +70,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-          <groupId>org.javalite</groupId>
-          <artifactId>activejdbc-instrumentation</artifactId>
-          <version>1.4.11</version>
-          <executions>
-              <execution>
-                  <phase>process-classes</phase>
-                  <goals>
-                      <goal>instrument</goal>
-                  </goals>
-              </execution>
-          </executions>
-      </plugin>
     </plugins>
   </build>
   <distributionManagement>
@@ -87,56 +80,5 @@
     </repository>
   </distributionManagement>
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>1.10.19</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jetbrains</groupId>
-      <artifactId>annotations</artifactId>
-      <version>15.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.1</version>
-    </dependency>
-    <!--<dependency>-->
-    	<!--<groupId>org.apache.commons</groupId>-->
-    	<!--<artifactId>commons-collections4</artifactId>-->
-    	<!--<version>4.1</version>-->
-    <!--</dependency>-->
-    <dependency>
-        <groupId>org.javalite</groupId>
-        <artifactId>activejdbc</artifactId>
-        <version>1.4.12</version>
-    </dependency>
-    <dependency>
-    	<groupId>org.xerial</groupId>
-    	<artifactId>sqlite-jdbc</artifactId>
-    	<version>3.8.11.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.21</version>
-    </dependency>
-    <dependency>
-    	<groupId>org.slf4j</groupId>
-    	<artifactId>slf4j-simple</artifactId>
-    	<version>1.7.21</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
 
 </project>

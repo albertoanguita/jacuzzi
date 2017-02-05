@@ -1,20 +1,13 @@
 package org.aanguita.jacuzzi.goal;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.event.hub.AbstractEventHubTest;
-import org.aanguita.jacuzzi.event.hub.EventHubFactory;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -22,7 +15,7 @@ import static org.mockito.Mockito.*;
  */
 public class StateHooksTest {
 
-    private static final long CYCLE = 2000;
+    private static final long CYCLE = 500;
 
     public enum State {
         A,
@@ -40,7 +33,7 @@ public class StateHooksTest {
 
         private final State state;
 
-        public Mocks(State state) {
+        Mocks(State state) {
             this.state = state;
             doAnswers(state);
         }
@@ -60,13 +53,13 @@ public class StateHooksTest {
             }).when(exit).run();
         }
 
-        public void verifyNone() {
+        void verifyNone() {
             verify(enter, never()).run();
             verify(periodic, never()).run();
             verify(exit, never()).run();
         }
 
-        public void verifyEnter() {
+        void verifyEnter() {
             verify(enter).run();
             reset(enter);
             verify(periodic, never()).run();
@@ -74,7 +67,7 @@ public class StateHooksTest {
             doAnswers(state);
         }
 
-        public void verifyPeriodic() {
+        void verifyPeriodic() {
             verify(enter, never()).run();
             verify(periodic).run();
             reset(periodic);
@@ -82,7 +75,7 @@ public class StateHooksTest {
             doAnswers(state);
         }
 
-        public void verifyExit() {
+        void verifyExit() {
             verify(enter, never()).run();
             verify(periodic, never()).run();
             verify(exit).run();
@@ -122,6 +115,7 @@ public class StateHooksTest {
         ThreadUtil.safeSleep(CYCLE / 2);
         System.out.println("Start cycles");
 
+        System.out.println("Verifying...");
         mocks.get(State.A).verifyExit();
         mocks.get(State.B).verifyEnter();
         mocks.get(State.C).verifyNone();
@@ -130,6 +124,7 @@ public class StateHooksTest {
 
         waitCycle();
 
+        System.out.println("Verifying...");
         mocks.get(State.A).verifyNone();
         mocks.get(State.B).verifyPeriodic();
         mocks.get(State.C).verifyNone();
@@ -138,24 +133,131 @@ public class StateHooksTest {
 
         waitCycle();
 
+        System.out.println("Verifying...");
         mocks.get(State.A).verifyNone();
         mocks.get(State.B).verifyPeriodic();
         mocks.get(State.C).verifyNone();
         mocks.get(State.D).verifyNone();
         mocks.get(State.E).verifyNone();
 
-        sh.setState(State.C);
-        waitCycle();
+        waitHalfCycle(sh, State.C);
 
+        System.out.println("Verifying...");
         mocks.get(State.A).verifyNone();
         mocks.get(State.B).verifyExit();
         mocks.get(State.C).verifyEnter();
         mocks.get(State.D).verifyNone();
         mocks.get(State.E).verifyNone();
+
+        waitCycle();
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyNone();
+        mocks.get(State.C).verifyPeriodic();
+        mocks.get(State.D).verifyNone();
+        mocks.get(State.E).verifyNone();
+
+        waitHalfCycle(sh, State.B);
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyEnter();
+        mocks.get(State.C).verifyExit();
+        mocks.get(State.D).verifyNone();
+        mocks.get(State.E).verifyNone();
+
+        waitCycle();
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyPeriodic();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyNone();
+        mocks.get(State.E).verifyNone();
+
+        waitHalfCycle(sh, State.E);
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyExit();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyNone();
+        mocks.get(State.E).verifyEnter();
+
+        waitCycle();
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyNone();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyNone();
+        mocks.get(State.E).verifyPeriodic();
+
+        waitCycle();
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyNone();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyNone();
+        mocks.get(State.E).verifyPeriodic();
+
+        waitCycle();
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyNone();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyNone();
+        mocks.get(State.E).verifyPeriodic();
+
+        waitHalfCycle(sh, State.D);
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyNone();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyEnter();
+        mocks.get(State.E).verifyExit();
+
+        waitCycle();
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyNone();
+        mocks.get(State.B).verifyNone();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyPeriodic();
+        mocks.get(State.E).verifyNone();
+
+        waitHalfCycle(sh, State.A);
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyEnter();
+        mocks.get(State.B).verifyNone();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyExit();
+        mocks.get(State.E).verifyNone();
+
+        waitCycle();
+
+        System.out.println("Verifying...");
+        mocks.get(State.A).verifyPeriodic();
+        mocks.get(State.B).verifyNone();
+        mocks.get(State.C).verifyNone();
+        mocks.get(State.D).verifyNone();
+        mocks.get(State.E).verifyNone();
+
     }
 
     private void waitCycle() {
         ThreadUtil.safeSleep(CYCLE);
         System.out.println("Enter cycle " + ++cycleCount);
+    }
+
+    private void waitHalfCycle(StateHooks<State> sh, State newState) {
+        sh.setState(newState);
+        ThreadUtil.safeSleep(CYCLE / 2);
+        System.out.println("Enter cycle " + ++cycleCount + " entering state " + newState);
     }
 }

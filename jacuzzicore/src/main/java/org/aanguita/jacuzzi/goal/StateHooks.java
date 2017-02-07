@@ -116,7 +116,7 @@ public class StateHooks<S> {
     }
 
     private String getExitChannel(S state) {
-        return registeredEnterStateHooks.get(state).channel + "-exit";
+        return registeredExitStateHooks.get(state).channel + "-exit";
     }
 
     public synchronized void addEnterStateHook(S state, Runnable task) {
@@ -189,9 +189,13 @@ public class StateHooks<S> {
         if (!state.equals(oldState)) {
             // we have moved to a new state -> invoke hooks
             stopTimer();
-            eventHub.publish(getExitChannel(oldState), true);
+            if (registeredExitStateHooks.containsKey(oldState)) {
+                eventHub.publish(getExitChannel(oldState), true);
+            }
             checkPeriodicHook();
-            eventHub.publish(getEnterChannel(state), true);
+            if (registeredEnterStateHooks.containsKey(state)) {
+                eventHub.publish(getEnterChannel(state), true);
+            }
 
             oldState = state;
         }

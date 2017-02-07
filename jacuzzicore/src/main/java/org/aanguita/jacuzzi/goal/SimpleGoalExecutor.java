@@ -61,7 +61,7 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
         this.goal = initialState;
         this.transitions = transitions;
         monitor = new Monitor(this, threadName + ".GoalExecutor");
-        transitionTimer = new Timer(0, this, threadName + ".GoalExecutor.TransitionTimer");
+        transitionTimer = new Timer(0, this, false, threadName + ".GoalExecutor.TransitionTimer");
         stateHooks = new StateHooks<>(state, threadName + ".GoalExecutor.StateHooks");
         atDesiredState = new SimpleSemaphore();
         setAtDesiredState();

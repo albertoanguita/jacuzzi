@@ -170,10 +170,12 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
         return 0L;
     }
 
+    @Override
     public void blockUntilGoalReached() {
         atDesiredState.access();
     }
 
+    @Override
     public void stop() {
         stateHooks.stop();
         monitor.stop();

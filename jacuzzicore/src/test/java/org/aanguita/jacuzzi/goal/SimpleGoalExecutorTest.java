@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
  */
 public class SimpleGoalExecutorTest {
 
-    private static final long BLOCK = 2000L;
+    private static final long BLOCK = 500L;
     private static final long FAST_BLOCK = 100L;
 
     private class HookEnd {
@@ -123,20 +123,6 @@ public class SimpleGoalExecutorTest {
         };
         SimpleGoalExecutor<DiscreteState> goalExecutor = new SimpleGoalExecutor<>(DiscreteState.A, transitions);
         goalExecutor.setGoal(DiscreteState.E);
-//        EvolvingState<DiscreteState, Boolean> evolvingState = new EvolvingState<>(DiscreteState.A, true, transitions);
-//        goalExecutor.setPeriodicStateHook(DiscreteState.B, BLOCK);
-//        goalExecutor.setEvolveStateTimer(DiscreteState.C, BLOCK * 2);
-//        goalExecutor.setEvolveStateTimer(new Predicate<DiscreteState>() {
-//            @Override
-//            public boolean test(DiscreteState state) {
-//                return true;
-//            }
-//
-//            @Override
-//            public String toString() {
-//                return "general state cond";
-//            }
-//        }, BLOCK * 3);
         goalExecutor.setPeriodicStateHook(DiscreteState.E, () -> System.out.println("Check E!!!"), BLOCK / 2);
         HookEnd hookEnd = new HookEnd();
         goalExecutor.addEnterStateHook(DiscreteState.B, new Hook(hookEnd, "enter B"));
@@ -167,6 +153,7 @@ public class SimpleGoalExecutorTest {
         confirmDiscreteState(DiscreteState.E, goalExecutor);
         ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.E, goalExecutor);
+        goalExecutor.evolve();
         ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.D, goalExecutor);
         confirmHook(hookEnd, "exit E");
@@ -193,100 +180,4 @@ public class SimpleGoalExecutorTest {
         Assert.assertEquals(state, goalExecutor.getState());
         System.out.println("We are in state " + state);
     }
-
-
-    private static class State2 {
-        int state;
-
-        public State2() {
-            this.state = 0;
-        }
-
-        @Override
-        public String toString() {
-            return "State2{" + state + '}';
-        }
-    }
-
-    @Test
-    public void test2() {
-        EvolvingState.Transitions<State2, Boolean> transitions = new EvolvingState.Transitions<State2, Boolean>() {
-            @Override
-            public boolean runTransition(State2 state, Boolean goal, EvolvingStateController<State2, Boolean> controller) {
-                System.out.println("Evolve: " + state);
-                if (goal) {
-                    if (state.state == 0) {
-                        state.state = 1;
-                        controller.stateHasChanged();
-                        return false;
-                    } else {
-                        state.state = 0;
-                        ThreadUtil.safeSleep(500);
-                        controller.stateHasChanged();
-                        return true;
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public boolean hasReachedGoal(State2 state, Boolean goal) {
-                return true;
-            }
-        };
-        EvolvingState<State2, Boolean> evolvingState = new EvolvingState<>(new State2(), true, transitions);
-        evolvingState.setEvolveStateTimer(state -> true, 5000L);
-
-        System.out.println("start");
-        ThreadUtil.safeSleep(41000L);
-    }
-
-    @Test
-    public void increasingTimeTest() {
-        EvolvingState.Transitions<Boolean, Boolean> transitions = new EvolvingState.Transitions<Boolean, Boolean>() {
-            @Override
-            public boolean runTransition(Boolean state, Boolean goal, EvolvingStateController<Boolean, Boolean> controller) {
-                System.out.println("Evolve: " + state);
-                updateRetryTime();
-                return true;
-            }
-
-            @Override
-            public boolean hasReachedGoal(Boolean state, Boolean goal) {
-                return true;
-            }
-        };
-        dynamicState = new EvolvingState<>(true, true, transitions);
-        setRetryTime(MAX_RETRY);
-
-        System.out.println("start");
-        checkDisconnections();
-        ThreadUtil.safeSleep(35000L);
-    }
-
-    private static final long MIN_RETRY = 1000L;
-
-    private static final long MAX_RETRY = 90000L;
-
-    private long currentRetry;
-
-    private EvolvingState<Boolean, Boolean> dynamicState;
-
-    private static final Predicate<Boolean> trueStateCondition = state -> true;
-
-    private void updateRetryTime() {
-        setRetryTime(Math.min(currentRetry * 2, MAX_RETRY));
-    }
-
-    private void setRetryTime(long time) {
-        // replace previously set time with new one
-        System.out.println("set retry time: " + time);
-        dynamicState.setEvolveStateTimer(trueStateCondition, time);
-        currentRetry = time;
-    }
-
-    public void checkDisconnections() {
-        setRetryTime(MIN_RETRY);
-    }
-
 }

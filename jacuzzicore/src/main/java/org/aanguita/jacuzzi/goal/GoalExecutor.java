@@ -26,4 +26,8 @@ public interface GoalExecutor<S> {
     void addExitStateHook(S state, Runnable task);
 
     void removeExitStateHook(S state, Runnable task);
+
+    void blockUntilGoalReached();
+
+    void stop();
 }

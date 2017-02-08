@@ -10,6 +10,12 @@ public interface EventHub {
 
     String getName();
 
+    void start();
+
+    void pause();
+
+    void resume();
+
     EventHubFactory.Type getType();
 
     void publish(String channel, Object... messages);

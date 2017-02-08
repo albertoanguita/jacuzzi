@@ -3,10 +3,12 @@ package org.aanguita.jacuzzi.event.hub;
 import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
+import org.aanguita.jacuzzi.queues.ConsumerQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -22,6 +24,24 @@ import java.util.*;
  */
 abstract class AbstractEventHub implements EventHub {
 
+    private static class PublicationRequest {
+
+        private final Long keepMillis;
+
+        private final Channel parsedChannel;
+
+        private final long timestamp;
+
+        private final Object[] messages;
+
+        private PublicationRequest(Long keepMillis, Channel parsedChannel, long timestamp, Object[] messages) {
+            this.keepMillis = keepMillis;
+            this.parsedChannel = parsedChannel;
+            this.timestamp = timestamp;
+            this.messages = messages;
+        }
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(AbstractEventHub.class);
 
     private final String name;
@@ -32,14 +52,23 @@ abstract class AbstractEventHub implements EventHub {
 
     private final PublicationRepository publicationRepository;
 
+    private final ConsumerQueue<PublicationRequest> queuedPublications;
+
     private final String threadExecutorClientId;
+
+    private final AtomicBoolean alive;
+
+    private boolean running;
 
     AbstractEventHub(String name) {
         this.name = name;
         subscribers = new HashMap<>();
         channelCache = new Cache();
         publicationRepository = new PublicationRepository();
+        queuedPublications = new ConsumerQueue<>(publicationRequest -> publish(publicationRequest.keepMillis, publicationRequest.parsedChannel, publicationRequest.timestamp, publicationRequest.messages));
         threadExecutorClientId = ThreadExecutor.registerClient(name + ".EventHub");
+        alive = new AtomicBoolean(true);
+        running = false;
     }
 
     @Override
@@ -48,14 +77,40 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
-    public void publish(String channel, Object... messages) {
+    public synchronized void start() {
+        resume();
+    }
+
+    @Override
+    public synchronized void pause() {
+        running = false;
+    }
+
+    @Override
+    public synchronized void resume() {
+        running = true;
+        queuedPublications.flush(false);
+    }
+
+    @Override
+    public synchronized void publish(String channel, Object... messages) {
         publish(0L, channel, messages);
     }
 
     @Override
-    public void publish(Long keepMillis, String channel, Object... messages) {
-        long timestamp = System.currentTimeMillis();
-        Channel parsedChannel = new Channel(channel);
+    public synchronized void publish(Long keepMillis, String channel, Object... messages) {
+        if (alive.get()) {
+            long timestamp = System.currentTimeMillis();
+            Channel parsedChannel = new Channel(channel);
+            if (running) {
+                publish(keepMillis, parsedChannel, timestamp, messages);
+            } else {
+                queuedPublications.add(new PublicationRequest(keepMillis, parsedChannel, timestamp, messages));
+            }
+        }
+    }
+
+    private void publish(Long keepMillis, Channel parsedChannel, long timestamp, Object... messages) {
         Publication publication = new Publication(getName(), parsedChannel, timestamp, messages);
         List<MatchingSubscriber> matchingSubscribers = findSubscribers(parsedChannel);
         logger.trace("Found matching subscribers for publication: {}", matchingSubscribers);
@@ -96,38 +151,46 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
-    public void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.Type type) {
-        if (subscriberId == null) {
-            subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
-        }
-        if (subscribers.containsKey(subscriberId)) {
-            throw new IllegalArgumentException("Subscriber id already registered: " + subscriberId);
-        } else {
-            subscribers.put(subscriberId, new SubscriberData(subscriberId, subscriber, SubscriberProcessorFactory.createSubscriberProcessor(type, subscriberId, subscriber)));
+    public synchronized void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.Type type) {
+        if (alive.get()) {
+            if (subscriberId == null) {
+                subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
+            }
+            if (subscribers.containsKey(subscriberId)) {
+                throw new IllegalArgumentException("Subscriber id already registered: " + subscriberId);
+            } else {
+                subscribers.put(subscriberId, new SubscriberData(subscriberId, subscriber, SubscriberProcessorFactory.createSubscriberProcessor(type, subscriberId, subscriber)));
+            }
         }
     }
 
     @Override
     public synchronized void subscribe(EventHubSubscriber subscriber, EventHubFactory.Type type, String... channelExpressions) {
-        String subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
-        registerSubscriber(subscriberId, subscriber, type);
-        subscribe(subscriberId, channelExpressions);
+        if (alive.get()) {
+            String subscriberId = assignSubscriberId(ThreadUtil.invokerName(1));
+            registerSubscriber(subscriberId, subscriber, type);
+            subscribe(subscriberId, channelExpressions);
+        }
     }
 
     @Override
     public synchronized void subscribe(String subscriberId, String... channelExpressions) {
-        subscribe(subscriberId, 0, channelExpressions);
+        if (alive.get()) {
+            subscribe(subscriberId, 0, channelExpressions);
+        }
     }
 
     @Override
     public synchronized void subscribe(String subscriberId, int priority, String... channelExpressions) {
-        if (!subscribers.containsKey(subscriberId)) {
-            throw new IllegalArgumentException("Attempting to subscribe an unregistered subscriber: " + subscriberId);
-        } else {
-            subscribers.get(subscriberId).subscribe(priority, channelExpressions);
+        if (alive.get()) {
+            if (!subscribers.containsKey(subscriberId)) {
+                throw new IllegalArgumentException("Attempting to subscribe an unregistered subscriber: " + subscriberId);
+            } else {
+                subscribers.get(subscriberId).subscribe(priority, channelExpressions);
+            }
+            channelCache.invalidate();
+            ThreadExecutor.submit(() -> publicationRepository.getStoredPublications(channelExpressions).forEach(p -> subscribers.get(subscriberId).getSubscriber().event(p)));
         }
-        channelCache.invalidate();
-        ThreadExecutor.submit(() -> publicationRepository.getStoredPublications(channelExpressions).forEach(p -> subscribers.get(subscriberId).getSubscriber().event(p)));
     }
 
     private String assignSubscriberId(String idProposal) {
@@ -140,31 +203,41 @@ abstract class AbstractEventHub implements EventHub {
 
     @Override
     public synchronized void unsubscribe(String subscriberId, String... channelExpressions) {
-        if (subscribers.containsKey(subscriberId)) {
-            subscribers.get(subscriberId).unsubscribe(channelExpressions);
+        if (alive.get()) {
+            if (subscribers.containsKey(subscriberId)) {
+                subscribers.get(subscriberId).unsubscribe(channelExpressions);
+            }
+            channelCache.invalidate();
         }
-        channelCache.invalidate();
     }
 
     @Override
-    public void unsubscribeAll(String subscriberId) {
-        if (subscribers.containsKey(subscriberId)) {
-            subscribers.get(subscriberId).unsubscribeAll();
+    public synchronized void unsubscribeAll(String subscriberId) {
+        if (alive.get()) {
+            if (subscribers.containsKey(subscriberId)) {
+                subscribers.get(subscriberId).unsubscribeAll();
+            }
+            channelCache.invalidate();
         }
-        channelCache.invalidate();
     }
 
     @Override
-    public void unregisterSubscriber(String subscriberId) {
-        if (subscribers.containsKey(subscriberId)) {
-            subscribers.remove(subscriberId);
+    public synchronized void unregisterSubscriber(String subscriberId) {
+        if (alive.get()) {
+            if (subscribers.containsKey(subscriberId)) {
+                subscribers.remove(subscriberId);
+            }
+            channelCache.invalidate();
         }
-        channelCache.invalidate();
     }
 
     @Override
-    public List<Publication> getStoredPublications(String... channelExpressions) {
-        return publicationRepository.getStoredPublications(channelExpressions);
+    public synchronized List<Publication> getStoredPublications(String... channelExpressions) {
+        if (alive.get()) {
+            return publicationRepository.getStoredPublications(channelExpressions);
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     @Override
@@ -177,8 +250,13 @@ abstract class AbstractEventHub implements EventHub {
      */
     @Override
     public void close() {
-        subscribers.values().forEach(SubscriberData::close);
-        ThreadExecutor.shutdownClient(threadExecutorClientId);
-        EventHubFactory.removeEventHub(getName());
+        if (alive.getAndSet(false)) {
+            channelCache.invalidate();
+            publicationRepository.clear();
+            subscribers.values().forEach(SubscriberData::close);
+            subscribers.clear();
+            ThreadExecutor.shutdownClient(threadExecutorClientId);
+            EventHubFactory.removeEventHub(getName());
+        }
     }
 }

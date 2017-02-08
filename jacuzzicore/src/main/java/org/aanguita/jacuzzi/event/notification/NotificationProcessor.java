@@ -11,6 +11,8 @@ import java.util.Set;
 /**
  * An API for handling event notifications. Classes can emit events, and other classes can subscribe to the emitted so they receive
  * the events.
+ *
+ * @deprecated use event hub api
  */
 public class NotificationProcessor {
 

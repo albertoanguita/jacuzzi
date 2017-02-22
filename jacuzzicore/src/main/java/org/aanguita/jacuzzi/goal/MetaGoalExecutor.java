@@ -171,6 +171,16 @@ public class MetaGoalExecutor<S> implements GoalExecutor<S> {
         stateHooks.removeExitStateHook(state, task);
     }
 
+    @Override
+    public void blockUntilGoalReached() {
+        // todo
+    }
+
+    @Override
+    public void stop() {
+        // todo
+    }
+
     private synchronized void goalRunnerHasReachedGoal(Notifier notifier) {
         if (currentNotifier.equals(notifier)) {
             remainingGoalExecutors--;

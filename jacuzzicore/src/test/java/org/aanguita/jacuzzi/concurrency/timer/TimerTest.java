@@ -1,7 +1,12 @@
 package org.aanguita.jacuzzi.concurrency.timer;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
+import org.aanguita.jacuzzi.network.URLDownloader;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Created by Alberto on 27/04/2016.

@@ -7,6 +7,8 @@ public interface GoalExecutor<S> {
 
     S getState();
 
+    void setState(S newState);
+
     S getGoal();
 
     void setGoal(S newGoal);

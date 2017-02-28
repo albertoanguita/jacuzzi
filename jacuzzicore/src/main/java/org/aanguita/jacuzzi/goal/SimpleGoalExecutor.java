@@ -73,6 +73,15 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
         return state;
     }
 
+    @Override
+    public void setState(S newState) {
+        if (!state.equals(newState)) {
+            this.state = newState;
+            setAtDesiredState();
+            stateHooks.setState(newState);
+        }
+    }
+
     public synchronized S getGoal() {
         return goal;
     }

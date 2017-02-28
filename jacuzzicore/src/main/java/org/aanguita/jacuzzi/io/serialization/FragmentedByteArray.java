@@ -25,6 +25,13 @@ public class FragmentedByteArray {
         return this;
     }
 
+    public void addBytes(byte... bytes) {
+        for (byte b : bytes) {
+            byte[] byteArray = {b};
+            addArray(byteArray);
+        }
+    }
+
     private void addArray(byte[] array) {
         arrayList.add(array);
         length += array.length;

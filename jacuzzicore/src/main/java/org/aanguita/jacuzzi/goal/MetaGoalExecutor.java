@@ -113,6 +113,11 @@ public class MetaGoalExecutor<S> implements GoalExecutor<S> {
     }
 
     @Override
+    public void setState(S newState) {
+        // todo
+    }
+
+    @Override
     public S getGoal() {
         return metaGoal;
     }

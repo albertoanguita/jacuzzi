@@ -147,6 +147,36 @@ public class MetaGoalExecutor<S> implements GoalExecutor<S> {
     }
 
     @Override
+    public void setGlobalBehavior(long millis) {
+        // todo all
+    }
+
+    @Override
+    public void setBehavior(S state, long millis) {
+
+    }
+
+    @Override
+    public void setBehavior(S state, S goal, long millis) {
+
+    }
+
+    @Override
+    public void removeGlobalBehavior() {
+
+    }
+
+    @Override
+    public void removeBehavior(S state) {
+
+    }
+
+    @Override
+    public void removeBehavior(S state, S goal) {
+
+    }
+
+    @Override
     public void addEnterStateHook(S state, Runnable task) {
         stateHooks.addEnterStateHook(state, task);
     }

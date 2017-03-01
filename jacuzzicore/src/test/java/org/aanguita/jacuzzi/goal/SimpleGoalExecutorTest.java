@@ -84,8 +84,7 @@ public class SimpleGoalExecutorTest {
                             return DiscreteState.C;
 
                         case C:
-                            System.out.println("moving state from C to D");
-                            return DiscreteState.D;
+                            System.out.println("moving state from C to D"); return DiscreteState.D;
 
                         case D:
                             System.out.println("moving state from D to E");
@@ -107,21 +106,11 @@ public class SimpleGoalExecutorTest {
                 }
                 return null;
             }
-
-            @Override
-            public Long behaviorInState(DiscreteState state, DiscreteState goal) {
-                switch (state) {
-
-                    case B:
-                        return BLOCK;
-                    case C:
-                        return BLOCK * 2;
-                    default:
-                        return BLOCK * 3;
-                }
-            }
         };
         SimpleGoalExecutor<DiscreteState> goalExecutor = new SimpleGoalExecutor<>(DiscreteState.A, transitions);
+        goalExecutor.setBehavior(DiscreteState.B, BLOCK);
+        goalExecutor.setBehavior(DiscreteState.C, BLOCK * 2);
+        goalExecutor.setGlobalBehavior(BLOCK * 3);
         goalExecutor.setGoal(DiscreteState.E);
         goalExecutor.setPeriodicStateHook(DiscreteState.E, () -> System.out.println("Check E!!!"), BLOCK / 2);
         HookEnd hookEnd = new HookEnd();
@@ -130,6 +119,7 @@ public class SimpleGoalExecutorTest {
         goalExecutor.addEnterStateHook(DiscreteState.C, new Hook(hookEnd, "enter C"));
         goalExecutor.addExitStateHook(DiscreteState.D, new Hook(hookEnd, "exit D"));
         goalExecutor.addExitStateHook(DiscreteState.E, new Hook(hookEnd, "exit E"));
+
 
         confirmDiscreteState(DiscreteState.A, goalExecutor);
         goalExecutor.evolve();

@@ -19,6 +19,8 @@ import java.util.*;
  * a state). All hooks are invoked asynchronously.
  *
  * S must correspond to an immutable class, as its values will serve as keys in map structures
+ *
+ * todo make type of event hub configurable, might want all synchronous (in goal executor e.g.)
  */
 public class StateHooks<S> {
 
@@ -103,6 +105,7 @@ public class StateHooks<S> {
         registeredPeriodicHooks = new HashMap<>();
         registeredExitStateHooks = new HashMap<>();
         eventHub = EventHubFactory.createEventHub(threadName + AlphaNumFactory.getStaticId(), EventHubFactory.Type.SYNCHRONOUS);
+        eventHub.start();
         this.threadName = threadName;
     }
 
@@ -167,7 +170,7 @@ public class StateHooks<S> {
         if (registeredStates.containsKey(state)) {
             for (Iterator<HookSubscriber> iterator = registeredStates.get(state).hooks.iterator(); iterator.hasNext(); ) {
                 HookSubscriber hookSubscriber = iterator.next();
-                if (hookSubscriber.hook == task) {
+                if (hookSubscriber.hook.equals(task)) {
                     iterator.remove();
                     return hookSubscriber;
                 }

@@ -7,6 +7,8 @@ import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 import org.aanguita.jacuzzi.concurrency.timer.Timer;
 import org.aanguita.jacuzzi.concurrency.timer.TimerAction;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -33,7 +35,7 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
          * - a positive value if the runner should wait some time (ms) until transitioning again
          * In any case, if the current state equals the goal, this method will not even be invoked
          */
-        Long behaviorInState(S state, S goal);
+//        Long behaviorInState(S state, S goal);
     }
 
     protected S state;
@@ -45,6 +47,12 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
     protected final Monitor monitor;
 
     private final Timer transitionTimer;
+
+    private Long globalBehavior;
+
+    private final Map<S, Long> stateBehavior;
+
+    private final Map<S, Map<S, Long>> stateGoalBehavior;
 
     private final StateHooks<S> stateHooks;
 
@@ -62,6 +70,9 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
         this.transitions = transitions;
         monitor = new Monitor(this, threadName + ".GoalExecutor");
         transitionTimer = new Timer(0, this, false, threadName + ".GoalExecutor.TransitionTimer");
+        globalBehavior = null;
+        stateBehavior = new HashMap<>();
+        stateGoalBehavior = new HashMap<>();
         stateHooks = new StateHooks<>(state, threadName + ".GoalExecutor.StateHooks");
         atDesiredState = new SimpleSemaphore();
         setAtDesiredState();
@@ -74,11 +85,20 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
     }
 
     @Override
-    public void setState(S newState) {
+    public synchronized void setState(S newState) {
         if (!state.equals(newState)) {
             this.state = newState;
             setAtDesiredState();
             stateHooks.setState(newState);
+            // check the behavior for the new state
+            Long behavior = getCurrentBehavior();
+            if (behavior != null && behavior <= 0) {
+                // transit right now
+                evolve();
+            } else if (behavior != null && behavior > 0) {
+                // wait some time before next transition
+                transitionTimer.reset(behavior);
+            }
         }
     }
 
@@ -108,6 +128,41 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
             atDesiredState.resume();
         } else {
             atDesiredState.pause();
+        }
+    }
+
+    @Override
+    public synchronized void setGlobalBehavior(long millis) {
+        globalBehavior = millis;
+    }
+
+    @Override
+    public synchronized void setBehavior(S state, long millis) {
+        stateBehavior.put(state, millis);
+    }
+
+    @Override
+    public synchronized void setBehavior(S state, S goal, long millis) {
+        if (stateGoalBehavior.containsKey(state)) {
+            stateGoalBehavior.put(state, new HashMap<>());
+        }
+        stateGoalBehavior.get(state).put(goal, millis);
+    }
+
+    @Override
+    public synchronized void removeGlobalBehavior() {
+        globalBehavior = null;
+    }
+
+    @Override
+    public synchronized void removeBehavior(S state) {
+        stateBehavior.remove(state);
+    }
+
+    @Override
+    public synchronized void removeBehavior(S state, S goal) {
+        if (stateGoalBehavior.containsKey(state)) {
+            stateGoalBehavior.get(state).remove(goal);
         }
     }
 
@@ -159,11 +214,11 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
             return true;
         }
         // check the behavior for the current state
-        Long behavior = transitions.behaviorInState(state, goal);
+        Long behavior = getCurrentBehavior();
         if (behavior == null) {
             // do nothing else
             return true;
-        } else if (behavior < 0) {
+        } else if (behavior <= 0) {
             // transit right now
             return false;
         } else {
@@ -171,6 +226,17 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
             transitionTimer.reset(behavior);
             return true;
         }
+    }
+
+    private Long getCurrentBehavior() {
+        Long currentBehavior = globalBehavior;
+        if (stateBehavior.containsKey(state)) {
+            currentBehavior = stateBehavior.get(state);
+        }
+        if (stateGoalBehavior.containsKey(state) && stateGoalBehavior.get(state).containsKey(goal)) {
+            currentBehavior = stateGoalBehavior.get(state).get(goal);
+        }
+        return currentBehavior;
     }
 
     @Override

@@ -17,6 +17,18 @@ public interface GoalExecutor<S> {
 
     void evolve();
 
+    void setGlobalBehavior(long millis);
+
+    void setBehavior(S state, long millis);
+
+    void setBehavior(S state, S goal, long millis);
+
+    void removeGlobalBehavior();
+
+    void removeBehavior(S state);
+
+    void removeBehavior(S state, S goal);
+
     void addEnterStateHook(S state, Runnable task);
 
     void removeEnterStateHook(S state, Runnable task);

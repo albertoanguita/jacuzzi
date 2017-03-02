@@ -2,6 +2,8 @@ package org.aanguita.jacuzzi.objects;
 
 /**
  * Utility methods for objects
+ *
+ * @deprecated use Objects class from SDK
  */
 public class Util {
 

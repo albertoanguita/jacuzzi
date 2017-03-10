@@ -14,8 +14,6 @@ import java.util.stream.IntStream;
  */
 public class OnDemandQueueProcessor<T> implements StateSolver {
 
-    java.rmi.AccessException accessException;
-
     /**
      * Default capacity for the event queue
      */

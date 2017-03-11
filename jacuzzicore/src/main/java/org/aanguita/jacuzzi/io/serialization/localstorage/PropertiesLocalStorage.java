@@ -1,11 +1,10 @@
 package org.aanguita.jacuzzi.io.serialization.localstorage;
 
-import org.aanguita.jacuzzi.objects.Util;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -86,7 +85,7 @@ public class PropertiesLocalStorage extends StringKeyLocalStorage {
     @Override
     protected void writeValue(String key, String value) throws IOException {
         value = value != null ? value : NULL_VALUE;
-        if (!properties.containsKey(key) || !Util.equals(properties.getProperty(key), value)) {
+        if (!properties.containsKey(key) || !Objects.equals(properties.getProperty(key), value)) {
             properties.setProperty(key, value);
             try (OutputStream output = new FileOutputStream(getPath())) {
                 properties.store(output, "Properties local storage");

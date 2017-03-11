@@ -1,7 +1,6 @@
 package org.aanguita.jacuzzi.io.serialization.localstorage;
 
 import org.aanguita.jacuzzi.lists.StringListKey;
-import org.aanguita.jacuzzi.objects.Util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -139,7 +138,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         String cacheKey = generateCacheKey(name, categories);
         if (!useCache ||
                 !cachedEntries.containsKey(cacheKey) ||
-                (cachedEntries.containsKey(cacheKey) && !Util.equals(value, cachedEntries.get(cacheKey)))) {
+                (cachedEntries.containsKey(cacheKey) && !Objects.equals(value, cachedEntries.get(cacheKey)))) {
             writeValue(name, value, categories);
             loadCache(cacheKey, value);
             return true;

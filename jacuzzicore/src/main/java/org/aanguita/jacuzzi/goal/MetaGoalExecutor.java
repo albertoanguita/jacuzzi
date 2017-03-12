@@ -42,7 +42,7 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
          */
         private Runnable currentTask;
 
-        public GoalExecutorAndGoal(SimpleGoalExecutor<S> goalExecutor, S goal) {
+        public GoalExecutorAndGoal(GoalExecutor<S> goalExecutor, S goal) {
             this.goalExecutor = goalExecutor;
             this.goal = goal;
         }
@@ -52,6 +52,7 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
                 currentTask = task;
                 goalExecutor.addEnterStateHook(goal, task);
                 goalExecutor.setGoal(goal);
+
             } else {
                 // already at goal
                 currentTask = null;
@@ -68,6 +69,7 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
         private void clearHook() {
             if (currentTask != null) {
                 goalExecutor.removeEnterStateHook(goal, currentTask);
+                currentTask = null;
             }
         }
     }
@@ -75,17 +77,17 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
     /**
      * A combination of underlying goal executors, each with its goal, and an operator to combine them
      */
-    public static class Step<S> {
+    public static class Step {
 
         private final Operator operator;
 
-        private final Collection<GoalExecutorAndGoal<S>> goalExecutors;
+        private final Collection<GoalExecutorAndGoal<?>> goalExecutors;
 
-        public Step(GoalExecutorAndGoal<S>... goalExecutors) {
+        public Step(GoalExecutorAndGoal<?>... goalExecutors) {
             this(Operator.defaultOperator(), goalExecutors);
         }
 
-        public Step(Operator operator, GoalExecutorAndGoal<S>... goalExecutors) {
+        public Step(Operator operator, GoalExecutorAndGoal<?>... goalExecutors) {
             this.operator = operator;
             this.goalExecutors = Arrays.asList(goalExecutors);
         }
@@ -93,7 +95,7 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
 
     public interface MetaSteps<S> {
 
-        Step<S> getStep(S metaState, S metaGoal);
+        Step getStep(S metaState, S metaGoal);
     }
 
     private class Notifier extends StringIdClass implements Runnable {
@@ -107,9 +109,9 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
 
     private final MetaSteps<S> metaSteps;
 
-    private Step<S> currentStep;
+    private Step currentStep;
 
-    private List<GoalExecutorAndGoal<S>> currentUnfinishedGoalExecutors;
+    private List<GoalExecutorAndGoal<?>> currentUnfinishedGoalExecutors;
 
     private Notifier currentNotifier;
 
@@ -144,7 +146,7 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
         clearCurrentStep();
         if (!state.equals(goal)) {
             currentStep = metaSteps.getStep(state, goal);
-            if (currentStep.goalExecutors.isEmpty()) {
+            if (currentStep == null || currentStep.goalExecutors.isEmpty()) {
                 goalReached();
             } else {
                 currentUnfinishedGoalExecutors = new ArrayList<>(currentStep.goalExecutors);

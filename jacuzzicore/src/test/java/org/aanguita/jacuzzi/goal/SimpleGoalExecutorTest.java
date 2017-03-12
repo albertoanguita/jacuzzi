@@ -1,17 +1,11 @@
 package org.aanguita.jacuzzi.goal;
 
-import org.aanguita.jacuzzi.AI.evolve.EvolvingState;
-import org.aanguita.jacuzzi.AI.evolve.EvolvingStateController;
-import org.aanguita.jacuzzi.AI.evolve.TestEvolvingState;
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Predicate;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Alberto on 07/02/2017.
@@ -111,7 +105,6 @@ public class SimpleGoalExecutorTest {
         goalExecutor.setBehavior(DiscreteState.B, BLOCK);
         goalExecutor.setBehavior(DiscreteState.C, BLOCK * 2);
         goalExecutor.setGlobalBehavior(BLOCK * 3);
-        goalExecutor.setGoal(DiscreteState.E);
         goalExecutor.setPeriodicStateHook(DiscreteState.E, () -> System.out.println("Check E!!!"), BLOCK / 2);
         HookEnd hookEnd = new HookEnd();
         goalExecutor.addEnterStateHook(DiscreteState.B, new Hook(hookEnd, "enter B"));
@@ -122,7 +115,7 @@ public class SimpleGoalExecutorTest {
 
 
         confirmDiscreteState(DiscreteState.A, goalExecutor);
-        goalExecutor.evolve();
+        goalExecutor.setGoal(DiscreteState.E);
         ThreadUtil.safeSleep(BLOCK / 2);
         confirmDiscreteState(DiscreteState.B, goalExecutor);
         confirmHook(hookEnd, "enter B");
@@ -138,12 +131,11 @@ public class SimpleGoalExecutorTest {
         ThreadUtil.safeSleep(FAST_BLOCK);
         confirmDiscreteState(DiscreteState.E, goalExecutor);
         confirmHook(hookEnd, "exit D");
-        goalExecutor.setGoal(DiscreteState.A);
         ThreadUtil.safeSleep(BLOCK - FAST_BLOCK);
         confirmDiscreteState(DiscreteState.E, goalExecutor);
         ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.E, goalExecutor);
-        goalExecutor.evolve();
+        goalExecutor.setGoal(DiscreteState.A);
         ThreadUtil.safeSleep(BLOCK);
         confirmDiscreteState(DiscreteState.D, goalExecutor);
         confirmHook(hookEnd, "exit E");

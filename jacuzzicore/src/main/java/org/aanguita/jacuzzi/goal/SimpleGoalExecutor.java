@@ -70,6 +70,12 @@ public class SimpleGoalExecutor<S> extends AbstractGoalExecutor<S> implements St
         }
     }
 
+    @Override
+    public synchronized void setGoal(S newGoal) {
+        super.setGoal(newGoal);
+        evolve();
+    }
+
     public void evolve() {
         monitor.stateChange();
     }

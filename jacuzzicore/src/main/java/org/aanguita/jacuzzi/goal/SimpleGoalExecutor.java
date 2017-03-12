@@ -1,7 +1,6 @@
 package org.aanguita.jacuzzi.goal;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 import org.aanguita.jacuzzi.concurrency.monitor.Monitor;
 import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 import org.aanguita.jacuzzi.concurrency.timer.Timer;
@@ -14,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by Alberto on 30/10/2016.
  */
-public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExecutor<S> {
+public class SimpleGoalExecutor<S> extends AbstractGoalExecutor<S> implements StateSolver, TimerAction {
 
     public interface Transitions<S> {
 
@@ -24,23 +23,7 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
          * @return the new state (null if state did not change)
          */
         S runTransition(S state, S goal);
-
-        /**
-         * Describes the goal runner behavior in each state, with a specific goal
-         *
-         * @param state the current state
-         * @param goal  the desired state
-         * @return - a negative value if the runner should immediately try to transition to the desired goal
-         * - null if the runner should not perform any transitions, and rather wait for external input
-         * - a positive value if the runner should wait some time (ms) until transitioning again
-         * In any case, if the current state equals the goal, this method will not even be invoked
-         */
-//        Long behaviorInState(S state, S goal);
     }
-
-    protected S state;
-
-    private S goal;
 
     private final Transitions<S> transitions;
 
@@ -54,10 +37,6 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
 
     private final Map<S, Map<S, Long>> stateGoalBehavior;
 
-    private final StateHooks<S> stateHooks;
-
-    private final SimpleSemaphore atDesiredState;
-
     private final AtomicBoolean alive;
 
     public SimpleGoalExecutor(S initialState, Transitions<S> transitions) {
@@ -65,31 +44,20 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
     }
 
     public SimpleGoalExecutor(S initialState, Transitions<S> transitions, String threadName) {
-        this.state = initialState;
-        this.goal = initialState;
+        super(initialState, threadName);
         this.transitions = transitions;
         monitor = new Monitor(this, threadName + ".GoalExecutor");
         transitionTimer = new Timer(0, this, false, threadName + ".GoalExecutor.TransitionTimer");
         globalBehavior = null;
         stateBehavior = new HashMap<>();
         stateGoalBehavior = new HashMap<>();
-        stateHooks = new StateHooks<>(state, threadName + ".GoalExecutor.StateHooks");
-        atDesiredState = new SimpleSemaphore();
-        setAtDesiredState();
         alive = new AtomicBoolean(true);
-    }
-
-
-    public synchronized S getState() {
-        return state;
     }
 
     @Override
     public synchronized void setState(S newState) {
         if (!state.equals(newState)) {
-            this.state = newState;
-            setAtDesiredState();
-            stateHooks.setState(newState);
+            super.setState(newState);
             // check the behavior for the new state
             Long behavior = getCurrentBehavior();
             if (behavior != null && behavior <= 0) {
@@ -102,46 +70,18 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
         }
     }
 
-    public synchronized S getGoal() {
-        return goal;
-    }
-
-    @Override
-    public synchronized void setGoal(S newGoal) {
-        if (!goal.equals(newGoal)) {
-            goal = newGoal;
-            setAtDesiredState();
-        }
-    }
-
-    @Override
-    public synchronized boolean hasReachedGoal() {
-        return state.equals(goal);
-    }
-
     public void evolve() {
         monitor.stateChange();
     }
 
-    private void setAtDesiredState() {
-        if (state.equals(goal)) {
-            atDesiredState.resume();
-        } else {
-            atDesiredState.pause();
-        }
-    }
-
-    @Override
     public synchronized void setGlobalBehavior(long millis) {
         globalBehavior = millis;
     }
 
-    @Override
     public synchronized void setBehavior(S state, long millis) {
         stateBehavior.put(state, millis);
     }
 
-    @Override
     public synchronized void setBehavior(S state, S goal, long millis) {
         if (stateGoalBehavior.containsKey(state)) {
             stateGoalBehavior.put(state, new HashMap<>());
@@ -149,51 +89,18 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
         stateGoalBehavior.get(state).put(goal, millis);
     }
 
-    @Override
     public synchronized void removeGlobalBehavior() {
         globalBehavior = null;
     }
 
-    @Override
     public synchronized void removeBehavior(S state) {
         stateBehavior.remove(state);
     }
 
-    @Override
     public synchronized void removeBehavior(S state, S goal) {
         if (stateGoalBehavior.containsKey(state)) {
             stateGoalBehavior.get(state).remove(goal);
         }
-    }
-
-    @Override
-    public synchronized void addEnterStateHook(S state, Runnable task) {
-        stateHooks.addEnterStateHook(state, task);
-    }
-
-    @Override
-    public synchronized void removeEnterStateHook(S state, Runnable task) {
-        stateHooks.removeEnterStateHook(state, task);
-    }
-
-    @Override
-    public synchronized void setPeriodicStateHook(S state, Runnable task, long delay) {
-        stateHooks.setPeriodicStateHook(state, task, delay);
-    }
-
-    @Override
-    public synchronized void removePeriodicStateHook(S state) {
-        stateHooks.removePeriodicStateHook(state);
-    }
-
-    @Override
-    public synchronized void addExitStateHook(S state, Runnable task) {
-        stateHooks.addExitStateHook(state, task);
-    }
-
-    @Override
-    public synchronized void removeExitStateHook(S state, Runnable task) {
-        stateHooks.removeExitStateHook(state, task);
     }
 
     @Override
@@ -203,12 +110,10 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
         }
         transitionTimer.stop();
         S newState = transitions.runTransition(getState(), getGoal());
-        if (newState != null && newState != state) {
+        if (newState != null) {
             // use this value to replace the old state
-            state = newState;
-            stateHooks.setState(newState);
+            setState(newState);
         }
-        setAtDesiredState();
         // check if we have reached the desired state
         if (state.equals(goal)) {
             return true;
@@ -246,13 +151,8 @@ public class SimpleGoalExecutor<S> implements StateSolver, TimerAction, GoalExec
     }
 
     @Override
-    public void blockUntilGoalReached() {
-        atDesiredState.access();
-    }
-
-    @Override
     public void stop() {
-        stateHooks.stop();
+        super.stop();
         monitor.stop();
         transitionTimer.stop();
         alive.set(false);

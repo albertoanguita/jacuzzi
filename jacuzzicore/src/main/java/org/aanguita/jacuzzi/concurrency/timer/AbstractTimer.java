@@ -106,7 +106,7 @@ public abstract class AbstractTimer extends StringIdClass {
 
     private synchronized void shutdownThread() {
         if (threadExecutorClientId != null) {
-            ThreadExecutor.shutdownClient(threadExecutorClientId);
+            ThreadExecutor.unregisterClient(threadExecutorClientId);
             threadExecutorClientId = null;
         }
     }

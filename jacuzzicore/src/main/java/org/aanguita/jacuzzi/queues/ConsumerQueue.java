@@ -37,7 +37,7 @@ public class ConsumerQueue<T> {
         if (inBackground) {
             String threadExecutorId = ThreadExecutor.registerClient("ConsumerQueue");
             ThreadExecutor.submit(() -> flush(false, delayBetweenTasks));
-            ThreadExecutor.shutdownClient(threadExecutorId);
+            ThreadExecutor.unregisterClient(threadExecutorId);
         } else {
             while (!queuedTasks.isEmpty()) {
                 T task = queuedTasks.remove();

@@ -23,6 +23,6 @@ public class OneThreadSubscriberProcessor implements SubscriberProcessor {
 
     @Override
     public void close() {
-        ThreadExecutor.shutdownClient(threadExecutorClientId);
+        ThreadExecutor.unregisterClient(threadExecutorClientId);
     }
 }

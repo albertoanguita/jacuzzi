@@ -255,7 +255,7 @@ abstract class AbstractEventHub implements EventHub {
             publicationRepository.clear();
             subscribers.values().forEach(SubscriberData::close);
             subscribers.clear();
-            ThreadExecutor.shutdownClient(threadExecutorClientId);
+            ThreadExecutor.unregisterClient(threadExecutorClientId);
             EventHubFactory.removeEventHub(getName());
         }
     }

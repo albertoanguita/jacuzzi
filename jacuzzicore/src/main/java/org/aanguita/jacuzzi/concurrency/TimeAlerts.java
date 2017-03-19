@@ -111,7 +111,7 @@ public class TimeAlerts implements ParametrizedTimerAction<String> {
 
     private void checkEmptyAlerts() {
         if (activeAlerts.isEmpty()) {
-            ThreadExecutor.shutdownClient(threadExecutorClientId);
+            ThreadExecutor.unregisterClient(threadExecutorClientId);
         }
     }
 

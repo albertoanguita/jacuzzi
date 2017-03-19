@@ -19,7 +19,12 @@ class MatchingSubscriber {
     }
 
     void publish(Publication publication) {
-        subscriberProcessor.publish(publication);
+        try {
+            subscriberProcessor.publish(publication);
+        } catch (Throwable e) {
+            // no exceptions should rise here todo error factory
+            e.printStackTrace();
+        }
     }
 
     @Override

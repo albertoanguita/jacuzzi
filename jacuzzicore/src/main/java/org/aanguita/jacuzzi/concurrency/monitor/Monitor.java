@@ -122,7 +122,7 @@ public class Monitor {
                     // ignore exceptions
                 }
             }
-            ThreadExecutor.shutdownClient(threadExecutorClientId);
+            ThreadExecutor.unregisterClient(threadExecutorClientId);
         }
     }
 

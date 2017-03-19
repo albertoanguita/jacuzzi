@@ -193,7 +193,7 @@ public class SpeedMonitor implements TimerAction, TimedQueue.TimedQueueInterface
             if (reportSpeedBelowTimer != null) {
                 reportSpeedBelowTimer.stop();
             }
-            ThreadExecutor.shutdownClient(threadExecutorClientId);
+            ThreadExecutor.unregisterClient(threadExecutorClientId);
         }
     }
 

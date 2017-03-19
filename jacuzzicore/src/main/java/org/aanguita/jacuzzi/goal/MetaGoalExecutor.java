@@ -56,10 +56,7 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
             } else {
                 // already at goal
                 currentTask = null;
-                // todo make a submitUnregistered method
-                String client = ThreadExecutor.registerClient();
-                ThreadExecutor.submit(task);
-                ThreadExecutor.shutdownClient(client);
+                ThreadExecutor.submitUnregistered(task);
             }
         }
 

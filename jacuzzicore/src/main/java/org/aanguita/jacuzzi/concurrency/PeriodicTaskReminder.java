@@ -3,11 +3,13 @@ package org.aanguita.jacuzzi.concurrency;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * todo check and add stop
  * The periodic task reminder raises one thread for invoking heterogeneous periodic tasks. Clients can register their periodic tasks for being
  * invoked at specific intervals (the intervals can grow with time, or shrink upon request). Each task can be configured to be invoked synchronously
  * or asynchronously. Care must be taken not to choke the periodic task reminder with heavy load tasks that are repeated very frequently.
@@ -146,9 +148,19 @@ public class PeriodicTaskReminder {
         }
     }
 
+    public synchronized void removePeriodicTask(String taskName) {
+        Iterator<TaskElement> it = taskElementQueue.iterator();
+        while (it.hasNext()) {
+            TaskElement taskElement = it.next();
+            if (taskElement.name.equals(taskName)) {
+                it.remove();
+                break;
+            }
+        }
+    }
+
     private void startReminderThread() {
         reminderThread.start();
-//        ManagerGeneral.executorService.submit(reminderThread);
     }
 
     private void runFirstTask() {

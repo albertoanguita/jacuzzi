@@ -20,9 +20,9 @@ public interface MessageReader<E> {
     E readMessage() throws FinishReadingMessagesException;
 
     /**
-     * This command instructs the message reader to stop reading messages, and throw a
-     * {@link FinishReadingMessagesException} in its next (or current) readMessage invocation
-     * // TODO: 26/03/2017 ???? the implementation must do this??????
+     * This command instructs the message reader to stop reading messages. The message reader must, from this moment,
+     * return all its calls to readMessage with a {@link FinishReadingMessagesException} exception (event the current
+     * call, if any)
      */
     void stop();
 }

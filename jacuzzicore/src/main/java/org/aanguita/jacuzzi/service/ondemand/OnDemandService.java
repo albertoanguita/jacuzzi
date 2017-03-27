@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.service;
+package org.aanguita.jacuzzi.service.ondemand;
 
 import java.util.function.Function;
 

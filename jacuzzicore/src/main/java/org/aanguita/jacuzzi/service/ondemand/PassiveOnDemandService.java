@@ -51,7 +51,7 @@ public class PassiveOnDemandService<T> extends AbstractOnDemandService<T> implem
 
         @Override
         public void handleMessage(T message) {
-
+            onDemandService.event(message);
         }
 
         @Override

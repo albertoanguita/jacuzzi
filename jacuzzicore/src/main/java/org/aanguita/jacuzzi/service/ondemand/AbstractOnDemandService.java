@@ -33,13 +33,18 @@ public abstract class AbstractOnDemandService<T> extends StringIdClass implement
     @Override
     public synchronized void unregister(String clientId) {
         registeredClients.remove(clientId);
-        if (registeredClients.isEmpty()) {
-            stopService();
-        }
+        checkEmpty();
     }
 
     public synchronized void event(T event) {
         registeredClients.entrySet().removeIf(client -> client.getValue().apply(event));
+        checkEmpty();
+    }
+
+    private void checkEmpty() {
+        if (registeredClients.isEmpty()) {
+            stopService();
+        }
     }
 
     abstract void startService();

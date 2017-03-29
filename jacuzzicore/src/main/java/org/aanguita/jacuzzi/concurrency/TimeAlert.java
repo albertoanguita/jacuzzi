@@ -2,6 +2,7 @@ package org.aanguita.jacuzzi.concurrency;
 
 import org.aanguita.jacuzzi.concurrency.timer.ParametrizedTimer;
 import org.aanguita.jacuzzi.concurrency.timer.ParametrizedTimerAction;
+import org.aanguita.jacuzzi.objects.ObjectMapPool;
 
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -10,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by Alberto on 03/12/2016.
  */
-public class TimeAlerts implements ParametrizedTimerAction<String> {
+public class TimeAlert implements ParametrizedTimerAction<String> {
 
     private static class Alert {
 
@@ -42,7 +43,7 @@ public class TimeAlerts implements ParametrizedTimerAction<String> {
         }
     }
 
-    private static TimeAlerts instance = null;
+    private static ObjectMapPool<String, TimeAlert> instances = new ObjectMapPool<>(s -> new TimeAlert());
 
     private final ConcurrentHashMap<String, Alert> activeAlerts;
 
@@ -54,24 +55,17 @@ public class TimeAlerts implements ParametrizedTimerAction<String> {
 
     private String threadExecutorClientId;
 
-    private static TimeAlerts getInstance() {
-        if (instance == null) {
-            instance = new TimeAlerts();
-        }
-        return instance;
+    public static TimeAlert getInstance(String name) {
+        return instances.getObject(name);
     }
 
-    private TimeAlerts() {
+    private TimeAlert() {
         activeAlerts = new ConcurrentHashMap<>();
         alertQueue = new PriorityQueue<>();
         timer = null;
     }
 
-    public static synchronized void addAlert(String alertName, long millis, Runnable runnable) {
-        instance.addAlertInstance(alertName, millis, runnable);
-    }
-
-    private synchronized void addAlertInstance(String alertName, long millis, Runnable runnable) {
+    public synchronized void addAlert(String alertName, long millis, Runnable runnable) {
         if (millis < 0) {
             throw new IllegalArgumentException("Invalid time for alert: " + millis);
         }
@@ -87,16 +81,12 @@ public class TimeAlerts implements ParametrizedTimerAction<String> {
         activateTimer();
     }
 
-    public static synchronized void removeAlert(String alertName) {
-        instance.removeAlertInstance(alertName);
-    }
-
-    private synchronized void removeAlertInstance(String alertName) {
+    public synchronized void removeAlert(String alertName) {
         Alert alert = activeAlerts.remove(alertName);
         if (alert != null) {
             alertQueue.remove(alert);
+            checkEmptyAlerts();
         }
-        checkEmptyAlerts();
     }
 
     private synchronized void activateTimer() {
@@ -119,7 +109,7 @@ public class TimeAlerts implements ParametrizedTimerAction<String> {
     public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alert) {
         if (alert.equals(nextAlert)) {
             ThreadExecutor.submit(activeAlerts.get(alert).runnable, this.getClass().getName() + "." + alert);
-            removeAlertInstance(nextAlert);
+            removeAlert(nextAlert);
             activateTimer();
         }
         return 0L;

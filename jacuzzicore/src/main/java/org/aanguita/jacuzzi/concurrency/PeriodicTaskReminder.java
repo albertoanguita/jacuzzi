@@ -1,15 +1,13 @@
 package org.aanguita.jacuzzi.concurrency;
 
+import org.aanguita.jacuzzi.objects.ObjectMapPool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.Iterator;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * todo check and add stop
  * The periodic task reminder raises one thread for invoking heterogeneous periodic tasks. Clients can register their periodic tasks for being
  * invoked at specific intervals (the intervals can grow with time, or shrink upon request). Each task can be configured to be invoked synchronously
  * or asynchronously. Care must be taken not to choke the periodic task reminder with heavy load tasks that are repeated very frequently.
@@ -20,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class PeriodicTaskReminder {
 
-    private static class TaskElement implements Comparable<TaskElement> {
+    private static class TaskElement {
 
         private final String name;
 
@@ -30,9 +28,7 @@ public class PeriodicTaskReminder {
 
         private final long period;
 
-        private long nextRun;
-
-        private TaskElement(String name, Runnable task, boolean inBackground, long period, boolean runNow) {
+        private TaskElement(String name, Runnable task, boolean inBackground, long period) {
             this.name = name;
             if (task == null) {
                 throw new IllegalArgumentException("Received null task");
@@ -43,44 +39,11 @@ public class PeriodicTaskReminder {
             this.task = task;
             this.inBackground = inBackground;
             this.period = period;
-            long now = System.currentTimeMillis();
-            if (runNow) {
-                nextRun = now;
-            } else {
-                nextRun = now + period;
-            }
-        }
-
-        private void calculateNextRun() {
-            nextRun += period;
         }
 
         private void run() {
             if (inBackground) {
-//                ManagerGeneral.executorService.submit(new Thread(name) {
-//                    @Override
-//                    public void run() {
-//                        try {
-//                            task.run();
-//                        } catch (Throwable e) {
-//                            if (LOGGER.isWarnEnabled()) {
-//                                LOGGER.warn("Periodic task " + name + " failed to execute normally", e);
-//                            }
-//                        }
-//                    }
-//                });
-                new Thread(name) {
-                    @Override
-                    public void run() {
-                        try {
-                            task.run();
-                        } catch (Throwable e) {
-                            if (LOGGER.isWarnEnabled()) {
-                                LOGGER.warn("Periodic task " + name + " failed to execute normally", e);
-                            }
-                        }
-                    }
-                }.start();
+                ThreadExecutor.submitUnregistered(task, name);
             } else {
                 try {
                     task.run();
@@ -91,100 +54,52 @@ public class PeriodicTaskReminder {
                 }
             }
         }
-
-        @Override
-        public int compareTo(TaskElement o) {
-            return (int) (nextRun - o.nextRun);
-        }
     }
 
-    private static class ReminderThread extends Thread {
-
-        private final PeriodicTaskReminder periodicTaskReminder;
-
-        public ReminderThread(PeriodicTaskReminder periodicTaskReminder, String name) {
-            super("PeriodicTaskReminder." + name);
-            setDaemon(true);
-            this.periodicTaskReminder = periodicTaskReminder;
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                periodicTaskReminder.runFirstTask();
-            }
-        }
-    }
+    /**
+     * All {@link PeriodicTaskReminder} instances use the same time alert
+     */
+    private static final String TIMED_ALERT_ID = "PERIODIC_TASK_REMINDER_TIME_ALERT";
 
     private static final Log LOGGER = LogFactory.getLog(PeriodicTaskReminder.class);
 
-    private static ConcurrentHashMap<String, PeriodicTaskReminder> instances = new ConcurrentHashMap<>();
+    private static ObjectMapPool<String, PeriodicTaskReminder> instances = new ObjectMapPool<>(PeriodicTaskReminder::new);
 
     private final String name;
 
-    private final Queue<TaskElement> taskElementQueue;
-
-    private final ReminderThread reminderThread;
+    private final Map<String, TaskElement> taskElements;
 
     public static PeriodicTaskReminder getInstance(String name) {
-        instances.putIfAbsent(name, new PeriodicTaskReminder(name));
-        return instances.get(name);
+        return instances.getObject(name);
     }
 
     public PeriodicTaskReminder(String name) {
         this.name = name;
-        taskElementQueue = new PriorityQueue<>();
-        reminderThread = new ReminderThread(this, name);
+        taskElements = new HashMap<>();
     }
 
     public synchronized void addPeriodicTask(String taskName, Runnable task, boolean inBackground, long period, boolean runNow) {
         LOGGER.info(name + " adding new task: " + taskName);
-        taskElementQueue.add(new TaskElement(taskName, task, inBackground, period, runNow));
-        if (taskElementQueue.size() == 1) {
-            LOGGER.info(name + " starting reminder thread");
-            startReminderThread();
-        } else {
-            reminderThread.interrupt();
+        taskElements.put(taskName, new TaskElement("PeriodicTaskReminder(" + name + "):" + taskName, task, inBackground, period));
+        TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(taskName, runNow ? 0 : period, () -> runTask(taskName));
+    }
+
+    private synchronized void runTask(String taskName) {
+        if (taskElements.containsKey(taskName)) {
+            TaskElement taskElement = taskElements.get(taskName);
+            taskElement.run();
+            TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(taskName, taskElement.period, () -> runTask(taskName));
         }
     }
 
     public synchronized void removePeriodicTask(String taskName) {
-        Iterator<TaskElement> it = taskElementQueue.iterator();
-        while (it.hasNext()) {
-            TaskElement taskElement = it.next();
-            if (taskElement.name.equals(taskName)) {
-                it.remove();
-                break;
-            }
-        }
+        taskElements.remove(taskName);
+        TimeAlert.getInstance(TIMED_ALERT_ID).removeAlert(taskName);
     }
 
-    private void startReminderThread() {
-        reminderThread.start();
-    }
-
-    private void runFirstTask() {
-        TaskElement taskElement;
-        synchronized (this) {
-            taskElement = taskElementQueue.peek();
-        }
-        try {
-            long wait = Math.max(taskElement.nextRun - System.currentTimeMillis(), 0L);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(name + " waiting for next task: " + taskElement.name + ". We will wait " + wait + " ms");
-            }
-            Thread.sleep(wait);
-            synchronized (this) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(name + " running task: " + taskElement.name);
-                }
-                taskElementQueue.remove();
-                taskElement.run();
-                taskElement.calculateNextRun();
-                taskElementQueue.add(taskElement);
-            }
-        } catch (InterruptedException e) {
-            // a new task was inserted. Return immediately and let the reminder thread come here again
+    public synchronized void stop() {
+        for (String taskName : taskElements.keySet()) {
+            removePeriodicTask(taskName);
         }
     }
 }

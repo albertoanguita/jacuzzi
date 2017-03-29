@@ -30,6 +30,11 @@ public class SimpleSemaphore {
     }
 
     /**
+     * All {@link SimpleSemaphore) instances use the same time alert
+     */
+    private static final String TIMED_ALERT_ID = "SIMPLE_SEMAPHORE_TIME_ALERT";
+
+    /**
      * Semaphore used to control the execution flow
      */
     private Semaphore semaphore;
@@ -101,9 +106,9 @@ public class SimpleSemaphore {
     public void access(long timeout) throws TimeoutException {
         try {
             String alertName = this.getClass().getName() + "-" + AlphaNumFactory.getStaticId();
-            TimeAlerts.addAlert(alertName, timeout, new OnTimeout(Thread.currentThread()));
+            TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(alertName, timeout, new OnTimeout(Thread.currentThread()));
             semaphore.acquire(1);
-            TimeAlerts.removeAlert(alertName);
+            TimeAlert.getInstance(TIMED_ALERT_ID).removeAlert(alertName);
         } catch (InterruptedException e) {
             // timeout was fired.
             throw new TimeoutException();

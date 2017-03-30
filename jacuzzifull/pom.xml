@@ -15,17 +15,17 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.aanguita</groupId>
+            <groupId>com.github.albertoanguita</groupId>
             <artifactId>jacuzzi-core</artifactId>
             <version>0.2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.aanguita</groupId>
+            <groupId>com.github.albertoanguita</groupId>
             <artifactId>jacuzzi-database</artifactId>
             <version>0.2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.aanguita</groupId>
+            <groupId>com.github.albertoanguita</groupId>
             <artifactId>jacuzzi-annotations</artifactId>
             <version>0.2.0</version>
         </dependency>

@@ -15,7 +15,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.aanguita</groupId>
+            <groupId>com.github.albertoanguita</groupId>
             <artifactId>jacuzzi-core</artifactId>
             <version>0.2.0</version>
         </dependency>

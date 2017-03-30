@@ -11,6 +11,7 @@
 
     <artifactId>jacuzzi-database</artifactId>
     <name>Jacuzzi - Database</name>
+    <description>A generic java utilities collection project - extended functionality with ActiveJDBC dependencies</description>
     <packaging>jar</packaging>
 
     <dependencies>

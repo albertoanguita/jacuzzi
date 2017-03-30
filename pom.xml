@@ -14,6 +14,7 @@
   </modules>
 
   <name>Jacuzzi</name>
+  <description>A generic java utilities collection project</description>
   <url>https://github.com/albertoanguita/jacuzzi</url>
 
   <licenses>
@@ -23,6 +24,21 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+
+  <developers>
+    <developer>
+      <name>Alberto Anguita</name>
+      <email>alberto.anguita@gmail.com</email>
+      <url>https://github.com/albertoanguita</url>
+      <id>albertoanguita</id>
+    </developer>
+  </developers>
+
+  <scm>
+    <url>https://github.com/albertoanguita/jacuzzi</url>
+    <connection></connection>
+    <developerConnection></developerConnection>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -11,6 +11,7 @@
 
     <artifactId>jacuzzi-core</artifactId>
     <name>Jacuzzi - Core</name>
+    <description>A generic java utilities collection project - core functionality with no external dependencies</description>
     <packaging>jar</packaging>
 
     <dependencies>

@@ -11,6 +11,7 @@
 
     <artifactId>jacuzzi-full</artifactId>
     <name>Jacuzzi - Full</name>
+    <description>A generic java utilities collection project - full functionality with all external dependencies</description>
     <packaging>pom</packaging>
 
     <dependencies>

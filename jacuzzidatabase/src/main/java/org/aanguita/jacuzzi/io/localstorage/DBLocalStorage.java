@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
+package org.aanguita.jacuzzi.io.localstorage;
 
 import org.aanguita.jacuzzi.io.activejdbcsupport.ActiveJDBCController;
 import org.aanguita.jacuzzi.objects.ObjectMapPool;
@@ -112,17 +112,6 @@ public class DBLocalStorage extends StringKeyLocalStorage {
                     .filter(key -> key.contains(getCategorySeparator()))
                     .map(key -> key.substring(0, key.indexOf(getCategorySeparator())))
                     .collect(Collectors.toSet());
-        } finally {
-            ActiveJDBCController.disconnect();
-        }
-    }
-
-    @Override
-    public void clearFile() {
-        ActiveJDBCController.connect(DATABASE, path);
-        try {
-            // todo keep metadata
-            Item.deleteAll();
         } finally {
             ActiveJDBCController.disconnect();
         }

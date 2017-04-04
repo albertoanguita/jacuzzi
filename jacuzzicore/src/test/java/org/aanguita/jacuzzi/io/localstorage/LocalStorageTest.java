@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
+package org.aanguita.jacuzzi.io.localstorage;
 
 import org.junit.Assert;
 import org.junit.Test;

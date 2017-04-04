@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
+package org.aanguita.jacuzzi.io.localstorage;
 
 import java.io.IOException;
 import java.util.Date;
@@ -8,6 +8,10 @@ import java.util.List;
  * Created by Alberto on 05/12/2016.
  */
 public interface LocalStorage extends ReadOnlyLocalStorage {
+
+    void removeItem(String name, String... categories) throws IOException;
+
+    void clear() throws IOException;
 
     boolean setString(String name, String value, String... categories) throws IOException;
 

@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
+package org.aanguita.jacuzzi.io.localstorage;
 
 import java.io.IOException;
 

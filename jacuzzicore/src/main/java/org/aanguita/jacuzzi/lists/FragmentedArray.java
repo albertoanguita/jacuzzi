@@ -29,7 +29,7 @@ public class FragmentedArray<T> {
         add(initialArray);
     }
 
-    public void add(T[] array) {
+    public FragmentedArray<T> add(T[] array) {
         arrays.add(array);
         Integer oldMax;
         if (size() > 0) {
@@ -38,14 +38,15 @@ public class FragmentedArray<T> {
             oldMax = -1;
         }
         indexes.add(new IntegerRange(oldMax + 1, oldMax + array.length));
+        return this;
     }
 
     @SafeVarargs
-    public final void addArray(T... array) {
-        add(array);
+    public final FragmentedArray<T> addArray(T... array) {
+        return add(array);
     }
 
-    public void addLeft(T[] array) {
+    public FragmentedArray<T> addLeft(T[] array) {
         arrays.add(0, array);
         Integer oldMin;
         if (size() > 0) {
@@ -54,11 +55,12 @@ public class FragmentedArray<T> {
             oldMin = 0;
         }
         indexes.add(0, new IntegerRange(oldMin - array.length, oldMin - 1));
+        return this;
     }
 
     @SafeVarargs
-    public final void addArrayLeft(T... array) {
-        addLeft(array);
+    public final FragmentedArray<T> addArrayLeft(T... array) {
+        return addLeft(array);
     }
 
     public int size() {

@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
+package org.aanguita.jacuzzi.io.localstorage;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -11,11 +11,13 @@ public abstract class StringKeyLocalStorage extends AbstractLocalStorage {
 
     private static final String CATEGORY_SEPARATOR = "categorySeparator";
 
+    private static final String DEFAULT_CATEGORY_SEPARATOR = ".";
+
     private final String categorySeparator;
 
     public StringKeyLocalStorage(String path) throws FileNotFoundException {
         super(path);
-        this.categorySeparator = getString(CATEGORY_SEPARATOR, METADATA_CATEGORY);
+        this.categorySeparator = getString(CATEGORY_SEPARATOR, METADATA_CATEGORY) != null ? getString(CATEGORY_SEPARATOR, METADATA_CATEGORY) : DEFAULT_CATEGORY_SEPARATOR;
     }
 
     protected StringKeyLocalStorage(String path, String categorySeparator, String listSeparator, boolean useCache, boolean overwrite) throws IOException {

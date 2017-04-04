@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.hash.hashdb;
 
 import org.aanguita.jacuzzi.hash.HashFunction;
-import org.aanguita.jacuzzi.io.serialization.localstorage.LocalStorage;
+import org.aanguita.jacuzzi.io.localstorage.LocalStorage;
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 
 import java.io.File;

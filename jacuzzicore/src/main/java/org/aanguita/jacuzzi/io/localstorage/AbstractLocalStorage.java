@@ -1,5 +1,6 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
+package org.aanguita.jacuzzi.io.localstorage;
 
+import org.aanguita.jacuzzi.lists.FragmentedArray;
 import org.aanguita.jacuzzi.lists.StringListKey;
 
 import java.io.File;
@@ -22,6 +23,9 @@ public abstract class AbstractLocalStorage implements LocalStorage {
     private static final String USE_CACHE = "useCache";
     private static final String CURRENT_VERSION = "1.0";
 
+    private static final String DEFAULT_LIST_SEPARATOR = ",";
+    private static final boolean DEFAULT_USE_CACHE = false;
+
 
     /**
      * Path to the local database
@@ -39,8 +43,8 @@ public abstract class AbstractLocalStorage implements LocalStorage {
             throw new FileNotFoundException("Cannot find localStorage file in given path: " + path);
         }
         this.path = path;
-        this.listSeparator = getString(LIST_SEPARATOR, METADATA_CATEGORY);
-        this.useCache = getBoolean(USE_CACHE, METADATA_CATEGORY);
+        this.listSeparator = getString(LIST_SEPARATOR, METADATA_CATEGORY) != null ? getString(LIST_SEPARATOR, METADATA_CATEGORY) : DEFAULT_LIST_SEPARATOR;
+        this.useCache = getBoolean(USE_CACHE, METADATA_CATEGORY) != null ? getBoolean(USE_CACHE, METADATA_CATEGORY) : DEFAULT_USE_CACHE;
         cachedEntries = Collections.synchronizedMap(new HashMap<>());
     }
 
@@ -111,17 +115,25 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         } else {
             removeItemAux(name, categories);
         }
-//        setString(name, null, categories);
     }
 
     protected abstract void removeItemAux(String name, String... categories) throws IOException;
 
-    public final void clear() {
+    public final void clear() throws IOException {
         cachedEntries.clear();
-        clearFile();
+        deleteCategory();
     }
 
-    protected abstract void clearFile();
+    private void deleteCategory(String... categories) throws IOException {
+        // first clear all keys in this category, then delete all sub-categories
+        for (String key : keys(categories)) {
+            removeItem(key, categories);
+        }
+        for (String subCategory : categories(categories)) {
+            String[] subCategories = new FragmentedArray<String>(categories).addArray(subCategory).getArray();
+            deleteCategory(subCategories);
+        }
+    }
 
     private <E> E loadCache(String name, E value) {
         if (useCache) {

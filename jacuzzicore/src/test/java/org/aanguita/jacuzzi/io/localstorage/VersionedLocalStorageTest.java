@@ -1,9 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
-
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.io.IOException;
+package org.aanguita.jacuzzi.io.localstorage;
 
 /**
  * todo restore

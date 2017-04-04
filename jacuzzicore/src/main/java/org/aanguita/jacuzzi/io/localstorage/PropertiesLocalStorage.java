@@ -1,4 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
+package org.aanguita.jacuzzi.io.localstorage;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -54,11 +54,6 @@ public class PropertiesLocalStorage extends StringKeyLocalStorage {
                 .filter(key -> key.contains(getCategorySeparator()))
                 .map(key -> key.substring(0, key.indexOf(getCategorySeparator())))
                 .collect(Collectors.toSet());
-    }
-
-    @Override
-    protected void clearFile() {
-        // todo
     }
 
     @Override

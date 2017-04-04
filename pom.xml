@@ -36,8 +36,6 @@
 
   <scm>
     <url>https://github.com/albertoanguita/jacuzzi</url>
-    <connection></connection>
-    <developerConnection></developerConnection>
   </scm>
 
   <properties>

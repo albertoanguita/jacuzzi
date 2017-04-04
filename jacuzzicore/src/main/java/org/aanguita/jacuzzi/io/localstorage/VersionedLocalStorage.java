@@ -1,6 +1,4 @@
-package org.aanguita.jacuzzi.io.serialization.localstorage;
-
-import java.io.IOException;
+package org.aanguita.jacuzzi.io.localstorage;
 
 /**
  * A local storage with a built-in function for storing a user-given version of the stored data. An interface is

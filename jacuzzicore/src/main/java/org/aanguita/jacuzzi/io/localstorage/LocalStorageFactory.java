@@ -7,10 +7,6 @@ import java.io.IOException;
  */
 public class LocalStorageFactory {
 
-    public static LocalStorage createPropertiesLocalStorage(String path, boolean overwrite) throws IOException {
-        return createPropertiesLocalStorage(path, null, null, overwrite);
-    }
-
     public static LocalStorage createPropertiesLocalStorage(String path, String categorySeparator, String listSeparator, boolean overwrite) throws IOException {
         PropertiesLocalStorage localStorage = new PropertiesLocalStorage(path, categorySeparator, listSeparator, overwrite);
         localStorage.setMetadata();

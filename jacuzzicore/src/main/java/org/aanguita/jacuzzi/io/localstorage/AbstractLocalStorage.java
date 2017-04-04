@@ -24,7 +24,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
     private static final String CURRENT_VERSION = "1.0";
 
     private static final String DEFAULT_LIST_SEPARATOR = ",";
-    private static final boolean DEFAULT_USE_CACHE = false;
+    private static final boolean DEFAULT_USE_CACHE = true;
 
 
     /**

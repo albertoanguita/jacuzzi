@@ -43,9 +43,9 @@ public abstract class AbstractLocalStorage implements LocalStorage {
             throw new FileNotFoundException("Cannot find localStorage file in given path: " + path);
         }
         this.path = path;
+        cachedEntries = Collections.synchronizedMap(new HashMap<>());
         this.listSeparator = getString(LIST_SEPARATOR, METADATA_CATEGORY) != null ? getString(LIST_SEPARATOR, METADATA_CATEGORY) : DEFAULT_LIST_SEPARATOR;
         this.useCache = getBoolean(USE_CACHE, METADATA_CATEGORY) != null ? getBoolean(USE_CACHE, METADATA_CATEGORY) : DEFAULT_USE_CACHE;
-        cachedEntries = Collections.synchronizedMap(new HashMap<>());
     }
 
     protected AbstractLocalStorage(String path, String listSeparator, boolean useCache, boolean overwrite) throws IOException {
@@ -57,9 +57,9 @@ public abstract class AbstractLocalStorage implements LocalStorage {
             }
         }
         this.path = path;
+        cachedEntries = Collections.synchronizedMap(new HashMap<>());
         this.listSeparator = listSeparator;
         this.useCache = useCache;
-        cachedEntries = Collections.synchronizedMap(new HashMap<>());
     }
 
     protected void setMetadata() throws IOException {
@@ -102,7 +102,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
     protected abstract int itemCountAux();
 
     public boolean containsItem(String name, String... categories) {
-        return useCache ? cachedEntries.containsKey(generateCacheKey(name, categories)) : containsKey(name, categories);
+        return useCache && cachedEntries.containsKey(generateCacheKey(name, categories)) || containsKey(name, categories);
     }
 
     protected abstract boolean containsKey(String name, String... categories);

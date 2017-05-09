@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TimeAlert implements ParametrizedTimerAction<String> {
 
-    private static class Alert {
+    private static class Alert implements Comparable<Alert> {
 
         private final String name;
 
@@ -40,6 +40,11 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         @Override
         public int hashCode() {
             return name.hashCode();
+        }
+
+        @Override
+        public int compareTo(Alert o) {
+            return millis == o.millis ? 0 : millis < o.millis ? -1 : 1;
         }
     }
 

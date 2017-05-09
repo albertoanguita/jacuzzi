@@ -27,19 +27,19 @@ public class DoubleKeyMap<K, S, V> implements Serializable {
     }
 
     public V get(K key) {
-        return mainMap.get(key).element3;
+        return mainMap.containsKey(key) ? mainMap.get(key).element3 : null;
     }
 
     public S getSecondaryKey(K key) {
-        return mainMap.get(key).element2;
+        return mainMap.containsKey(key) ? mainMap.get(key).element2 : null;
     }
 
     public V getSecondary(S key) {
-        return secondaryMap.get(key).element3;
+        return secondaryMap.containsKey(key) ? secondaryMap.get(key).element3 : null;
     }
 
     public K getMainKey(S key) {
-        return secondaryMap.get(key).element1;
+        return secondaryMap.containsKey(key) ? secondaryMap.get(key).element1 : null;
     }
 
     public boolean containsKey(K key) {

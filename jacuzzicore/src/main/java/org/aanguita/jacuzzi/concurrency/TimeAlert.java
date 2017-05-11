@@ -3,28 +3,38 @@ package org.aanguita.jacuzzi.concurrency;
 import org.aanguita.jacuzzi.concurrency.timer.ParametrizedTimer;
 import org.aanguita.jacuzzi.concurrency.timer.ParametrizedTimerAction;
 import org.aanguita.jacuzzi.objects.ObjectMapPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by Alberto on 03/12/2016.
+ * A time alert api. Alerts are added and queued. A single thread handles all added alerts. If the same alert (with equal name) is
+ * added twice, it is overriden.
  */
 public class TimeAlert implements ParametrizedTimerAction<String> {
+
+    private static final Logger logger = LoggerFactory.getLogger(TimeAlert.class);
 
     private static class Alert implements Comparable<Alert> {
 
         private final String name;
 
-        private final long millis;
+        private final long timeToGoOff;
 
         private final Runnable runnable;
 
         private Alert(String name, long millis, Runnable runnable) {
             this.name = name;
-            this.millis = millis;
+            this.timeToGoOff = System.currentTimeMillis() + millis;
             this.runnable = runnable;
+        }
+
+        private long getRemainingTime() {
+            long time = timeToGoOff - System.currentTimeMillis();
+            return time >= 0L ? time : 0L;
         }
 
         @Override
@@ -44,7 +54,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
 
         @Override
         public int compareTo(Alert o) {
-            return millis == o.millis ? 0 : millis < o.millis ? -1 : 1;
+            return timeToGoOff == o.timeToGoOff ? 0 : timeToGoOff < o.timeToGoOff ? -1 : 1;
         }
     }
 
@@ -100,7 +110,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         }
         if (!activeAlerts.isEmpty()) {
             nextAlert = alertQueue.peek().name;
-            timer = new ParametrizedTimer<>(alertQueue.peek().millis, this, nextAlert, true, this.getClass().getName());
+            timer = new ParametrizedTimer<>(alertQueue.peek().getRemainingTime(), this, nextAlert, true, this.getClass().getName());
         }
     }
 

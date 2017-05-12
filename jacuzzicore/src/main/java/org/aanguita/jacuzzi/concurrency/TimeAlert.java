@@ -96,6 +96,20 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         activateTimer();
     }
 
+    public synchronized void addAlertIfEarlier(String alertName, long millis, Runnable runnable) {
+        Long remainingTime = getAlertRemainingTime(alertName);
+        if (remainingTime == null || remainingTime > millis) {
+            addAlert(alertName, millis, runnable);
+        }
+    }
+
+    public synchronized void addAlertIfLater(String alertName, long millis, Runnable runnable) {
+        Long remainingTime = getAlertRemainingTime(alertName);
+        if (remainingTime == null || remainingTime < millis) {
+            addAlert(alertName, millis, runnable);
+        }
+    }
+
     public synchronized Long getAlertRemainingTime(String alertName) {
         Alert alert = activeAlerts.get(alertName);
         return alert != null ? alert.getRemainingTime() : null;

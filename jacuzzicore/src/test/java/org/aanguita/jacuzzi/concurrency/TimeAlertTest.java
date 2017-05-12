@@ -43,6 +43,9 @@ public class TimeAlertTest {
             if (seconds < 10) {
                 addAlert1();
             }
+            System.out.println("Time for alert 1: " + TimeAlert.getInstance(TIME_ALERT).getAlertRemainingTime(ALERT_1));
+            System.out.println("Time for alert 2: " + TimeAlert.getInstance(TIME_ALERT).getAlertRemainingTime(ALERT_2));
+            System.out.println("Time for alert 3: " + TimeAlert.getInstance(TIME_ALERT).getAlertRemainingTime(ALERT_3));
         }
     }
 

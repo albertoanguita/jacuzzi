@@ -2,6 +2,7 @@ package org.aanguita.jacuzzi.io.stream;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public class FragmentedInputStream extends InputStream {
     }
 
     public FragmentedInputStream(InputStream... inputStreams) {
-        this(Arrays.asList(inputStreams));
+        this(new ArrayList<InputStream>(Arrays.asList(inputStreams)));
     }
 
     @Override

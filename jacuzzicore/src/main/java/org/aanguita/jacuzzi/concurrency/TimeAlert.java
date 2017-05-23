@@ -59,23 +59,6 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         }
     }
 
-    private static class RunnableImpl implements Runnable {
-
-        private final Consumer<String> consumer;
-
-        private final String alertName;
-
-        public RunnableImpl(Consumer<String> consumer, String alertName) {
-            this.consumer = consumer;
-            this.alertName = alertName;
-        }
-
-        @Override
-        public void run() {
-            consumer.accept(alertName);
-        }
-    }
-
     private static ObjectMapPool<String, TimeAlert> instances = new ObjectMapPool<>(s -> new TimeAlert());
 
     private final ConcurrentHashMap<String, Alert> activeAlerts;
@@ -158,9 +141,10 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
     }
 
     @Override
-    public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alert) {
-        if (alert.equals(nextAlert)) {
-            ThreadExecutor.submit(new RunnableImpl(activeAlerts.get(alert).consumer, alert), this.getClass().getName() + "." + alert);
+    public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alertName) {
+        if (alertName.equals(nextAlert)) {
+            Alert alert = activeAlerts.get(alertName);
+            ThreadExecutor.submit(() -> alert.consumer.accept(alertName), this.getClass().getName() + "." + alert);
             removeAlert(nextAlert);
             activateTimer();
         }

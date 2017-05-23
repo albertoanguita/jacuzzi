@@ -2,7 +2,7 @@ package org.aanguita.jacuzzi.concurrency;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.util.function.Consumer;
 
 /**
  * @author aanguita
@@ -15,7 +15,7 @@ public class TimeAlertTest {
     private static final String ALERT_2 = "alert_2";
     private static final String ALERT_3 = "alert_3";
 
-    private static class Printer implements Runnable {
+    private static class Printer implements Consumer<String> {
 
         private final String name;
 
@@ -24,7 +24,7 @@ public class TimeAlertTest {
         }
 
         @Override
-        public void run() {
+        public void accept(String alertName) {
             System.out.println(name);
         }
     }

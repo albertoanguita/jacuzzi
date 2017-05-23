@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * A time alert api. Alerts are added and queued. A single thread handles all added alerts. If the same alert (with equal name) is
@@ -24,12 +25,12 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
 
         private final long timeToGoOff;
 
-        private final Runnable runnable;
+        private final Consumer<String> consumer;
 
-        private Alert(String name, long millis, Runnable runnable) {
+        private Alert(String name, long millis, Consumer<String> consumer) {
             this.name = name;
             this.timeToGoOff = System.currentTimeMillis() + millis;
-            this.runnable = runnable;
+            this.consumer = consumer;
         }
 
         private long getRemainingTime() {
@@ -58,6 +59,23 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         }
     }
 
+    private static class RunnableImpl implements Runnable {
+
+        private final Consumer<String> consumer;
+
+        private final String alertName;
+
+        public RunnableImpl(Consumer<String> consumer, String alertName) {
+            this.consumer = consumer;
+            this.alertName = alertName;
+        }
+
+        @Override
+        public void run() {
+            consumer.accept(alertName);
+        }
+    }
+
     private static ObjectMapPool<String, TimeAlert> instances = new ObjectMapPool<>(s -> new TimeAlert());
 
     private final ConcurrentHashMap<String, Alert> activeAlerts;
@@ -80,14 +98,14 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         timer = null;
     }
 
-    public synchronized void addAlert(String alertName, long millis, Runnable runnable) {
+    public synchronized void addAlert(String alertName, long millis, Consumer<String> consumer) {
         if (millis < 0) {
             throw new IllegalArgumentException("Invalid time for alert: " + millis);
         }
         if (activeAlerts.containsKey(alertName)) {
             removeAlert(alertName);
         }
-        Alert alert = new Alert(alertName, millis, runnable);
+        Alert alert = new Alert(alertName, millis, consumer);
         activeAlerts.put(alertName, alert);
         alertQueue.add(alert);
         if (activeAlerts.size() == 1) {
@@ -96,17 +114,17 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         activateTimer();
     }
 
-    public synchronized void addAlertIfEarlier(String alertName, long millis, Runnable runnable) {
+    public synchronized void addAlertIfEarlier(String alertName, long millis, Consumer<String> consumer) {
         Long remainingTime = getAlertRemainingTime(alertName);
         if (remainingTime == null || remainingTime > millis) {
-            addAlert(alertName, millis, runnable);
+            addAlert(alertName, millis, consumer);
         }
     }
 
-    public synchronized void addAlertIfLater(String alertName, long millis, Runnable runnable) {
+    public synchronized void addAlertIfLater(String alertName, long millis, Consumer<String> consumer) {
         Long remainingTime = getAlertRemainingTime(alertName);
         if (remainingTime == null || remainingTime < millis) {
-            addAlert(alertName, millis, runnable);
+            addAlert(alertName, millis, consumer);
         }
     }
 
@@ -142,7 +160,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
     @Override
     public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alert) {
         if (alert.equals(nextAlert)) {
-            ThreadExecutor.submit(activeAlerts.get(alert).runnable, this.getClass().getName() + "." + alert);
+            ThreadExecutor.submit(new RunnableImpl(activeAlerts.get(alert).consumer, alert), this.getClass().getName() + "." + alert);
             removeAlert(nextAlert);
             activateTimer();
         }

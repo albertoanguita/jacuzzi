@@ -166,15 +166,15 @@ public class VersionedObjectSerializer {
     }
 
     public static void deserialize(VersionedObject versionedObject, byte[] data) throws VersionedSerializationException {
-        deserialize(versionedObject, data, new MutableOffset());
+        deserialize(versionedObject, data, new Offset());
     }
 
-    public static void deserialize(VersionedObject versionedObject, byte[] data, MutableOffset offset) throws VersionedSerializationException {
+    public static void deserialize(VersionedObject versionedObject, byte[] data, Offset offset) throws VersionedSerializationException {
         VersionStack versionStack = null;
         Map<String, Object> attributes = new HashMap<>();
         try {
             data = CRC.extractDataWithCRC(data, offset);
-            MutableOffset dataOffset = new MutableOffset();
+            Offset dataOffset = new Offset();
             versionStack = new VersionStack ((ArrayList<String>) Serializer.deserializeObject(data, dataOffset));
             int attributeCount = Serializer.deserializeIntValue(data, dataOffset);
             for (int i = 0; i < attributeCount; i++) {

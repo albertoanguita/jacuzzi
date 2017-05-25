@@ -3,11 +3,11 @@ package org.aanguita.jacuzzi.io.serialization;
 /**
  * Offset used in the serialization of objects
  */
-public class MutableOffset {
+public class Offset {
 
     private int offset;
 
-    public MutableOffset() {
+    public Offset() {
         offset = 0;
     }
 

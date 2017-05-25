@@ -29,6 +29,23 @@ public class TimeAlertTest {
         }
     }
 
+    private static class AutoRepeat implements Consumer<String> {
+
+        int timesLeft;
+
+        public AutoRepeat(int timesLeft) {
+            this.timesLeft = timesLeft;
+        }
+
+        @Override
+        public void accept(String alertName) {
+            System.out.println("AutoRepeat. Times left: " + timesLeft);
+            if (timesLeft > 0) {
+                TimeAlert.getInstance(TIME_ALERT).addAlert(alertName, 1000, new AutoRepeat(timesLeft - 1));
+            }
+        }
+    }
+
     @Test
     public void test() {
 
@@ -47,6 +64,12 @@ public class TimeAlertTest {
             System.out.println("Time for alert 2: " + TimeAlert.getInstance(TIME_ALERT).getAlertRemainingTime(ALERT_2));
             System.out.println("Time for alert 3: " + TimeAlert.getInstance(TIME_ALERT).getAlertRemainingTime(ALERT_3));
         }
+    }
+
+    @Test
+    public void autoRepeatTest() {
+        TimeAlert.getInstance(TIME_ALERT).addAlert("auto.repeat", 1000, new AutoRepeat(10));
+        ThreadUtil.safeSleep(15000);
     }
 
     private void addAlert1() {

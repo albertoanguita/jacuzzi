@@ -120,8 +120,17 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         Alert alert = activeAlerts.remove(alertName);
         if (alert != null) {
             alertQueue.remove(alert);
+            activateTimer();
             checkEmptyAlerts();
         }
+    }
+
+    public synchronized void removeAllAlerts() {
+        if (timer != null) {
+            timer.stop();
+        }
+        activeAlerts.clear();
+        alertQueue.clear();
     }
 
     private synchronized void activateTimer() {

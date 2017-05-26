@@ -77,7 +77,7 @@ public abstract class AbstractTimer extends StringIdClass {
         validateTime(millis);
         this.millis = millis;
         active = new AtomicBoolean(false);
-        remainingTimeWhenStopped = 0;
+        remainingTimeWhenStopped = millis;
         this.threadName = threadName + ".Timer";
     }
 

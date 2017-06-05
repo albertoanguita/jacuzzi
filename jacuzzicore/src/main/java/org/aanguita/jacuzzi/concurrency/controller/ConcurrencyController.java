@@ -258,6 +258,12 @@ public class ConcurrencyController implements StateSolver {
         monitor.stateChange();
     }
 
+    public final int getActivityCount(String activity) {
+        synchronized (this) {
+            return numberOfExecutionsOfActivities.getObjectCount(activity);
+        }
+    }
+
     @Override
     public boolean solveState() {
         // we try to execute one of the tasks stored in the activity queue. If one cannot execute, we try with the

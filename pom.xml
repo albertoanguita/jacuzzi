@@ -35,8 +35,10 @@
   </developers>
 
   <scm>
-    <url>https://github.com/albertoanguita/jacuzzi</url>
-  </scm>
+    <connection>scm:git:git://github.com/albertoanguita/jacuzzi.git</connection>
+    <developerConnection>scm:git:ssh://github.com:albertoanguita/jacuzzi.git</developerConnection>
+    <url>http://github.com/albertoanguita/jacuzzi/tree/master</url>
+  </scm>https://github.com/albertoanguita/jacuzzi.git
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -84,15 +86,41 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.3</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <stagingProfileId>7edbe315063867</stagingProfileId>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
-  <distributionManagement>
-    <repository>
-      <id>central</id>
-      <name>libs-release-local</name>
-      <url>http://139.162.162.223:8081/artifactory/libs-release-local</url>
-    </repository>
-  </distributionManagement>
+  <!--<distributionManagement>-->
+    <!--<repository>-->
+      <!--<id>central</id>-->
+      <!--<name>libs-release-local</name>-->
+      <!--<url>http://139.162.162.223:8081/artifactory/libs-release-local</url>-->
+    <!--</repository>-->
+  <!--</distributionManagement>-->
 
 
 </project>

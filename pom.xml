@@ -4,7 +4,7 @@
 
   <groupId>com.github.albertoanguita</groupId>
   <artifactId>jacuzzi</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
     <module>jacuzzicore</module>
@@ -38,7 +38,7 @@
     <connection>scm:git:git://github.com/albertoanguita/jacuzzi.git</connection>
     <developerConnection>scm:git:ssh://github.com:albertoanguita/jacuzzi.git</developerConnection>
     <url>http://github.com/albertoanguita/jacuzzi/tree/master</url>
-  </scm>https://github.com/albertoanguita/jacuzzi.git
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -114,6 +114,12 @@
       </plugin>
     </plugins>
   </build>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
   <!--<distributionManagement>-->
     <!--<repository>-->
       <!--<id>central</id>-->

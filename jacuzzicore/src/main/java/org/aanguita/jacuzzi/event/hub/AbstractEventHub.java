@@ -232,6 +232,16 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
+    public synchronized int getSubscribersCount() {
+        return subscribers.size();
+    }
+
+    @Override
+    public synchronized boolean hasSubscribers() {
+        return getSubscribersCount() > 0;
+    }
+
+    @Override
     public synchronized List<Publication> getStoredPublications(String... channelExpressions) {
         if (alive.get()) {
             return publicationRepository.getStoredPublications(channelExpressions);

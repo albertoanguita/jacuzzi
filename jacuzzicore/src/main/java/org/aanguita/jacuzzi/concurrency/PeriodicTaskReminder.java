@@ -81,14 +81,14 @@ public class PeriodicTaskReminder {
     public synchronized void addPeriodicTask(String taskName, Runnable task, boolean inBackground, long period, boolean runNow) {
         LOGGER.info(name + " adding new task: " + taskName);
         taskElements.put(taskName, new TaskElement("PeriodicTaskReminder(" + name + "):" + taskName, task, inBackground, period));
-        TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(taskName, runNow ? 0 : period, () -> runTask(taskName));
+        TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(taskName, runNow ? 0 : period, (alertName) -> runTask(taskName));
     }
 
     private synchronized void runTask(String taskName) {
         if (taskElements.containsKey(taskName)) {
             TaskElement taskElement = taskElements.get(taskName);
             taskElement.run();
-            TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(taskName, taskElement.period, () -> runTask(taskName));
+            TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(taskName, taskElement.period, (alertName) -> runTask(taskName));
         }
     }
 

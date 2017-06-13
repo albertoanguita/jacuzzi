@@ -23,7 +23,7 @@ public class VersionedObjectPreview implements VersionedObject {
         VersionedObjectSerializer.deserialize(this, data);
     }
 
-    public VersionedObjectPreview(byte[] data, MutableOffset offset) throws VersionedSerializationException {
+    public VersionedObjectPreview(byte[] data, Offset offset) throws VersionedSerializationException {
         VersionedObjectSerializer.deserialize(this, data, offset);
     }
 

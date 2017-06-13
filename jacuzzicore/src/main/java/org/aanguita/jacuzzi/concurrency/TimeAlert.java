@@ -3,28 +3,39 @@ package org.aanguita.jacuzzi.concurrency;
 import org.aanguita.jacuzzi.concurrency.timer.ParametrizedTimer;
 import org.aanguita.jacuzzi.concurrency.timer.ParametrizedTimerAction;
 import org.aanguita.jacuzzi.objects.ObjectMapPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
- * Created by Alberto on 03/12/2016.
+ * A time alert api. Alerts are added and queued. A single thread handles all added alerts. If the same alert (with equal name) is
+ * added twice, it is overriden.
  */
 public class TimeAlert implements ParametrizedTimerAction<String> {
 
-    private static class Alert {
+    private static final Logger logger = LoggerFactory.getLogger(TimeAlert.class);
+
+    private static class Alert implements Comparable<Alert> {
 
         private final String name;
 
-        private final long millis;
+        private final long timeToGoOff;
 
-        private final Runnable runnable;
+        private final Consumer<String> consumer;
 
-        private Alert(String name, long millis, Runnable runnable) {
+        private Alert(String name, long millis, Consumer<String> consumer) {
             this.name = name;
-            this.millis = millis;
-            this.runnable = runnable;
+            this.timeToGoOff = System.currentTimeMillis() + millis;
+            this.consumer = consumer;
+        }
+
+        private long getRemainingTime() {
+            long time = timeToGoOff - System.currentTimeMillis();
+            return time >= 0L ? time : 0L;
         }
 
         @Override
@@ -40,6 +51,11 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         @Override
         public int hashCode() {
             return name.hashCode();
+        }
+
+        @Override
+        public int compareTo(Alert o) {
+            return timeToGoOff == o.timeToGoOff ? 0 : timeToGoOff < o.timeToGoOff ? -1 : 1;
         }
     }
 
@@ -65,14 +81,14 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         timer = null;
     }
 
-    public synchronized void addAlert(String alertName, long millis, Runnable runnable) {
+    public synchronized void addAlert(String alertName, long millis, Consumer<String> consumer) {
         if (millis < 0) {
             throw new IllegalArgumentException("Invalid time for alert: " + millis);
         }
         if (activeAlerts.containsKey(alertName)) {
             removeAlert(alertName);
         }
-        Alert alert = new Alert(alertName, millis, runnable);
+        Alert alert = new Alert(alertName, millis, consumer);
         activeAlerts.put(alertName, alert);
         alertQueue.add(alert);
         if (activeAlerts.size() == 1) {
@@ -81,12 +97,40 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         activateTimer();
     }
 
+    public synchronized void addAlertIfEarlier(String alertName, long millis, Consumer<String> consumer) {
+        Long remainingTime = getAlertRemainingTime(alertName);
+        if (remainingTime == null || remainingTime > millis) {
+            addAlert(alertName, millis, consumer);
+        }
+    }
+
+    public synchronized void addAlertIfLater(String alertName, long millis, Consumer<String> consumer) {
+        Long remainingTime = getAlertRemainingTime(alertName);
+        if (remainingTime == null || remainingTime < millis) {
+            addAlert(alertName, millis, consumer);
+        }
+    }
+
+    public synchronized Long getAlertRemainingTime(String alertName) {
+        Alert alert = activeAlerts.get(alertName);
+        return alert != null ? alert.getRemainingTime() : null;
+    }
+
     public synchronized void removeAlert(String alertName) {
         Alert alert = activeAlerts.remove(alertName);
         if (alert != null) {
             alertQueue.remove(alert);
+            activateTimer();
             checkEmptyAlerts();
         }
+    }
+
+    public synchronized void removeAllAlerts() {
+        if (timer != null) {
+            timer.stop();
+        }
+        activeAlerts.clear();
+        alertQueue.clear();
     }
 
     private synchronized void activateTimer() {
@@ -95,7 +139,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         }
         if (!activeAlerts.isEmpty()) {
             nextAlert = alertQueue.peek().name;
-            timer = new ParametrizedTimer<>(alertQueue.peek().millis, this, nextAlert, true, this.getClass().getName());
+            timer = new ParametrizedTimer<>(alertQueue.peek().getRemainingTime(), this, nextAlert, true, this.getClass().getName());
         }
     }
 
@@ -106,9 +150,10 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
     }
 
     @Override
-    public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alert) {
-        if (alert.equals(nextAlert)) {
-            ThreadExecutor.submit(activeAlerts.get(alert).runnable, this.getClass().getName() + "." + alert);
+    public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alertName) {
+        if (alertName.equals(nextAlert)) {
+            Alert alert = activeAlerts.get(alertName);
+            ThreadExecutor.submit(() -> alert.consumer.accept(alertName), this.getClass().getName() + "." + alert);
             removeAlert(nextAlert);
             activateTimer();
         }

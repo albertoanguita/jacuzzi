@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.hash;
 
 import org.aanguita.jacuzzi.io.serialization.FragmentedByteArray;
-import org.aanguita.jacuzzi.io.serialization.MutableOffset;
+import org.aanguita.jacuzzi.io.serialization.Offset;
 import org.aanguita.jacuzzi.io.serialization.Serializer;
 
 import java.util.Arrays;
@@ -44,7 +44,7 @@ public class CRC {
      * @return the original data, properly validated
      */
     public static byte[] extractDataWithCRC(byte[] data) throws CRCMismatchException {
-        return extractDataWithCRC(data, new MutableOffset());
+        return extractDataWithCRC(data, new Offset());
     }
 
     /**
@@ -54,13 +54,13 @@ public class CRC {
      * @return the original data, if the CRC validation is ok
      * @throws CRCMismatchException if the CRC validation failed
      */
-    public static byte[] extractDataWithCRC(byte[] data, MutableOffset mutableOffset) throws CRCMismatchException {
-        int dataLength = Serializer.deserializeIntValue(data, mutableOffset);
-        int CRCLength = Serializer.deserializeIntValue(data, mutableOffset);
-        byte[] originalData = Arrays.copyOfRange(data, mutableOffset.value(), mutableOffset.value() + dataLength);
-        mutableOffset.add(dataLength);
-        byte[] existingCRC = Arrays.copyOfRange(data, mutableOffset.value(), mutableOffset.value() + CRCLength);
-        mutableOffset.add(CRCLength);
+    public static byte[] extractDataWithCRC(byte[] data, Offset offset) throws CRCMismatchException {
+        int dataLength = Serializer.deserializeIntValue(data, offset);
+        int CRCLength = Serializer.deserializeIntValue(data, offset);
+        byte[] originalData = Arrays.copyOfRange(data, offset.value(), offset.value() + dataLength);
+        offset.add(dataLength);
+        byte[] existingCRC = Arrays.copyOfRange(data, offset.value(), offset.value() + CRCLength);
+        offset.add(CRCLength);
         if (Arrays.equals(existingCRC, calculateCRC(originalData, CRCLength))) {
             return originalData;
         } else {

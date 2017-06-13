@@ -4,6 +4,7 @@ import org.aanguita.jacuzzi.id.AlphaNumFactory;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * This class provides simple stop/let go functionality to threads. SimpleSemaphore has two methods for opening or
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class SimpleSemaphore {
 
-    private static class OnTimeout implements Runnable {
+    private static class OnTimeout implements Consumer<String> {
 
         private final Thread threadToInterrupt;
 
@@ -24,7 +25,7 @@ public class SimpleSemaphore {
         }
 
         @Override
-        public void run() {
+        public void accept(String alertName) {
             threadToInterrupt.interrupt();
         }
     }

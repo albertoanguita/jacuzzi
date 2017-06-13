@@ -353,14 +353,18 @@ public class Serializer {
         }
     }
 
-    public static byte[] deserializeRest(byte[] data, MutableOffset offset) {
+    public static byte[] deserializeRest(byte[] data, Offset offset) {
         byte[] rest = new byte[data.length - offset.value()];
         System.arraycopy(data, offset.value(), rest, 0, rest.length);
         offset.add(rest.length);
         return rest;
     }
 
-    public static Object deserializeObject(byte[] data, MutableOffset offset) throws ClassNotFoundException {
+    public static Object deserializeObject(byte[] data) throws ClassNotFoundException {
+        return deserializeObject(data, new Offset());
+    }
+
+    public static Object deserializeObject(byte[] data, Offset offset) throws ClassNotFoundException {
         int objectLength = deserializeIntValue(data, offset);
         byte[] objectData = Arrays.copyOfRange(data, offset.value(), offset.value() + objectLength);
         Object o = deserializeObjectWithoutLengthHeader(objectData);
@@ -415,11 +419,19 @@ public class Serializer {
         }
     }
 
-    public static List<String> deserializeListFromByteArray(byte[] data, MutableOffset offset) throws ParseException {
+    public static List<String> deserializeListFromByteArray(byte[] data) throws ParseException {
+        return deserializeListFromByteArray(data, new Offset());
+    }
+
+    public static List<String> deserializeListFromByteArray(byte[] data, Offset offset) throws ParseException {
         return deserializeListFromReadableString(deserializeString(data, offset));
     }
 
-    public static String deserializeString(byte[] data, MutableOffset offset) {
+    public static String deserializeString(byte[] data) {
+        return deserializeString(data, new Offset());
+    }
+
+    public static String deserializeString(byte[] data, Offset offset) {
         try {
             return deserializeString(data, UTF8, offset);
         } catch (UnsupportedEncodingException e) {
@@ -428,7 +440,11 @@ public class Serializer {
         }
     }
 
-    public static String deserializeString(byte[] data, String encoding, MutableOffset offset) throws UnsupportedEncodingException {
+    public static String deserializeString(byte[] data, String encoding) throws UnsupportedEncodingException {
+        return deserializeString(data, encoding, new Offset());
+    }
+
+    public static String deserializeString(byte[] data, String encoding, Offset offset) throws UnsupportedEncodingException {
         int strLen = deserializeIntValue(data, offset);
         if (strLen < 0) {
             return null;
@@ -440,7 +456,11 @@ public class Serializer {
         }
     }
 
-    public static Boolean deserializeBoolean(byte[] data, MutableOffset offset) {
+    public static Boolean deserializeBoolean(byte[] data) {
+        return deserializeBoolean(data, new Offset());
+    }
+
+    public static Boolean deserializeBoolean(byte[] data, Offset offset) {
         byte b = deserializeByteValue(data, offset);
         if (b == -1) {
             return null;
@@ -449,11 +469,19 @@ public class Serializer {
         }
     }
 
-    public static boolean deserializeBooleanValue(byte[] data, MutableOffset offset) {
+    public static boolean deserializeBooleanValue(byte[] data) {
+        return deserializeBooleanValue(data, new Offset());
+    }
+
+    public static boolean deserializeBooleanValue(byte[] data, Offset offset) {
         return deserializeByteValue(data, offset) != 0;
     }
 
-    public static Byte deserializeByte(byte[] data, MutableOffset offset) {
+    public static Byte deserializeByte(byte[] data) {
+        return deserializeByte(data, new Offset());
+    }
+
+    public static Byte deserializeByte(byte[] data, Offset offset) {
         boolean notNull = deserializeBooleanValue(data, offset);
         if (notNull) {
             return deserializeByteValue(data, offset);
@@ -462,11 +490,19 @@ public class Serializer {
         }
     }
 
-    public static byte deserializeByteValue(byte[] data, MutableOffset offset) {
+    public static byte deserializeByteValue(byte[] data) {
+        return deserializeByteValue(data, new Offset());
+    }
+
+    public static byte deserializeByteValue(byte[] data, Offset offset) {
         return deserializeNumber(data, 1, offset).byteValue();
     }
 
-    public static Short deserializeShort(byte[] data, MutableOffset offset) {
+    public static Short deserializeShort(byte[] data) {
+        return deserializeShort(data, new Offset());
+    }
+
+    public static Short deserializeShort(byte[] data, Offset offset) {
         boolean notNull = deserializeBooleanValue(data, offset);
         if (notNull) {
             return deserializeShortValue(data, offset);
@@ -475,11 +511,19 @@ public class Serializer {
         }
     }
 
-    public static short deserializeShortValue(byte[] data, MutableOffset offset) {
+    public static short deserializeShortValue(byte[] data) {
+        return deserializeShortValue(data, new Offset());
+    }
+
+    public static short deserializeShortValue(byte[] data, Offset offset) {
         return deserializeNumber(data, 2, offset).shortValue();
     }
 
-    public static Integer deserializeInt(byte[] data, MutableOffset offset) {
+    public static Integer deserializeInt(byte[] data) {
+        return deserializeInt(data, new Offset());
+    }
+
+    public static Integer deserializeInt(byte[] data, Offset offset) {
         boolean notNull = deserializeBooleanValue(data, offset);
         if (notNull) {
             return deserializeIntValue(data, offset);
@@ -488,11 +532,19 @@ public class Serializer {
         }
     }
 
-    public static int deserializeIntValue(byte[] data, MutableOffset offset) {
+    public static int deserializeIntValue(byte[] data) {
+        return deserializeIntValue(data, new Offset());
+    }
+
+    public static int deserializeIntValue(byte[] data, Offset offset) {
         return deserializeNumber(data, 4, offset).intValue();
     }
 
-    public static Long deserializeLong(byte[] data, MutableOffset offset) {
+    public static Long deserializeLong(byte[] data) {
+        return deserializeLong(data, new Offset());
+    }
+
+    public static Long deserializeLong(byte[] data, Offset offset) {
         boolean notNull = deserializeBooleanValue(data, offset);
         if (notNull) {
             return deserializeLongValue(data, offset);
@@ -501,11 +553,19 @@ public class Serializer {
         }
     }
 
-    public static long deserializeLongValue(byte[] data, MutableOffset offset) {
+    public static long deserializeLongValue(byte[] data) {
+        return deserializeLongValue(data, new Offset());
+    }
+
+    public static long deserializeLongValue(byte[] data, Offset offset) {
         return deserializeNumber(data, 8, offset);
     }
 
-    public static Float deserializeFloat(byte[] data, MutableOffset offset) {
+    public static Float deserializeFloat(byte[] data) {
+        return deserializeFloat(data, new Offset());
+    }
+
+    public static Float deserializeFloat(byte[] data, Offset offset) {
         Integer floatBits = deserializeInt(data, offset);
         if (floatBits != null) {
             return Float.intBitsToFloat(floatBits);
@@ -514,11 +574,19 @@ public class Serializer {
         }
     }
 
-    public static float deserializeFloatValue(byte[] data, MutableOffset offset) {
+    public static float deserializeFloatValue(byte[] data) {
+        return deserializeFloatValue(data, new Offset());
+    }
+
+    public static float deserializeFloatValue(byte[] data, Offset offset) {
         return Float.intBitsToFloat(deserializeIntValue(data, offset));
     }
 
-    public static Double deserializeDouble(byte[] data, MutableOffset offset) {
+    public static Double deserializeDouble(byte[] data) {
+        return deserializeDouble(data, new Offset());
+    }
+
+    public static Double deserializeDouble(byte[] data, Offset offset) {
         Long doubleBits = deserializeLong(data, offset);
         if (doubleBits != null) {
             return Double.longBitsToDouble(doubleBits);
@@ -527,11 +595,19 @@ public class Serializer {
         }
     }
 
-    public static double deserializeDoubleValue(byte[] data, MutableOffset offset) {
+    public static double deserializeDoubleValue(byte[] data) {
+        return deserializeDoubleValue(data, new Offset());
+    }
+
+    public static double deserializeDoubleValue(byte[] data, Offset offset) {
         return Double.longBitsToDouble(deserializeLongValue(data, offset));
     }
 
-    public static <E extends Enum<E>> E deserializeEnum(Class<E> enumType, byte[] data, MutableOffset offset) {
+    public static <E extends Enum<E>> E deserializeEnum(Class<E> enumType, byte[] data) {
+        return deserializeEnum(enumType, data, new Offset());
+    }
+
+    public static <E extends Enum<E>> E deserializeEnum(Class<E> enumType, byte[] data, Offset offset) {
         int ordinal = Serializer.deserializeIntValue(data, offset);
         for (Enum<E> value : enumType.getEnumConstants()) {
             if (value.ordinal() == ordinal) {
@@ -542,7 +618,7 @@ public class Serializer {
         return null;
     }
 
-    private static Long deserializeNumber(byte[] data, int byteCount, MutableOffset offset) {
+    private static Long deserializeNumber(byte[] data, int byteCount, Offset offset) {
         String hex = "";
         for (int i = 0; i < byteCount; i++) {
             hex = hex + addZerosLeft(byteToHex(data[i + offset.value()]), 2);
@@ -551,7 +627,11 @@ public class Serializer {
         return new BigInteger(hex, 16).longValue();
     }
 
-    public static byte[] deserializeBytes(byte[] data, MutableOffset offset) {
+    public static byte[] deserializeBytes(byte[] data) {
+        return deserializeBytes(data, new Offset());
+    }
+
+    public static byte[] deserializeBytes(byte[] data, Offset offset) {
         Integer bytesLen = deserializeInt(data, offset);
         if (bytesLen != null) {
             byte[] bytes = new byte[bytesLen];

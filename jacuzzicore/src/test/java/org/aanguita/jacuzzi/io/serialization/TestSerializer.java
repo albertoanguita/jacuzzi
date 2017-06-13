@@ -34,10 +34,10 @@ public class TestSerializer {
         byte[] shortNotNullData = Serializer.serialize(new Short((short) 56));
         byte[] shortData = new FragmentedByteArray(shortValueData, shortNullData, shortNotNullData).generateArray();
 
-        MutableOffset shortMutableOffset = new MutableOffset();
-        Assert.assertEquals((short) -1, Serializer.deserializeShortValue(shortData, shortMutableOffset));
-        Assert.assertEquals(null, Serializer.deserializeShort(shortData, shortMutableOffset));
-        Assert.assertEquals(new Short((short) 56), Serializer.deserializeShort(shortData, shortMutableOffset));
+        Offset shortOffset = new Offset();
+        Assert.assertEquals((short) -1, Serializer.deserializeShortValue(shortData, shortOffset));
+        Assert.assertEquals(null, Serializer.deserializeShort(shortData, shortOffset));
+        Assert.assertEquals(new Short((short) 56), Serializer.deserializeShort(shortData, shortOffset));
 
 
         byte[] dataF = Serializer.serialize(1234.5f);
@@ -55,7 +55,7 @@ public class TestSerializer {
 
         byte[] data = Serializer.addArrays(dataF, dataD, dataS, dataI, dataII, dataSh, dataL, dataLL, dataMinB, dataNullB, eData);
 
-        MutableOffset off = new MutableOffset();
+        Offset off = new Offset();
 
         Assert.assertEquals(1234.5f, Serializer.deserializeFloatValue(data, off), 0);
         Assert.assertEquals(new Double(98765.4d), Serializer.deserializeDouble(data, off));

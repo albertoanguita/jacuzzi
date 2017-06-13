@@ -36,6 +36,10 @@ public interface EventHub {
 
     void unregisterSubscriber(String subscriberId);
 
+    int getSubscribersCount();
+
+    boolean hasSubscribers();
+
     List<Publication> getStoredPublications(String... channelExpressions);
 
     Set<String> cachedChannels();

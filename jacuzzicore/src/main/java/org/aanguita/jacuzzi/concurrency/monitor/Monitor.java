@@ -150,7 +150,7 @@ public class Monitor {
     private boolean executeAction() {
         try {
             return stateSolver.solveState();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             //unexpected exception obtained. Print error and terminate
             ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in monitor implementation", e, Arrays.toString(e.getStackTrace()));
             stop();

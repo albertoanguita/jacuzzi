@@ -48,7 +48,7 @@ class MessageReaderThread<E> extends Thread {
         } catch (FinishReadingMessagesException e) {
             // the message reader finished
             return true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // user should not let any exceptions to reach this level -> error exposed in console
             // todo
             e.printStackTrace();

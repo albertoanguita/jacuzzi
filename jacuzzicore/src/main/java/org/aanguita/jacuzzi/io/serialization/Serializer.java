@@ -415,7 +415,7 @@ public class Serializer {
             }
             return list;
         } catch (Exception e) {
-            throw new ParseException("Error parsing the string", offset);
+            throw new ParseException("Error parsing the string: " + e.getMessage(), offset);
         }
     }
 

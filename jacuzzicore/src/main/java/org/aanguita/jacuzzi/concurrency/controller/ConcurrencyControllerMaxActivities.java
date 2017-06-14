@@ -2,8 +2,6 @@ package org.aanguita.jacuzzi.concurrency.controller;
 
 import org.aanguita.jacuzzi.maps.ObjectCount;
 
-import java.util.function.Consumer;
-
 /**
  * A simple concurrency controller where all tasks are equally treated, but there is a limit to the number of
  * total executing activities
@@ -48,7 +46,7 @@ public class ConcurrencyControllerMaxActivities extends ConcurrencyController {
         super(new MaxActivitiesAction(maxActivityCount));
     }
 
-    public ConcurrencyControllerMaxActivities(int maxActivityCount, Consumer<String> logger, String name) {
-        super(new MaxActivitiesAction(maxActivityCount), logger, name);
+    public ConcurrencyControllerMaxActivities(int maxActivityCount, String name) {
+        super(new MaxActivitiesAction(maxActivityCount), name);
     }
 }

@@ -343,7 +343,7 @@ public class Lists {
             for (Future future : futureSet) {
                 try {
                     future.get();
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     // signal error
                     throw new RuntimeException(e.getMessage());
                 }

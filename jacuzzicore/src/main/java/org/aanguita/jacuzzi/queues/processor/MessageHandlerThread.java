@@ -37,7 +37,7 @@ class MessageHandlerThread<E> extends Thread {
         } catch (InterruptedException e) {
             // only the MessageProcessor can interrupt this thread, cannot be an error
             return true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // user should not let any exceptions to reach this level -> error exposed in console
             // todo how to handle this
             e.printStackTrace();

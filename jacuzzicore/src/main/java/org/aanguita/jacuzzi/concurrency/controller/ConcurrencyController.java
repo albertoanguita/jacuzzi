@@ -1,16 +1,18 @@
 package org.aanguita.jacuzzi.concurrency.controller;
 
 import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
+import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.concurrency.monitor.Monitor;
 import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 import org.aanguita.jacuzzi.maps.ObjectCount;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 //import javax.validation.constraints.NotNull;
 
@@ -68,6 +70,8 @@ public class ConcurrencyController implements StateSolver {
 
     private static final String STOP_ACTIVITY = "@@@STOP@@@";
 
+    private static final Logger logger = LoggerFactory.getLogger(ConcurrencyController.class);
+
     /**
      * Actions implemented by the client
      */
@@ -95,11 +99,6 @@ public class ConcurrencyController implements StateSolver {
     private final AtomicBoolean alive;
 
     /**
-     * Logger that receives log messages when activities request to begin or end
-     */
-    private final Consumer<String> logger;
-
-    /**
      * Name of this concurrency controller, for logging purposes
      */
     private final String name;
@@ -108,19 +107,18 @@ public class ConcurrencyController implements StateSolver {
      * Class constructor. Initializes the concurrency controller with a specific amount of allowed simultaneous executions
      */
     public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction) {
-        this(concurrencyControllerAction, message -> {}, "");
+        this(concurrencyControllerAction, ThreadUtil.invokerName(1));
     }
 
     /**
      * Class constructor. Initializes the concurrency controller with a specific amount of allowed simultaneous executions
      */
-    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction, Consumer<String> logger, String name) {
+    public ConcurrencyController(ConcurrencyControllerAction concurrencyControllerAction, String name) {
         this.concurrencyControllerAction = concurrencyControllerAction;
         activityRequestsQueue = new PriorityBlockingQueue<>();
         numberOfExecutionsOfActivities = new ObjectCount<>();
         monitor = new Monitor(this);
         alive = new AtomicBoolean(true);
-        this.logger = logger;
         this.name = name;
     }
 
@@ -184,7 +182,9 @@ public class ConcurrencyController implements StateSolver {
 
         // place the executor in the priority queue, so the monitor eventually takes it
 
-        logger.accept(formatStateLog("request begin activity", activity));
+        if (logger.isDebugEnabled()) {
+            logger.debug(formatStateLog("request begin activity", activity));
+        }
 
         QueueElement queueElement = registerActivity(activity);
         if (queueElement == null) {
@@ -195,7 +195,9 @@ public class ConcurrencyController implements StateSolver {
         // block this executor in these lines of code -> it will be liberated when other thread
         // releases it from its block (queueElement.allowContinue())
         beginRegisteredActivity(queueElement, timeout);
-        logger.accept(formatStateLog("activity proceeds with execution", activity));
+        if (logger.isDebugEnabled()) {
+            logger.debug(formatStateLog("activity proceeds with execution", activity));
+        }
 
         return true;
 
@@ -251,7 +253,9 @@ public class ConcurrencyController implements StateSolver {
         synchronized (this) {
             numberOfExecutionsOfActivities.subtractObject(activity);
         }
-        logger.accept(formatStateLog("end activity", activity));
+        if (logger.isDebugEnabled()) {
+            logger.debug(formatStateLog("end activity", activity));
+        }
 
         concurrencyControllerAction.activityHasEnded(activity, numberOfExecutionsOfActivities);
         // alert the monitor that a new opportunity for execution has raised

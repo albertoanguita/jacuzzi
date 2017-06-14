@@ -117,7 +117,7 @@ public abstract class AbstractTimer extends StringIdClass {
             Long timerActionResult = null;
             try {
                 timerActionResult = wakeUp();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 //unexpected exception obtained. Print error and terminate
                 ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in timer action implementation", e, Arrays.toString(e.getStackTrace()));
                 stop();

@@ -1,5 +1,6 @@
 package org.aanguita.jacuzzi.service.ondemand;
 
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
 /**
@@ -21,7 +22,7 @@ public interface OnDemandService<T> {
      *                      </li>
      *                      A null return is not permitted, and will leave the service in an undesired state
      */
-    void register(Function<T, Boolean> eventCallback);
+    String register(Function<T, Boolean> eventCallback);
 
     /**
      * Registers a new client in the service
@@ -42,4 +43,8 @@ public interface OnDemandService<T> {
      * @param clientId identifier of the client
      */
     void unregister(String clientId);
+
+    void blockUntilClientIsUnregistered(String clientId);
+
+    void blockUntilClientIsUnregistered(String clientId, long timeout) throws TimeoutException;
 }

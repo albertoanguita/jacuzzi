@@ -65,11 +65,6 @@ public class PassiveOnDemandService<T> extends AbstractOnDemandService<T> implem
     }
 
     @Override
-    public synchronized void register(Function<T, Boolean> eventCallback) {
-        register(AlphaNumFactory.getStaticId(), eventCallback);
-    }
-
-    @Override
     void startService() {
         messageProcessor = new MessageProcessor<T>(new Reader<T>(eventSupplier), new Handler<T>(this), false);
         messageProcessor.start();

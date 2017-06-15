@@ -27,11 +27,6 @@ public class ActiveOnDemandService<T> extends AbstractOnDemandService<T> impleme
     }
 
     @Override
-    public synchronized void register(Function<T, Boolean> eventCallback) {
-        register(AlphaNumFactory.getStaticId(), eventCallback);
-    }
-
-    @Override
     void startService() {
         periodicTaskReminder.addPeriodicTask(TASK_NAME, this, false, period, true);
     }

@@ -4,7 +4,7 @@
 
   <groupId>com.github.albertoanguita</groupId>
   <artifactId>jacuzzi</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.2</version>
   <packaging>pom</packaging>
   <modules>
     <module>jacuzzicore</module>
@@ -108,7 +108,7 @@
         <configuration>
           <serverId>ossrh</serverId>
           <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-          <stagingProfileId>7edbe315063867</stagingProfileId>
+          <!--<stagingProfileId>7edbe315063867</stagingProfileId>-->
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
         </configuration>
       </plugin>

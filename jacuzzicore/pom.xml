@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>jacuzzi-core</artifactId>
+    <version>0.2.3</version>
     <name>Jacuzzi - Core</name>
     <description>A generic java utilities collection project - core functionality with no external dependencies</description>
     <packaging>jar</packaging>

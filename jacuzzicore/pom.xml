@@ -6,11 +6,10 @@
     <parent>
         <groupId>com.github.albertoanguita</groupId>
         <artifactId>jacuzzi</artifactId>
-        <version>0.2.2</version>
+        <version>0.2.4</version>
     </parent>
 
     <artifactId>jacuzzi-core</artifactId>
-    <version>0.2.3</version>
     <name>Jacuzzi - Core</name>
     <description>A generic java utilities collection project - core functionality with no external dependencies</description>
     <packaging>jar</packaging>

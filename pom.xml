@@ -4,7 +4,7 @@
 
   <groupId>com.github.albertoanguita</groupId>
   <artifactId>jacuzzi</artifactId>
-  <version>${version}</version>
+  <version>0.2.2</version>
   <packaging>pom</packaging>
   <modules>
     <module>jacuzzicore</module>
@@ -42,7 +42,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <version>0.2.1</version>
   </properties>
 
   <build>

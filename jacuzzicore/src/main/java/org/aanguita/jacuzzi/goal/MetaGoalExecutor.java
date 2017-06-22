@@ -38,35 +38,52 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
         private final S goal;
 
         /**
+         * State that indicates if the goal executor has failed
+         */
+        private final S fail;
+
+        /**
          * Task to run when the goal executor reaches the goal
          */
-        private Runnable currentTask;
+        private Runnable successTask;
 
-        public GoalExecutorAndGoal(GoalExecutor<S> goalExecutor, S goal) {
+        /**
+         * Task to run when the goal executor reaches the goal
+         */
+        private Runnable failTask;
+
+        public GoalExecutorAndGoal(GoalExecutor<S> goalExecutor, S goal, S fail) {
             this.goalExecutor = goalExecutor;
             this.goal = goal;
+            this.fail = fail;
         }
 
-        private void run(Runnable task) {
+        private void run(Runnable successTask, Runnable failTask) {
             if (!goalExecutor.getState().equals(goal)) {
-                currentTask = task;
-                goalExecutor.addEnterStateHook(goal, task);
+                this.successTask = successTask;
+                goalExecutor.addEnterStateHook(goal, successTask);
+                this.failTask = failTask;
+                goalExecutor.addEnterStateHook(fail, failTask);
                 goalExecutor.setGoal(goal);
-
             } else {
                 // already at goal
-                currentTask = null;
-                ThreadExecutor.submitUnregistered(task);
+                this.successTask = null;
+                this.failTask = null;
+                ThreadExecutor.submitUnregistered(successTask);
             }
         }
 
         /**
          * Clears the task to run when goal is reached
          */
-        private void clearHook() {
-            if (currentTask != null) {
-                goalExecutor.removeEnterStateHook(goal, currentTask);
-                currentTask = null;
+        private void clearHooks() {
+            if (successTask != null) {
+                goalExecutor.removeEnterStateHook(goal, successTask);
+                successTask = null;
+            }
+            if (failTask != null) {
+                goalExecutor.removeEnterStateHook(fail, failTask);
+                failTask = null;
             }
         }
     }
@@ -74,28 +91,39 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
     /**
      * A combination of underlying goal executors, each with its goal, and an operator to combine them
      */
-    public static class Step {
+    public static class Step<S> {
 
         private final Operator operator;
 
+        private final S failedState;
+
         private final Collection<GoalExecutorAndGoal<?>> goalExecutors;
 
-        public Step(GoalExecutorAndGoal<?>... goalExecutors) {
-            this(Operator.defaultOperator(), goalExecutors);
+        public Step(S failedState, GoalExecutorAndGoal<?>... goalExecutors) {
+            this(Operator.defaultOperator(), failedState, goalExecutors);
         }
 
-        public Step(Operator operator, GoalExecutorAndGoal<?>... goalExecutors) {
+        public Step(S failedState, List<GoalExecutorAndGoal<?>> goalExecutors) {
+            this(Operator.defaultOperator(), failedState, goalExecutors);
+        }
+
+        public Step(Operator operator, S failedState, GoalExecutorAndGoal<?>... goalExecutors) {
+            this(operator, failedState, Arrays.asList(goalExecutors));
+        }
+
+        public Step(Operator operator, S failedState, List<GoalExecutorAndGoal<?>> goalExecutors) {
             this.operator = operator;
-            this.goalExecutors = Arrays.asList(goalExecutors);
+            this.failedState = failedState;
+            this.goalExecutors = goalExecutors;
         }
     }
 
     public interface MetaSteps<S> {
 
-        Step getStep(S metaState, S metaGoal);
+        Step<S> getStep(S metaState, S metaGoal);
     }
 
-    private class Notifier extends StringIdClass implements Runnable {
+    private class SuccessNotifier extends StringIdClass implements Runnable {
 
         @Override
         public void run() {
@@ -103,14 +131,24 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
         }
     }
 
+    private class FailureNotifier extends StringIdClass implements Runnable {
+
+        @Override
+        public void run() {
+            MetaGoalExecutor.this.goalRunnerHasFailed(this);
+        }
+    }
+
 
     private final MetaSteps<S> metaSteps;
 
-    private Step currentStep;
+    private Step<S> currentStep;
 
     private List<GoalExecutorAndGoal<?>> currentUnfinishedGoalExecutors;
 
-    private Notifier currentNotifier;
+    private SuccessNotifier currentSuccessNotifier;
+
+    private FailureNotifier currentFailureNotifier;
 
     public MetaGoalExecutor(S initialMetaState, MetaSteps<S> metaSteps) {
         this(initialMetaState, metaSteps, ThreadUtil.invokerName(1));
@@ -147,22 +185,23 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
                 goalReached();
             } else {
                 currentUnfinishedGoalExecutors = new ArrayList<>(currentStep.goalExecutors);
-                currentNotifier = new Notifier();
+                currentSuccessNotifier = new SuccessNotifier();
+                currentFailureNotifier = new FailureNotifier();
                 switch (currentStep.operator) {
                     case AND:
                     case OR:
-                        currentStep.goalExecutors.forEach(goalExecutorAndGoal -> goalExecutorAndGoal.run(currentNotifier));
+                        currentStep.goalExecutors.forEach(goalExecutorAndGoal -> goalExecutorAndGoal.run(currentSuccessNotifier, currentFailureNotifier));
                         break;
                     case AND_QUEUE:
-                        currentUnfinishedGoalExecutors.get(0).run(currentNotifier);
+                        currentUnfinishedGoalExecutors.get(0).run(currentSuccessNotifier, currentFailureNotifier);
                         break;
                 }
             }
         }
     }
 
-    private synchronized void goalRunnerHasReachedGoal(Notifier notifier) {
-        if (currentNotifier.equals(notifier)) {
+    private synchronized void goalRunnerHasReachedGoal(SuccessNotifier successNotifier) {
+        if (currentSuccessNotifier.equals(successNotifier)) {
             switch (currentStep.operator) {
                 case AND:
                     // delete one goal executor (does not matter which) and check if all have finished
@@ -178,7 +217,7 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
                     if (currentUnfinishedGoalExecutors.isEmpty()) {
                         goalReached();
                     } else {
-                        currentUnfinishedGoalExecutors.get(0).run(currentNotifier);
+                        currentUnfinishedGoalExecutors.get(0).run(currentSuccessNotifier, currentFailureNotifier);
                     }
                     break;
                 case OR:
@@ -189,15 +228,45 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
         }
     }
 
+    private synchronized void goalRunnerHasFailed(FailureNotifier failureNotifier) {
+        if (currentFailureNotifier.equals(failureNotifier)) {
+            switch (currentStep.operator) {
+                case AND:
+                case AND_QUEUE:
+                    // with one fail, the whole meta goal fails
+                    goalFailed();
+                    break;
+                case OR:
+                    // only if this is the last executor, the meta task fails
+                    if (currentUnfinishedGoalExecutors.isEmpty()) {
+                        goalFailed();
+                    }
+                    break;
+            }
+        }
+    }
+
     private void goalReached() {
-        setState(goal);
+        super.setState(goal);
+        clearCurrentStep();
+    }
+
+    private void goalFailed() {
+        super.setState(currentStep.failedState);
+        clearCurrentStep();
     }
 
     private void clearCurrentStep() {
         if (currentStep != null) {
-            currentStep.goalExecutors.forEach(GoalExecutorAndGoal::clearHook);
+            currentStep.goalExecutors.forEach(GoalExecutorAndGoal::clearHooks);
             currentStep = null;
             currentUnfinishedGoalExecutors = null;
         }
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        clearCurrentStep();
     }
 }

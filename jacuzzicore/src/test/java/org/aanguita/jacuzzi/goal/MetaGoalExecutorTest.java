@@ -14,17 +14,18 @@ public class MetaGoalExecutorTest {
     private enum DiscreteState {
         A,
         B,
+        FAIL
     }
 
     private enum MetaState {
         _1,
         _2,
+        META_FAIL
     }
 
     private static final long TIME_1 = 1000;
     private static final long TIME_2 = 2000;
     private static final long TIME_3 = 3000;
-
 
 
     private class Transitions implements SimpleGoalExecutor.Transitions<DiscreteState> {
@@ -74,11 +75,12 @@ public class MetaGoalExecutorTest {
                 GoalExecutor<DiscreteState> goalExecutor3 = new SimpleGoalExecutor<>(DiscreteState.A, transitions);
                 transitions.setGoalExecutor(goalExecutor3);
 
-                return new MetaGoalExecutor.Step(
+                return new MetaGoalExecutor.Step<>(
                         MetaGoalExecutor.Operator.AND_QUEUE,
-                        new MetaGoalExecutor.GoalExecutorAndGoal<>(goalExecutor1, DiscreteState.B),
-                        new MetaGoalExecutor.GoalExecutorAndGoal<>(goalExecutor2, DiscreteState.B),
-                        new MetaGoalExecutor.GoalExecutorAndGoal<>(goalExecutor3, DiscreteState.B));
+                        MetaState.META_FAIL,
+                        new MetaGoalExecutor.GoalExecutorAndGoal<>(goalExecutor1, DiscreteState.B, DiscreteState.FAIL),
+                        new MetaGoalExecutor.GoalExecutorAndGoal<>(goalExecutor2, DiscreteState.B, DiscreteState.FAIL),
+                        new MetaGoalExecutor.GoalExecutorAndGoal<>(goalExecutor3, DiscreteState.B, DiscreteState.FAIL));
             } else {
                 return null;
             }

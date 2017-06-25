@@ -2,9 +2,9 @@ package org.aanguita.jacuzzi.concurrency.timer;
 
 import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.id.StringIdClass;
-import org.aanguita.jacuzzi.log.ErrorLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -34,6 +34,8 @@ public abstract class AbstractTimer extends StringIdClass {
             }
         }
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractTimer.class);
 
     /**
      * Future object associated to the thread that waits. Used to cancel the thread if timer is killed
@@ -119,7 +121,9 @@ public abstract class AbstractTimer extends StringIdClass {
                 timerActionResult = wakeUp();
             } catch (Throwable e) {
                 //unexpected exception obtained. Print error and terminate
-                ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in timer action implementation", e, Arrays.toString(e.getStackTrace()));
+                if (logger.isErrorEnabled()) {
+                    logger.error("UNEXPECTED EXCEPTION THROWN BY TIMER ACTION IMPLEMENTATION. THE TIMER WILL STOP EXECUTING. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
+                }
                 stop();
             }
             synchronized (this) {

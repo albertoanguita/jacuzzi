@@ -1,11 +1,11 @@
 package org.aanguita.jacuzzi.concurrency.monitor;
 
-import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
-import org.aanguita.jacuzzi.log.ErrorLog;
+import org.aanguita.jacuzzi.concurrency.ThreadUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -41,6 +41,8 @@ public class Monitor {
             }
         }
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(Monitor.class);
 
     /**
      * StateSolver implementation for resolving state changes
@@ -152,7 +154,9 @@ public class Monitor {
             return stateSolver.solveState();
         } catch (Throwable e) {
             //unexpected exception obtained. Print error and terminate
-            ErrorLog.reportError(this.getClass().getName(), "Unexpected exception in monitor implementation", e, Arrays.toString(e.getStackTrace()));
+            if (logger.isErrorEnabled()) {
+                logger.error("UNEXPECTED EXCEPTION THROWN BY MONITOR IMPLEMENTATION. THE MONITOR WILL STOP EXECUTING. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
+            }
             stop();
             return true;
         }

@@ -2,6 +2,8 @@ package org.aanguita.jacuzzi.concurrency;
 
 import org.aanguita.jacuzzi.concurrency.controller.ConcurrencyController;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,8 +62,9 @@ public class ThreadExecutor {
             try {
                 return start() ? task.call() : null;
             } catch (Throwable e) {
-                // TODO: 05/06/2017
-                e.printStackTrace();
+                if (logger.isErrorEnabled()) {
+                    logger.error("UNEXPECTED EXCEPTION THROWN BY CALLABLE IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
+                }
                 return null;
             } finally {
                 end();
@@ -85,8 +88,9 @@ public class ThreadExecutor {
                     task.run();
                 }
             } catch (Throwable e) {
-                // TODO: 05/06/2017
-                e.printStackTrace();
+                if (logger.isErrorEnabled()) {
+                    logger.error("UNEXPECTED EXCEPTION THROWN BY RUNNABLE IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
+                }
             } finally {
                 end();
             }
@@ -114,6 +118,8 @@ public class ThreadExecutor {
     }
 
     private static final String UNNAMED_CLIENT = "unnamed_client";
+
+    private static final Logger logger = LoggerFactory.getLogger(ThreadExecutor.class);
 
     private static ExecutorService executorService;
 

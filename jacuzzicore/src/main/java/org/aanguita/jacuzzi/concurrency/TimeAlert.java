@@ -151,7 +151,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
 
     @Override
     public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alertName) {
-        if (alertName.equals(nextAlert)) {
+        if (alertName.equals(nextAlert) && activeAlerts.containsKey(alertName)) {
             Alert alert = activeAlerts.get(alertName);
             ThreadExecutor.submit(() -> alert.consumer.accept(alertName), this.getClass().getName() + "." + alert);
             removeAlert(nextAlert);

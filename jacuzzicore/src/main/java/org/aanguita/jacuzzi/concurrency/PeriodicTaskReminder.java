@@ -57,9 +57,9 @@ public class PeriodicTaskReminder {
     }
 
     /**
-     * All {@link PeriodicTaskReminder} instances use the same time alert
+     * Prefix for the timer alert id
      */
-    private static final String TIMED_ALERT_ID = "PERIODIC_TASK_REMINDER_TIME_ALERT";
+    private static final String TIMED_ALERT_ID = "periodic_task_reminder.";
 
     private static final Log LOGGER = LogFactory.getLog(PeriodicTaskReminder.class);
 
@@ -81,20 +81,24 @@ public class PeriodicTaskReminder {
     public synchronized void addPeriodicTask(String taskName, Runnable task, boolean inBackground, long period, boolean runNow) {
         LOGGER.info(name + " adding new task: " + taskName);
         taskElements.put(taskName, new TaskElement("PeriodicTaskReminder(" + name + "):" + taskName, task, inBackground, period));
-        TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(taskName, runNow ? 0 : period, (alertName) -> runTask(taskName));
+        TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, runNow ? 0 : period, (alertName) -> runTask(taskName));
     }
 
     private synchronized void runTask(String taskName) {
         if (taskElements.containsKey(taskName)) {
             TaskElement taskElement = taskElements.get(taskName);
             taskElement.run();
-            TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(taskName, taskElement.period, (alertName) -> runTask(taskName));
+            TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, taskElement.period, (alertName) -> runTask(taskName));
         }
     }
 
     public synchronized void removePeriodicTask(String taskName) {
         taskElements.remove(taskName);
-        TimeAlert.getInstance(TIMED_ALERT_ID).removeAlert(taskName);
+        TimeAlert.getInstance(getTimeAlertId()).removeAlert(taskName);
+    }
+
+    private String getTimeAlertId() {
+        return TIMED_ALERT_ID + name;
     }
 
     public synchronized void stop() {

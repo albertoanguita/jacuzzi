@@ -10,6 +10,21 @@ import java.util.Set;
  */
 public class ThreadUtil {
 
+
+    public static String getStackTrace() {
+        return getStackTrace(0);
+    }
+
+    public static String getStackTrace(int fromLevel) {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        StringBuilder stackTraceString = new StringBuilder();
+        for (int i = fromLevel; i < stackTrace.length; i++) {
+            stackTraceString.append(stackTrace[i]).append("\n");
+        }
+        return stackTraceString.toString();
+    }
+
+
     public static String invokerName(int levels) {
         return Thread.currentThread().getStackTrace()[levels + 2].toString();
     }

@@ -213,7 +213,7 @@ public class NumericUtil {
         } else {
             double factor = ((double) value - (double) min) / ((double) max - (double) min);
             double offset = factor * ((double) newMax - (double) newMin);
-            int newValue = (int) ((double) newMin + offset);
+            int newValue = (int) Math.round((double) newMin + offset);
             if (newValue < newMin) {
                 newValue = newMin;
             } else if (newValue > newMax) {
@@ -248,7 +248,7 @@ public class NumericUtil {
         } else {
             double factor = ((double) value - (double) min) / ((double) max - (double) min);
             double offset = factor * ((double) newMax - (double) newMin);
-            long newValue = (int) ((double) newMin + offset);
+            long newValue = Math.round((double) newMin + offset);
             if (newValue < newMin) {
                 newValue = newMin;
             } else if (newValue > newMax) {

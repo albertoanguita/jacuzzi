@@ -28,7 +28,9 @@ public class PeriodicTaskReminder {
 
         private final long period;
 
-        private TaskElement(String name, Runnable task, boolean inBackground, long period) {
+        private Integer numberOfRuns;
+
+        private TaskElement(String name, Runnable task, boolean inBackground, long period, Integer numberOfRuns) {
             this.name = name;
             if (task == null) {
                 throw new IllegalArgumentException("Received null task");
@@ -39,6 +41,7 @@ public class PeriodicTaskReminder {
             this.task = task;
             this.inBackground = inBackground;
             this.period = period;
+            this.numberOfRuns = numberOfRuns;
         }
 
         private void run() {
@@ -53,6 +56,13 @@ public class PeriodicTaskReminder {
                     }
                 }
             }
+            if (numberOfRuns != null) {
+                numberOfRuns--;
+            }
+        }
+
+        private boolean mustRunMore() {
+            return numberOfRuns == null || numberOfRuns > 0;
         }
     }
 
@@ -73,14 +83,15 @@ public class PeriodicTaskReminder {
         return instances.getObject(name);
     }
 
-    public PeriodicTaskReminder(String name) {
+    private PeriodicTaskReminder(String name) {
         this.name = name;
         taskElements = new HashMap<>();
     }
 
+    // TODO: 21/09/2017 add possibility of setting number of times that the task is executed
     public synchronized void addPeriodicTask(String taskName, Runnable task, boolean inBackground, long period, boolean runNow) {
         LOGGER.info(name + " adding new task: " + taskName);
-        taskElements.put(taskName, new TaskElement("PeriodicTaskReminder(" + name + "):" + taskName, task, inBackground, period));
+        taskElements.put(taskName, new TaskElement("PeriodicTaskReminder(" + name + "):" + taskName, task, inBackground, period, null));
         TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, runNow ? 0 : period, (alertName) -> runTask(taskName));
     }
 

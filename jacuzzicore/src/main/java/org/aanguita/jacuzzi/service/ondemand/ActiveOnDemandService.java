@@ -23,7 +23,7 @@ public class ActiveOnDemandService<T> extends AbstractOnDemandService<T> impleme
     public ActiveOnDemandService(Supplier<T> eventSupplier, long period) {
         super(eventSupplier);
         this.period = period;
-        periodicTaskReminder = new PeriodicTaskReminder(getClass().toString() + "-" + getId());
+        periodicTaskReminder = PeriodicTaskReminder.getInstance(getClass().toString() + "-" + getId());
     }
 
     @Override

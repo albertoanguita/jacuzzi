@@ -1,6 +1,7 @@
 package org.aanguita.jacuzzi.concurrency;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author aanguita
@@ -8,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class BlockingState<T> {
 
-    private T value;
+    private AtomicReference<T> value;
 
     private final TimeAlert alerts;
 
@@ -17,26 +18,36 @@ public class BlockingState<T> {
     private final Object sync;
 
     public BlockingState(T value, String timeAlertName) {
-        this.value = value;
+        this.value = new AtomicReference<T>(value);
         alerts = TimeAlert.getInstance(timeAlertName);
         blockedThreads = new ConcurrentHashMap<>();
         sync = new Object();
     }
 
-    public synchronized T getValue() {
-        return value;
+    public T get() {
+        return value.get();
     }
 
-    public synchronized void setValue(T value) {
-        this.value = value;
+    public void set(T value) {
+        this.value.set(value);
         synchronized (sync) {
             sync.notifyAll();
         }
     }
 
+    public T getAndSet(T value) {
+        try {
+            return this.value.getAndSet(value);
+        } finally {
+            synchronized (sync) {
+                sync.notifyAll();
+            }
+        }
+    }
+
     public void blockUntil(T expectedValue) throws InterruptedException {
         synchronized (sync) {
-            while (!value.equals(expectedValue)) {
+            while (!value.get().equals(expectedValue)) {
                 sync.wait();
             }
         }

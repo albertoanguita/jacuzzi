@@ -1,9 +1,6 @@
 package org.aanguita.jacuzzi.concurrency;
 
-import org.junit.After;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * @author aanguita
@@ -89,6 +86,6 @@ public class BlockingStateTest {
 
     private void set(BlockingState<State> blockingState, State newValue) {
         System.out.println(System.currentTimeMillis() + ": " + "Setting new value for blocking state: " + newValue);
-        blockingState.setValue(newValue);
+        blockingState.set(newValue);
     }
 }

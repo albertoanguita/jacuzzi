@@ -237,6 +237,12 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
+    public synchronized int getSubscribersCount(String channel) {
+        Channel parsedChannel = new Channel(channel);
+        return findSubscribers(parsedChannel).size();
+    }
+
+    @Override
     public synchronized boolean hasSubscribers() {
         return getSubscribersCount() > 0;
     }

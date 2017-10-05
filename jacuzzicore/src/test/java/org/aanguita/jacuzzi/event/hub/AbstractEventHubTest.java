@@ -153,6 +153,20 @@ public class AbstractEventHubTest {
     }
 
     @Test
+    public void testCount() {
+        eventHub.registerSubscriber("all", mockedSubscriberAll, EventHubFactory.Type.ASYNCHRONOUS);
+        eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
+        eventHub.registerSubscriber("one", mockedSubscriberOne, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
+        eventHub.subscribe("all", "*");
+        eventHub.subscribe("some", "test/*");
+        eventHub.subscribe("one", "test/one");
+
+        assertEquals(1, eventHub.getSubscribersCount("notest"));
+        assertEquals(2, eventHub.getSubscribersCount("test/two"));
+        assertEquals(3, eventHub.getSubscribersCount("test/one"));
+    }
+
+    @Test
     public void testThreeSubscribers() {
         eventHub.registerSubscriber("all", mockedSubscriberAll, EventHubFactory.Type.ASYNCHRONOUS);
         eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);

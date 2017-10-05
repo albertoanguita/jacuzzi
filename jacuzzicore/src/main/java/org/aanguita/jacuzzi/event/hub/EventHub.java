@@ -38,6 +38,8 @@ public interface EventHub {
 
     int getSubscribersCount();
 
+    int getSubscribersCount(String channelExpression);
+
     boolean hasSubscribers();
 
     List<Publication> getStoredPublications(String... channelExpressions);

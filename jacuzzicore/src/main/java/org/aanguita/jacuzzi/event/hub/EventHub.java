@@ -30,7 +30,7 @@ public interface EventHub {
 
     void subscribe(String subscriberId, int priority, String... channelExpressions);
 
-    void unsubscribe(String subscriberId, String... channelExpressions);
+    void unsubscribe(String subscriberId, String channelExpression, String... otherChannelExpressions);
 
     void unsubscribeAll(String subscriberId);
 

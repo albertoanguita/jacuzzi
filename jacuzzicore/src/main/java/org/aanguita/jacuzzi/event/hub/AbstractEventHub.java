@@ -202,10 +202,11 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
-    public synchronized void unsubscribe(String subscriberId, String... channelExpressions) {
+    public synchronized void unsubscribe(String subscriberId, String channelExpression, String... otherChannelExpressions) {
         if (alive.get()) {
             if (subscribers.containsKey(subscriberId)) {
-                subscribers.get(subscriberId).unsubscribe(channelExpressions);
+                subscribers.get(subscriberId).unsubscribe(channelExpression);
+                subscribers.get(subscriberId).unsubscribe(otherChannelExpressions);
             }
             channelCache.invalidate();
         }

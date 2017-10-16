@@ -5,6 +5,7 @@ import java.util.Set;
 
 /**
  * Created by Alberto on 07/10/2016.
+ * todo simplify registration procedure
  */
 public interface EventHub {
 

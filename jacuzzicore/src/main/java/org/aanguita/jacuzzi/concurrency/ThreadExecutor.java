@@ -125,6 +125,10 @@ public class ThreadExecutor {
 
     private static final Map<String, ClientData> registeredClients = new HashMap<>();
 
+    /**
+     * // TODO: 24/10/2017 this should register the invoking client with its class name. Make an unregister with no arguments
+     * @return
+     */
     public static synchronized String registerClient() {
         return registerClient(UNNAMED_CLIENT);
     }

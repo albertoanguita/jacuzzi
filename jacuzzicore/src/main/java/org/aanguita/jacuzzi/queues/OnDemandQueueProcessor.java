@@ -35,6 +35,11 @@ public class OnDemandQueueProcessor<T> implements StateSolver {
         this(messageConsumer, DEFAULT_QUEUE_CAPACITY);
     }
 
+    /**
+     * // TODO: 24/10/2017 this constructor should be for maxThreads
+     * @param messageConsumer
+     * @param queueCapacity
+     */
     public OnDemandQueueProcessor(Consumer<T> messageConsumer, int queueCapacity) {
         this(messageConsumer, queueCapacity, 1);
     }

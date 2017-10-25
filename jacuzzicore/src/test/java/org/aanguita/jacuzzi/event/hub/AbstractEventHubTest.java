@@ -164,6 +164,9 @@ public class AbstractEventHubTest {
         assertEquals(1, eventHub.getSubscribersCount("notest"));
         assertEquals(2, eventHub.getSubscribersCount("test/two"));
         assertEquals(3, eventHub.getSubscribersCount("test/one"));
+
+        eventHub.unsubscribeAll("one");
+        assertEquals(2, eventHub.getSubscribersCount("test/one"));
     }
 
     @Test

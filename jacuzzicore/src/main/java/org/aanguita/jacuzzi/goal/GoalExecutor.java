@@ -1,5 +1,7 @@
 package org.aanguita.jacuzzi.goal;
 
+import java.util.concurrent.TimeoutException;
+
 /**
  * Created by Alberto on 07/11/2016.
  */
@@ -28,6 +30,8 @@ public interface GoalExecutor<S> {
     void removeExitStateHook(S state, Runnable task);
 
     void blockUntilGoalReached();
+
+    void blockUntilGoalReached(long timeout) throws TimeoutException;
 
     void stop();
 }

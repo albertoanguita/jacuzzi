@@ -2,6 +2,8 @@ package org.aanguita.jacuzzi.goal;
 
 import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 
+import java.util.concurrent.TimeoutException;
+
 /**
  * Created by Alberto on 12/03/2017.
  */
@@ -93,6 +95,11 @@ public abstract class AbstractGoalExecutor<S> implements GoalExecutor<S> {
     @Override
     public void blockUntilGoalReached() {
         atDesiredState.access();
+    }
+
+    @Override
+    public void blockUntilGoalReached(long timeout) throws TimeoutException {
+        atDesiredState.access(timeout);
     }
 
     @Override

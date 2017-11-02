@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -113,6 +114,10 @@ public class Monitor {
 
     public void blockUntilStateIsSolved() {
         blockUntilStateSolve.access();
+    }
+
+    public void blockUntilStateIsSolved(long timeout) throws TimeoutException {
+        blockUntilStateSolve.access(timeout);
     }
 
     public void stop() {

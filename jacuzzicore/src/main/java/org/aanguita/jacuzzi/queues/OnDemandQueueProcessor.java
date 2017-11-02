@@ -5,6 +5,7 @@ import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -37,6 +38,7 @@ public class OnDemandQueueProcessor<T> implements StateSolver {
 
     /**
      * // TODO: 24/10/2017 this constructor should be for maxThreads
+     *
      * @param messageConsumer
      * @param queueCapacity
      */
@@ -91,6 +93,17 @@ public class OnDemandQueueProcessor<T> implements StateSolver {
             return false;
         } else {
             return true;
+        }
+    }
+
+    public void blockUntilEventsAreSolved() {
+        monitors.forEach(Monitor::blockUntilStateIsSolved);
+    }
+
+    // todo times are added. solve...
+    public void blockUntilEventsAreSolved(long timeout) throws TimeoutException {
+        for (Monitor monitor : monitors) {
+            monitor.blockUntilStateIsSolved(timeout);
         }
     }
 

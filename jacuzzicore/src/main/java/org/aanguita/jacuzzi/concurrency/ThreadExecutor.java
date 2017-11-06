@@ -156,7 +156,7 @@ public class ThreadExecutor {
     }
 
     public static synchronized Map<String, ClientData> getRegisteredClients() {
-        return registeredClients;
+        return new HashMap<>(registeredClients);
     }
 
     /**

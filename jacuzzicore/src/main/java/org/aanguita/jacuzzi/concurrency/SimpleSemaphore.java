@@ -110,11 +110,15 @@ public class SimpleSemaphore {
             TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(alertName, timeout, new OnTimeout(Thread.currentThread()));
             semaphore.acquire(1);
             TimeAlert.getInstance(TIMED_ALERT_ID).removeAlert(alertName);
+            semaphore.release();
         } catch (InterruptedException e) {
             // timeout was fired.
             throw new TimeoutException();
-        } finally {
-            semaphore.release();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleSemaphore open=" + !paused;
     }
 }

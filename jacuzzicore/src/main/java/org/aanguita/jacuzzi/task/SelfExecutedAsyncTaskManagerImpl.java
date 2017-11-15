@@ -1,6 +1,7 @@
 package org.aanguita.jacuzzi.task;
 
 import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
+import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.objects.ObjectMapPool;
 
 import java.util.HashMap;
@@ -14,11 +15,9 @@ import java.util.function.Consumer;
 
 /**
  * @author aanguita
- * 14/11/2017
+ * 15/11/2017
  */
-public class AsyncTaskManagerImpl<K, T, R> implements AsyncTaskManager<K, T, R> {
-
-    private final ConcurrentMap<K, T> tasks;
+public class SelfExecutedAsyncTaskManagerImpl<K, R> implements SelfExecutedAsyncTaskManager<K, R> {
 
     private final Map<K, Consumer<R>> resultEvents;
 
@@ -28,8 +27,7 @@ public class AsyncTaskManagerImpl<K, T, R> implements AsyncTaskManager<K, T, R> 
 
     private final ObjectMapPool<K, SimpleSemaphore> resultSemaphores;
 
-    public AsyncTaskManagerImpl(boolean fair) {
-        tasks = new ConcurrentHashMap<>();
+    public SelfExecutedAsyncTaskManagerImpl(boolean fair) {
         resultEvents = new HashMap<>();
         results = new ConcurrentHashMap<>();
         taskLocks = new ObjectMapPool<>(key -> new ReentrantLock(fair));
@@ -37,16 +35,16 @@ public class AsyncTaskManagerImpl<K, T, R> implements AsyncTaskManager<K, T, R> 
     }
 
     @Override
-    public synchronized void addTask(K key, T task, Consumer<R> resultEvent) {
-        tasks.put(key, task);
+    public synchronized void addTask(K key, Runnable task, Consumer<R> resultEvent) {
         resultSemaphores.getObject(key).pause();
         if (resultEvent != null) {
             resultEvents.put(key, resultEvent);
         }
+        ThreadExecutor.submitUnregistered(task);
     }
 
     @Override
-    public R addTaskBlocking(K key, T task, Long timeout) throws TimeoutException {
+    public R addTaskBlocking(K key, Runnable task, Long timeout) throws TimeoutException {
         Lock lock = taskLocks.getObject(key);
         lock.lock();
         try {
@@ -61,31 +59,6 @@ public class AsyncTaskManagerImpl<K, T, R> implements AsyncTaskManager<K, T, R> 
         } finally {
             lock.unlock();
         }
-    }
-
-    @Override
-    public int taskCount() {
-        return tasks.size();
-    }
-
-    @Override
-    public T pickTask(SelectPolicy selectPolicy) {
-        return null;
-    }
-
-    @Override
-    public T pickTask(SelectPolicy selectPolicy, Long timeout) {
-        return null;
-    }
-
-    @Override
-    public T pickTask(K key) {
-        return tasks.remove(key);
-    }
-
-    @Override
-    public T pickTask(K key, Long timeout) {
-        return null;
     }
 
     @Override

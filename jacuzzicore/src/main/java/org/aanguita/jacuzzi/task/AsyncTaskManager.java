@@ -1,6 +1,7 @@
 package org.aanguita.jacuzzi.task;
 
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * This interface defines an entity capable of asynchronously handling the delivery and resolution of generic tasks
@@ -19,9 +20,9 @@ public interface AsyncTaskManager<K, T, R> {
         RANDOM
     }
 
-    void addTask(K key, T task);
+    void addTask(K key, T task, Consumer<R> resultEvent);
 
-    R addTask(K key, T task, Long timeout) throws TimeoutException;
+    R addTaskBlocking(K key, T task, Long timeout) throws TimeoutException;
 
     default boolean isEmpty() {
         return taskCount() == 0;

@@ -151,6 +151,11 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
+    public synchronized Collection<String> getSubscribers() {
+        return new HashSet<>(subscribers.keySet());
+    }
+
+    @Override
     public synchronized void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.Type type) {
         if (alive.get()) {
             if (subscriberId == null) {

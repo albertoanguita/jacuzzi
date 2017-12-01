@@ -17,7 +17,7 @@ public interface SelfExecutedAsyncTaskManager<K, R> {
 
     void addTask(K key, Runnable task, Consumer<R> resultEvent);
 
-    R addTaskBlocking(K key, Runnable task, Long timeout) throws TimeoutException;
+    R addTaskBlocking(K key, Runnable task, Long timeout, K... additionalKeys) throws TimeoutException;
 
     void solveTask(K key, R result);
 }

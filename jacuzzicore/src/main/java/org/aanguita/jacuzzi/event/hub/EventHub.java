@@ -1,5 +1,6 @@
 package org.aanguita.jacuzzi.event.hub;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -22,6 +23,8 @@ public interface EventHub {
     void publish(String channel, Object... messages);
 
     void publish(Long keepMillis, String channel, Object... messages);
+
+    Collection<String> getSubscribers();
 
     void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.Type type);
 

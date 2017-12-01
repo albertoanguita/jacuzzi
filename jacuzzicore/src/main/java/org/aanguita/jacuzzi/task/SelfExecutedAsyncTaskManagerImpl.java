@@ -44,20 +44,32 @@ public class SelfExecutedAsyncTaskManagerImpl<K, R> implements SelfExecutedAsync
     }
 
     @Override
-    public R addTaskBlocking(K key, Runnable task, Long timeout) throws TimeoutException {
+    public R addTaskBlocking(K key, Runnable task, Long timeout, K... additionalKeys) throws TimeoutException {
         Lock lock = taskLocks.getObject(key);
         lock.lock();
         try {
+            for (K additionalKey : additionalKeys) {
+                resultSemaphores.getObject(additionalKey).pause();
+            }
             addTask(key, task, null);
-            SimpleSemaphore simpleSemaphore = resultSemaphores.getObject(key);
-            if (timeout != null) {
-                simpleSemaphore.access(timeout);
-            } else {
-                simpleSemaphore.access();
+            long initTime = System.currentTimeMillis();
+            accessKeySemaphore(key, timeout);
+            for (K additionalKey : additionalKeys) {
+                Long remainingTimeout = timeout != null ? timeout + initTime - System.currentTimeMillis() : null;
+                accessKeySemaphore(additionalKey, remainingTimeout);
             }
             return results.remove(key);
         } finally {
             lock.unlock();
+        }
+    }
+
+    private void accessKeySemaphore(K key, Long timeout) throws TimeoutException {
+        SimpleSemaphore simpleSemaphore = resultSemaphores.getObject(key);
+        if (timeout != null) {
+            simpleSemaphore.access(timeout);
+        } else {
+            simpleSemaphore.access();
         }
     }
 

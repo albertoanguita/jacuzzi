@@ -99,20 +99,28 @@ public class SimpleSemaphore {
 
     /**
      * This method makes the invoking thread access the pausable element. If the element is currently paused, the
-     * thread will be blocked until some other thread resumes the element. If the element is not paused, this method
+     * thread will be blocked until some other thread resumes the element, or the timeout fires. If the element is not paused, this method
      * will return immediately.
      * <p/>
      * If fairness is used, upon resume, blocked accesses will be executed in order of arrival
+     *
+     * @param timeout: the time in millis to wait before a timeout exception kicks. If 0 or negative, the timeout
+     *                 exception is thrown directly
+     * @throws TimeoutException if the pausable element cannot be accessed before the given timeout passes, or if timeout is equals or less than zero
      */
     public void access(long timeout) throws TimeoutException {
-        try {
-            String alertName = this.getClass().getName() + "-" + AlphaNumFactory.getStaticId();
-            TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(alertName, timeout, new OnTimeout(Thread.currentThread()));
-            semaphore.acquire(1);
-            TimeAlert.getInstance(TIMED_ALERT_ID).removeAlert(alertName);
-            semaphore.release();
-        } catch (InterruptedException e) {
-            // timeout was fired.
+        if (timeout > 0) {
+            try {
+                String alertName = this.getClass().getName() + "-" + AlphaNumFactory.getStaticId();
+                TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(alertName, timeout, new OnTimeout(Thread.currentThread()));
+                semaphore.acquire(1);
+                TimeAlert.getInstance(TIMED_ALERT_ID).removeAlert(alertName);
+                semaphore.release();
+            } catch (InterruptedException e) {
+                // timeout was fired.
+                throw new TimeoutException();
+            }
+        } else {
             throw new TimeoutException();
         }
     }

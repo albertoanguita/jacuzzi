@@ -6,6 +6,7 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Alberto on 12/03/2017.
+ * todo remove synchronizeds so state and goal can be fetched during transitions
  */
 public abstract class AbstractGoalExecutor<S> implements GoalExecutor<S> {
 

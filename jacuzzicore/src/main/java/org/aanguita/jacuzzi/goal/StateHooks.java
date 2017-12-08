@@ -215,13 +215,20 @@ public class StateHooks<S> {
             periodicHookTimer = new Timer(
                     registeredPeriodicHooks.get(state).delay,
                     timer -> {
+                        Runnable task;
                         synchronized (this) {
                             if (registeredPeriodicHooks.containsKey(state)) {
-                                registeredPeriodicHooks.get(state).task.run();
-                                return null;
+                                task = registeredPeriodicHooks.get(state).task;
                             } else {
-                                return 0L;
+                                task = null;
                             }
+                        }
+                        // the task is run outside the synchronized block, to avoid blocking the state hook while running it
+                        if (task != null) {
+                            task.run();
+                            return null;
+                        } else {
+                            return 0L;
                         }
                     }, threadName);
         } else if (!registeredPeriodicHooks.containsKey(state) && periodicHookTimer != null) {

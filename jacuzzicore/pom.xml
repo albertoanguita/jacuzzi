@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.github.albertoanguita</groupId>
         <artifactId>jacuzzi</artifactId>
-        <version>0.2.8</version>
+        <version>0.3.0</version>
     </parent>
 
     <artifactId>jacuzzi-core</artifactId>

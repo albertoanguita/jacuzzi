@@ -460,6 +460,11 @@ public class NumericUtil {
         }
     }
 
+    public static double round(double value, int precision) {
+        int scale = (int) Math.pow(10, precision);
+        return (double) Math.round(value * scale) / scale;
+    }
+
     public static int limitInRange(int value, Integer min, Integer max) {
         if (min != null && value < min) {
             value = min;

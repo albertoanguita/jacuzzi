@@ -2,6 +2,8 @@ package org.aanguita.jacuzzi.objects;
 
 import org.aanguita.jacuzzi.lists.tuple.Duple;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -41,6 +43,10 @@ public class ObjectMapPoolAdvancedCreator<K, T, V> {
         } else {
             throw new IllegalArgumentException("Requesting a non-existing object: " + key);
         }
+    }
+
+    public Collection<V> getAllObjects() {
+        return new ArrayList<>(objectPool.values());
     }
 
     public boolean containsKey(K key) {

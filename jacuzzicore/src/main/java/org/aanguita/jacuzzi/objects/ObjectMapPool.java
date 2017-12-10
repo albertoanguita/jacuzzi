@@ -1,5 +1,8 @@
 package org.aanguita.jacuzzi.objects;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -30,6 +33,10 @@ public class ObjectMapPool<K, V> {
             }
         }
         return myObject;
+    }
+
+    public Collection<V> getAllObjects() {
+        return new ArrayList<>(objectPool.values());
     }
 
     public boolean containsKey(K key) {

@@ -18,6 +18,10 @@ public interface EventHub {
 
     void resume();
 
+    void pause(String channel);
+
+    void resume(String channel);
+
     EventHubFactory.Type getType();
 
     void publish(String channel, Object... messages);
@@ -26,19 +30,19 @@ public interface EventHub {
 
     Collection<String> getSubscribers();
 
-    void registerSubscriber(String subscriberId, EventHubSubscriber subscriber, EventHubFactory.Type type);
+    void registerSubscriber(EventHubSubscriber subscriber, EventHubFactory.Type type);
 
-    void subscribe(EventHubSubscriber subscriber, EventHubFactory.Type type, String... channelExpressions);
+//    void subscribe(EventHubSubscriber subscriber, EventHubFactory.Type type, String... channelExpressions);
 
-    void subscribe(String subscriberId, String... channelExpressions);
+    void subscribe(EventHubSubscriber subscriber, String... channelExpressions);
 
-    void subscribe(String subscriberId, int priority, String... channelExpressions);
+    void subscribe(EventHubSubscriber subscriber, int priority, String... channelExpressions);
 
-    void unsubscribe(String subscriberId, String channelExpression, String... otherChannelExpressions);
+    void unsubscribe(EventHubSubscriber subscriber, String channelExpression, String... otherChannelExpressions);
 
-    void unsubscribeAll(String subscriberId);
+    void unsubscribeAll(EventHubSubscriber subscriber);
 
-    void unregisterSubscriber(String subscriberId);
+    void unregisterSubscriber(EventHubSubscriber subscriber);
 
     int getSubscribersCount();
 

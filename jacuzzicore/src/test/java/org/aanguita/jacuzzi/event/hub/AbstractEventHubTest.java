@@ -102,8 +102,6 @@ public class AbstractEventHubTest {
 
     @Test
     public void test() {
-        EventHub eventHub = EventHubFactory.createEventHub("test-asynchronous-permanent", EventHubFactory.Type.SYNCHRONOUS);
-        eventHub.start();
         testPriorities(eventHub);
     }
 
@@ -217,6 +215,59 @@ public class AbstractEventHubTest {
         verifyMatches(mockedSubscriberSome.getPublications().get(0), "test", "test/two", time1, 5);
         verifyMatches(mockedSubscriberSome.getPublications().get(1), "test", "test/one", time2, 5, true);
         verifyMatches(mockedSubscriberOne.getPublications().get(0), "test", "test/one", time1, 5, true);
+    }
+
+    @Test
+    public void testPause() {
+        eventHub.registerSubscriber(mockedSubscriberAll, EventHubFactory.Type.ASYNCHRONOUS);
+        eventHub.registerSubscriber(mockedSubscriberSome, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
+        eventHub.registerSubscriber(mockedSubscriberOne, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
+        eventHub.subscribe(mockedSubscriberAll, "*");
+        eventHub.subscribe(mockedSubscriberSome, "test/?");
+        eventHub.subscribe(mockedSubscriberOne, "test/one");
+
+        String event1 = "hello";
+        String event2 = "test/two";
+        String event3 = "test/one";
+        Integer i = 5;
+        Boolean b = true;
+
+        eventHub.pause();
+
+        eventHub.publish(event1);
+        eventHub.publish(event2, i);
+        eventHub.publish(event3, i, b);
+
+        ThreadUtil.safeSleep(500);
+
+        assertEquals(0, mockedSubscriberAll.publications.size());
+        assertEquals(0, mockedSubscriberSome.publications.size());
+        assertEquals(0, mockedSubscriberOne.publications.size());
+
+        eventHub.resume();
+        ThreadUtil.safeSleep(500);
+
+        assertEquals(3, mockedSubscriberAll.publications.size());
+        assertEquals(2, mockedSubscriberSome.publications.size());
+        assertEquals(1, mockedSubscriberOne.publications.size());
+
+        eventHub.pause("hello");
+        eventHub.publish(event1);
+        eventHub.publish(event2, i);
+        eventHub.publish(event3, i, b);
+
+        ThreadUtil.safeSleep(500);
+
+        assertEquals(5, mockedSubscriberAll.publications.size());
+        assertEquals(4, mockedSubscriberSome.publications.size());
+        assertEquals(2, mockedSubscriberOne.publications.size());
+
+        eventHub.resume("hello");
+        ThreadUtil.safeSleep(500);
+
+        assertEquals(6, mockedSubscriberAll.publications.size());
+        assertEquals(4, mockedSubscriberSome.publications.size());
+        assertEquals(2, mockedSubscriberOne.publications.size());
     }
 
     private void verifyMatches(Publication publication, String hubName, String channel, long time, Object... messages) {

@@ -95,11 +95,21 @@ public class PeriodicTaskReminder {
         TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, runNow ? 0 : period, (alertName) -> runTask(taskName));
     }
 
-    private synchronized void runTask(String taskName) {
-        if (taskElements.containsKey(taskName)) {
-            TaskElement taskElement = taskElements.get(taskName);
+    private void runTask(String taskName) {
+        TaskElement taskElement = null;
+        synchronized (this) {
+            if (taskElements.containsKey(taskName)) {
+                taskElement = taskElements.get(taskName);
+                TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, taskElement.period, (alertName) -> runTask(taskName));
+            }
+        }
+        if (taskElement != null) {
             taskElement.run();
-            TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, taskElement.period, (alertName) -> runTask(taskName));
+        }
+        synchronized (this) {
+            if (taskElement != null) {
+                TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, taskElement.period, (alertName) -> runTask(taskName));
+            }
         }
     }
 

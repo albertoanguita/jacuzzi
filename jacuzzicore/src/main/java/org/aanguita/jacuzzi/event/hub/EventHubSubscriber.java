@@ -1,5 +1,7 @@
 package org.aanguita.jacuzzi.event.hub;
 
+import org.aanguita.jacuzzi.id.AlphaNumFactory;
+
 /**
  * @author aanguita
  *         23/09/2016
@@ -8,6 +10,10 @@ package org.aanguita.jacuzzi.event.hub;
  *         empty implementations
  */
 public interface EventHubSubscriber {
+
+    default String getId() {
+        return AlphaNumFactory.getStaticId();
+    }
 
     void event(Publication publication);
 }

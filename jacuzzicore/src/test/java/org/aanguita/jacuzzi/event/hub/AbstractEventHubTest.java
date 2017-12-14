@@ -50,6 +50,11 @@ public class AbstractEventHubTest {
         }
 
         @Override
+        public String getId() {
+            return name;
+        }
+
+        @Override
         public synchronized void event(Publication publication) {
             int order = getOrder();
             logger.debug(this + ": new publication: " + publication + " (order " + order + ")");
@@ -87,6 +92,7 @@ public class AbstractEventHubTest {
         mockedSubscriberAll = new SubscriberMock("all");
         mockedSubscriberSome = new SubscriberMock("some");
         mockedSubscriberOne = new SubscriberMock("one");
+        eventHub.start();
     }
 
     @After
@@ -97,6 +103,7 @@ public class AbstractEventHubTest {
     @Test
     public void test() {
         EventHub eventHub = EventHubFactory.createEventHub("test-asynchronous-permanent", EventHubFactory.Type.SYNCHRONOUS);
+        eventHub.start();
         testPriorities(eventHub);
     }
 
@@ -114,26 +121,26 @@ public class AbstractEventHubTest {
         SubscriberMock subscriberMock1 = new SubscriberMock("1");
         SubscriberMock subscriberMock2 = new SubscriberMock("2");
         SubscriberMock subscriberMock3 = new SubscriberMock("3");
-        eventHub.registerSubscriber("1", subscriberMock1, EventHubFactory.Type.SYNCHRONOUS);
-        eventHub.registerSubscriber("2", subscriberMock2, EventHubFactory.Type.SYNCHRONOUS);
-        eventHub.registerSubscriber("3", subscriberMock3, EventHubFactory.Type.SYNCHRONOUS);
-        eventHub.subscribe("1", 20, "test");
-        eventHub.subscribe("2", 10, "?");
-        eventHub.subscribe("3", 0, "*");
+        eventHub.registerSubscriber(subscriberMock1, EventHubFactory.Type.SYNCHRONOUS);
+        eventHub.registerSubscriber(subscriberMock2, EventHubFactory.Type.SYNCHRONOUS);
+        eventHub.registerSubscriber(subscriberMock3, EventHubFactory.Type.SYNCHRONOUS);
+        eventHub.subscribe(subscriberMock1, 20, "test");
+        eventHub.subscribe(subscriberMock2, 10, "?");
+        eventHub.subscribe(subscriberMock3, 0, "*");
         eventHub.publish("test", "message");
         ThreadUtil.safeSleep(100);
 
         assertTrue(subscriberMock1.getTimestamps().get(subscriberMock1.getPublications().get(0)) < subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)));
         assertTrue(subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)) < subscriberMock3.getTimestamps().get(subscriberMock1.getPublications().get(0)));
-        eventHub.unsubscribeAll("1");
-        eventHub.unsubscribeAll("2");
-        eventHub.unsubscribeAll("3");
+        eventHub.unsubscribeAll(subscriberMock1);
+        eventHub.unsubscribeAll(subscriberMock2);
+        eventHub.unsubscribeAll(subscriberMock3);
         subscriberMock1.clearPublications();
         subscriberMock2.clearPublications();
         subscriberMock3.clearPublications();
-        eventHub.subscribe("1", 0, "test");
-        eventHub.subscribe("2", 10, "?");
-        eventHub.subscribe("3", 20, "*");
+        eventHub.subscribe(subscriberMock1, 0, "test");
+        eventHub.subscribe(subscriberMock2, 10, "?");
+        eventHub.subscribe(subscriberMock3, 20, "*");
         eventHub.publish("test", "message");
         ThreadUtil.safeSleep(100);
         assertTrue(subscriberMock1.getTimestamps().get(subscriberMock1.getPublications().get(0)) > subscriberMock2.getTimestamps().get(subscriberMock1.getPublications().get(0)));
@@ -154,29 +161,29 @@ public class AbstractEventHubTest {
 
     @Test
     public void testCount() {
-        eventHub.registerSubscriber("all", mockedSubscriberAll, EventHubFactory.Type.ASYNCHRONOUS);
-        eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
-        eventHub.registerSubscriber("one", mockedSubscriberOne, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
-        eventHub.subscribe("all", "*");
-        eventHub.subscribe("some", "test/*");
-        eventHub.subscribe("one", "test/one");
+        eventHub.registerSubscriber(mockedSubscriberAll, EventHubFactory.Type.ASYNCHRONOUS);
+        eventHub.registerSubscriber(mockedSubscriberSome, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
+        eventHub.registerSubscriber(mockedSubscriberOne, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
+        eventHub.subscribe(mockedSubscriberAll, "*");
+        eventHub.subscribe(mockedSubscriberSome, "test/*");
+        eventHub.subscribe(mockedSubscriberOne, "test/one");
 
         assertEquals(1, eventHub.getSubscribersCount("notest"));
         assertEquals(2, eventHub.getSubscribersCount("test/two"));
         assertEquals(3, eventHub.getSubscribersCount("test/one"));
 
-        eventHub.unsubscribeAll("one");
+        eventHub.unsubscribeAll(mockedSubscriberOne);
         assertEquals(2, eventHub.getSubscribersCount("test/one"));
     }
 
     @Test
     public void testThreeSubscribers() {
-        eventHub.registerSubscriber("all", mockedSubscriberAll, EventHubFactory.Type.ASYNCHRONOUS);
-        eventHub.registerSubscriber("some", mockedSubscriberSome, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
-        eventHub.registerSubscriber("one", mockedSubscriberOne, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
-        eventHub.subscribe("all", "*");
-        eventHub.subscribe("some", "test/?");
-        eventHub.subscribe("one", "test/one");
+        eventHub.registerSubscriber(mockedSubscriberAll, EventHubFactory.Type.ASYNCHRONOUS);
+        eventHub.registerSubscriber(mockedSubscriberSome, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_EVENTUAL_THREAD);
+        eventHub.registerSubscriber(mockedSubscriberOne, EventHubFactory.Type.ASYNCHRONOUS_QUEUE_PERMANENT_THREAD);
+        eventHub.subscribe(mockedSubscriberAll, "*");
+        eventHub.subscribe(mockedSubscriberSome, "test/?");
+        eventHub.subscribe(mockedSubscriberOne, "test/one");
 
         String event1 = "hello";
         String event2 = "test/two";

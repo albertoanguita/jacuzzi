@@ -255,7 +255,7 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     private String getSubscriberId(EventHubSubscriber subscriber) {
-        return subscriber.getClass().getName();
+        return subscriber.getId();
     }
 
     @Override

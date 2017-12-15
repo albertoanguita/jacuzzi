@@ -11,9 +11,7 @@ import org.aanguita.jacuzzi.id.AlphaNumFactory;
  */
 public interface EventHubSubscriber {
 
-    default String getId() {
-        return AlphaNumFactory.getStaticId();
-    }
+    String getId();
 
     void event(Publication publication);
 }

@@ -2,10 +2,7 @@ package org.aanguita.jacuzzi.goal;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.concurrency.timer.Timer;
-import org.aanguita.jacuzzi.event.hub.EventHub;
-import org.aanguita.jacuzzi.event.hub.EventHubFactory;
-import org.aanguita.jacuzzi.event.hub.EventHubSubscriber;
-import org.aanguita.jacuzzi.event.hub.Publication;
+import org.aanguita.jacuzzi.event.hub.*;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.aanguita.jacuzzi.id.StringIdClass;
 
@@ -24,7 +21,7 @@ import java.util.*;
  */
 public class StateHooks<S> {
 
-    private static class HookSubscriber implements EventHubSubscriber {
+    private static class HookSubscriber extends EventHubSubscriberRandomId {
 
         private final Runnable hook;
 

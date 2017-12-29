@@ -616,9 +616,9 @@ public class ThreadExecutor {
      *
      * @param tasks tasks to execute
      */
-    public static synchronized void submit(Runnable... tasks) throws ExecutionException, InterruptedException {
+    public static synchronized void submitBlock(Runnable... tasks) throws ExecutionException, InterruptedException {
         try {
-            submit(0L, tasks);
+            submitBlock(0L, tasks);
         } catch (TimeoutException e) {
             // ignore, cannot happen
         }
@@ -632,7 +632,7 @@ public class ThreadExecutor {
      * @param timeout timeout to wait for each of the tasks
      * @param tasks   tasks to execute
      */
-    public static synchronized void submit(long timeout, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
+    public static synchronized void submitBlock(long timeout, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
         String id = registerClient();
         Collection<Future<?>> futures = new ArrayList<>();
         for (Runnable task : tasks) {
@@ -655,10 +655,10 @@ public class ThreadExecutor {
      *
      * @param tasks tasks to execute
      */
-    public static synchronized void submitUnregistered(Runnable... tasks) throws ExecutionException, InterruptedException {
+    public static synchronized void submitBlockUnregistered(Runnable... tasks) throws ExecutionException, InterruptedException {
         // first task runs in this thread. Rest of tasks run in separate threads
         String id = registerClient();
-        submit(tasks);
+        submitBlock(tasks);
         unregisterClient(id);
     }
 
@@ -670,10 +670,10 @@ public class ThreadExecutor {
      * @param timeout timeout to wait for each of the tasks
      * @param tasks   tasks to execute
      */
-    public static synchronized void submitUnregistered(long timeout, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
+    public static synchronized void submitBlockUnregistered(long timeout, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
         // first task runs in this thread. Rest of tasks run in separate threads
         String id = registerClient();
-        submit(timeout, tasks);
+        submitBlock(timeout, tasks);
         unregisterClient(id);
     }
 }

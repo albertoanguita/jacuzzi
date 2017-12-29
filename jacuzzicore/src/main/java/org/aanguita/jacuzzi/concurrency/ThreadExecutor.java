@@ -5,13 +5,8 @@ import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * This class provides static methods for launching named threads (runnable and callable implementations),
@@ -127,6 +122,7 @@ public class ThreadExecutor {
 
     /**
      * // TODO: 24/10/2017 this should register the invoking client with its class name. Make an unregister with no arguments
+     *
      * @return
      */
     public static synchronized String registerClient() {
@@ -175,7 +171,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task task to execute
@@ -206,7 +202,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task task to execute
@@ -237,7 +233,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task task to execute
@@ -268,7 +264,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task task to execute
@@ -299,7 +295,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task task to execute
@@ -330,7 +326,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task task to execute
@@ -367,7 +363,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task                  task to execute
@@ -410,7 +406,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task                  task to execute
@@ -454,7 +450,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task                  task to execute
@@ -499,7 +495,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task                  task to execute
@@ -544,7 +540,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task                  task to execute
@@ -590,7 +586,7 @@ public class ThreadExecutor {
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
-     *
+     * <p>
      * Previous registration is not required
      *
      * @param task                  task to execute
@@ -611,5 +607,73 @@ public class ThreadExecutor {
         Future<T> future = executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName), result);
         unregisterClient(id);
         return future;
+    }
+
+    /**
+     * Executes several tasks in parallel, and waits for all of them to finish
+     * <p>
+     * Previous registration is not required
+     *
+     * @param tasks tasks to execute
+     */
+    public static synchronized void submit(Runnable... tasks) throws ExecutionException, InterruptedException {
+        try {
+            submit(0L, tasks);
+        } catch (TimeoutException e) {
+            // ignore, cannot happen
+        }
+    }
+
+    /**
+     * Executes several tasks in parallel, and waits for all of them to finish
+     * <p>
+     * Previous registration is not required
+     *
+     * @param timeout timeout to wait for each of the tasks
+     * @param tasks   tasks to execute
+     */
+    public static synchronized void submit(long timeout, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
+        String id = registerClient();
+        Collection<Future<?>> futures = new ArrayList<>();
+        for (Runnable task : tasks) {
+            futures.add(executorService.submit(new InnerRunnable(task, null, null, ThreadUtil.invokerName(1))));
+        }
+        for (Future<?> future : futures) {
+            if (timeout > 0) {
+                future.get(timeout, TimeUnit.MILLISECONDS);
+            } else {
+                future.get();
+            }
+        }
+        unregisterClient(id);
+    }
+
+    /**
+     * Executes several tasks in parallel, and waits for all of them to finish
+     * <p>
+     * Previous registration is not required
+     *
+     * @param tasks tasks to execute
+     */
+    public static synchronized void submitUnregistered(Runnable... tasks) throws ExecutionException, InterruptedException {
+        // first task runs in this thread. Rest of tasks run in separate threads
+        String id = registerClient();
+        submit(tasks);
+        unregisterClient(id);
+    }
+
+    /**
+     * Executes several tasks in parallel, and waits for all of them to finish
+     * <p>
+     * Previous registration is not required
+     *
+     * @param timeout timeout to wait for each of the tasks
+     * @param tasks   tasks to execute
+     */
+    public static synchronized void submitUnregistered(long timeout, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
+        // first task runs in this thread. Rest of tasks run in separate threads
+        String id = registerClient();
+        submit(timeout, tasks);
+        unregisterClient(id);
     }
 }

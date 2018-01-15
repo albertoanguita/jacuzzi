@@ -391,7 +391,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
         setLongList(name, list.stream().map(Date::getTime).collect(Collectors.toList()), categories);
     }
 
-    public <E> List<E> getEnumList(String name, Class<E> enum_, String... categories) {
+    public <E> List<E> getEnumList(String name, Class<E> enum_, String... categories) throws ClassCastException {
         List<String> stringList = getStringList(name, categories);
         try {
             Method valueOf = enum_.getMethod("valueOf", String.class);
@@ -399,7 +399,7 @@ public abstract class AbstractLocalStorage implements LocalStorage {
                 try {
                     return (E) valueOf.invoke(null, s);
                 } catch (Exception e) {
-                    return null;
+                    throw new ClassCastException("Cannot parse " + s + " into a valid value of " + enum_.getName());
                 }
             }).collect(Collectors.toList()) : null;
         } catch (Exception e) {

@@ -64,5 +64,5 @@ public interface ReadOnlyLocalStorage {
 
     List<Date> getDateList(String name, String... categories);
 
-    <E> List<E> getEnumList(String name, Class<E> enum_, String... categories);
+    <E> List<E> getEnumList(String name, Class<E> enum_, String... categories) throws ClassCastException;
 }

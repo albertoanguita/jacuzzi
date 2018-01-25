@@ -100,7 +100,6 @@ public class PeriodicTaskReminder {
         synchronized (this) {
             if (taskElements.containsKey(taskName)) {
                 taskElement = taskElements.get(taskName);
-                TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, taskElement.period, (alertName) -> runTask(taskName));
             }
         }
         if (taskElement != null) {

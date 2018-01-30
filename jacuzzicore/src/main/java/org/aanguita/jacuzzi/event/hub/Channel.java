@@ -45,7 +45,7 @@ public class Channel {
                 return false;
             }
         }
-        return true;
+        return thisSize == otherSize;
     }
 
     @Override

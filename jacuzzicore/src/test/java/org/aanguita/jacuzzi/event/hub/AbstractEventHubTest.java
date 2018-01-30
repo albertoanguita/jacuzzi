@@ -186,6 +186,7 @@ public class AbstractEventHubTest {
         String event1 = "hello";
         String event2 = "test/two";
         String event3 = "test/one";
+        String event4 = "test/one/extra";
         Integer i = 5;
         Boolean b = true;
 
@@ -202,16 +203,21 @@ public class AbstractEventHubTest {
         long time3 = System.currentTimeMillis();
         ThreadUtil.safeSleep(100);
         assertEquals(new HashSet<>(Arrays.asList(event1, event2, event3)), eventHub.cachedChannels());
+        eventHub.publish(event4, i, b);
+        long time4 = System.currentTimeMillis();
+        ThreadUtil.safeSleep(100);
+        assertEquals(new HashSet<>(Arrays.asList(event1, event2, event3, event4)), eventHub.cachedChannels());
 
 
         ThreadUtil.safeSleep(500);
 
-        assertEquals(3, mockedSubscriberAll.publications.size());
+        assertEquals(4, mockedSubscriberAll.publications.size());
         assertEquals(2, mockedSubscriberSome.publications.size());
         assertEquals(1, mockedSubscriberOne.publications.size());
         verifyMatches(mockedSubscriberAll.getPublications().get(0), "test", "hello", time1);
         verifyMatches(mockedSubscriberAll.getPublications().get(1), "test", "test/two", time2, 5);
         verifyMatches(mockedSubscriberAll.getPublications().get(2), "test", "test/one", time3, 5, true);
+        verifyMatches(mockedSubscriberAll.getPublications().get(3), "test", "test/one/extra", time4, 5, true);
         verifyMatches(mockedSubscriberSome.getPublications().get(0), "test", "test/two", time1, 5);
         verifyMatches(mockedSubscriberSome.getPublications().get(1), "test", "test/one", time2, 5, true);
         verifyMatches(mockedSubscriberOne.getPublications().get(0), "test", "test/one", time1, 5, true);
@@ -229,6 +235,7 @@ public class AbstractEventHubTest {
         String event1 = "hello";
         String event2 = "test/two";
         String event3 = "test/one";
+        String event4 = "test/one/extra";
         Integer i = 5;
         Boolean b = true;
 
@@ -237,6 +244,7 @@ public class AbstractEventHubTest {
         eventHub.publish(event1);
         eventHub.publish(event2, i);
         eventHub.publish(event3, i, b);
+        eventHub.publish(event4, i, b);
 
         ThreadUtil.safeSleep(500);
 
@@ -247,7 +255,7 @@ public class AbstractEventHubTest {
         eventHub.resume();
         ThreadUtil.safeSleep(500);
 
-        assertEquals(3, mockedSubscriberAll.publications.size());
+        assertEquals(4, mockedSubscriberAll.publications.size());
         assertEquals(2, mockedSubscriberSome.publications.size());
         assertEquals(1, mockedSubscriberOne.publications.size());
 
@@ -255,17 +263,18 @@ public class AbstractEventHubTest {
         eventHub.publish(event1);
         eventHub.publish(event2, i);
         eventHub.publish(event3, i, b);
+        eventHub.publish(event4, i, b);
 
         ThreadUtil.safeSleep(500);
 
-        assertEquals(5, mockedSubscriberAll.publications.size());
+        assertEquals(7, mockedSubscriberAll.publications.size());
         assertEquals(4, mockedSubscriberSome.publications.size());
         assertEquals(2, mockedSubscriberOne.publications.size());
 
         eventHub.resume("hello");
         ThreadUtil.safeSleep(500);
 
-        assertEquals(6, mockedSubscriberAll.publications.size());
+        assertEquals(8, mockedSubscriberAll.publications.size());
         assertEquals(4, mockedSubscriberSome.publications.size());
         assertEquals(2, mockedSubscriberOne.publications.size());
     }

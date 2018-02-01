@@ -1,57 +1,20 @@
 package org.aanguita.jacuzzi.concurrency;
 
-import org.aanguita.jacuzzi.id.AlphaNumFactory;
-
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 
 /**
- * This class provides simple stop/let go functionality to threads. SimpleSemaphore has two methods for opening or
- * closing access. Access threads invoke a method that is non-blocking (returns immediately) if access is open, and
- * is blocking if access is closed (until a controller thread opens access again)
- * <p>
- * The simple semaphore does not maintain the number of available permits or acquired stops. It just acts as an
- * open/close barrier
+ * @deprecated Use Barrier
  */
 public class SimpleSemaphore {
 
-    private static class OnTimeout implements Consumer<String> {
-
-        private final Thread threadToInterrupt;
-
-        private OnTimeout(Thread threadToInterrupt) {
-            this.threadToInterrupt = threadToInterrupt;
-        }
-
-        @Override
-        public void accept(String alertName) {
-            threadToInterrupt.interrupt();
-        }
-    }
-
-    /**
-     * All {@link SimpleSemaphore) instances use the same time alert
-     */
-    private static final String TIMED_ALERT_ID = "SIMPLE_SEMAPHORE_TIME_ALERT";
-
-    /**
-     * Semaphore used to control the execution flow
-     */
-    private Semaphore semaphore;
-
-    /**
-     * Flag for controlling when the element is paused
-     */
-    private boolean paused;
+    private final Barrier barrier;
 
     public SimpleSemaphore() {
-        this(false);
+        barrier = new Barrier();
     }
 
     public SimpleSemaphore(boolean fairness) {
-        semaphore = new Semaphore(1, fairness);
-        paused = false;
+        barrier = new Barrier(fairness);
     }
 
     /**
@@ -59,14 +22,7 @@ public class SimpleSemaphore {
      * The element can be paused more times, with no effect.
      */
     public void pause() {
-        // if the lock isn't currently acquired, then it must be acquired. Otherwise, leave it paused (so this
-        // invocation never blocks)
-        synchronized (this) {
-            if (!paused) {
-                semaphore.acquireUninterruptibly();
-                paused = true;
-            }
-        }
+        barrier.pause();
     }
 
     /**
@@ -75,14 +31,7 @@ public class SimpleSemaphore {
      * element previously
      */
     public void resume() {
-        // if the lock is currently acquired, then release it. Otherwise leave it unlocked (so this
-        // invocation never blocks)
-        synchronized (this) {
-            if (paused) {
-                semaphore.release();
-                paused = false;
-            }
-        }
+        barrier.resume();
     }
 
     /**
@@ -93,8 +42,7 @@ public class SimpleSemaphore {
      * If fairness is used, upon resume, blocked accesses will be executed in order of arrival
      */
     public void access() {
-        semaphore.acquireUninterruptibly();
-        semaphore.release();
+        barrier.access();
     }
 
     /**
@@ -109,24 +57,11 @@ public class SimpleSemaphore {
      * @throws TimeoutException if the pausable element cannot be accessed before the given timeout passes, or if timeout is equals or less than zero
      */
     public void access(long timeout) throws TimeoutException {
-        if (timeout > 0) {
-            try {
-                String alertName = this.getClass().getName() + "-" + AlphaNumFactory.getStaticId();
-                TimeAlert.getInstance(TIMED_ALERT_ID).addAlert(alertName, timeout, new OnTimeout(Thread.currentThread()));
-                semaphore.acquire(1);
-                TimeAlert.getInstance(TIMED_ALERT_ID).removeAlert(alertName);
-                semaphore.release();
-            } catch (InterruptedException e) {
-                // timeout was fired.
-                throw new TimeoutException();
-            }
-        } else {
-            throw new TimeoutException();
-        }
+        barrier.access(timeout);
     }
 
     @Override
     public String toString() {
-        return "SimpleSemaphore open=" + !paused;
+        return barrier.toString();
     }
 }

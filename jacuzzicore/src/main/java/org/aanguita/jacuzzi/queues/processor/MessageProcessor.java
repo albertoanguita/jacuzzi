@@ -1,7 +1,7 @@
 package org.aanguita.jacuzzi.queues.processor;
 
+import org.aanguita.jacuzzi.concurrency.Barrier;
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,12 @@ public class MessageProcessor<E> {
     /**
      * Traffic control object for pausing the message processing system
      */
-    private final SimpleSemaphore simpleSemaphore;
+    private final Barrier barrier;
+
+    /**
+     * If not null, when adding a new message and above this value, a warning will be logged
+     */
+    private final Integer queueSizeWarning;
 
     /**
      * Indicates if this message processor is alive. Once stopped, a message processor cannot come to live again
@@ -103,6 +108,10 @@ public class MessageProcessor<E> {
     }
 
     public MessageProcessor(String name, MessageReader<E> messageReader, MessageHandler<E> messageHandler, int queueCapacity, boolean separateThreads) throws IllegalArgumentException {
+        this(name, messageReader, messageHandler, queueCapacity, separateThreads, null);
+    }
+
+    public MessageProcessor(String name, MessageReader<E> messageReader, MessageHandler<E> messageHandler, int queueCapacity, boolean separateThreads, Integer queueSizeWarning) throws IllegalArgumentException {
         if (name == null) {
             throw new IllegalArgumentException("name must not be null");
         } else if (separateThreads && messageReader == null && messageHandler == null) {
@@ -116,9 +125,12 @@ public class MessageProcessor<E> {
         messageHandlerThread = initializeMessageHandlerThread(messageHandler, separateThreads, name);
         messageReaderHandlerThread = initializeMessageReaderHandlerThread(messageReader, messageHandler, separateThreads, name);
         this.separateThreads = separateThreads;
-        simpleSemaphore = new SimpleSemaphore();
+        barrier = new Barrier();
+        this.queueSizeWarning = queueSizeWarning;
         alive = new AtomicBoolean(true);
-        logger.debug(logInit() + ") initialized");
+        if (logger.isDebugEnabled()) {
+            logger.debug(logInit() + "initialized");
+        }
     }
 
     private ArrayBlockingQueue<E> initializeMessageQueue(boolean separateThreads, int queueCapacity) {
@@ -160,7 +172,9 @@ public class MessageProcessor<E> {
         } else {
             startThread(messageReaderHandlerThread);
         }
-        logger.debug(logInit() + ") started");
+        if (logger.isDebugEnabled()) {
+            logger.debug(logInit() + "started");
+        }
     }
 
     private synchronized void startThread(Thread thread) {
@@ -171,14 +185,18 @@ public class MessageProcessor<E> {
 
     public void pause() {
         if (alive.get()) {
-            simpleSemaphore.pause();
-            logger.debug(logInit() + ") paused");
+            barrier.pause();
+            if (logger.isDebugEnabled()) {
+                logger.debug(logInit() + "paused");
+            }
         }
     }
 
     public void resume() {
-        simpleSemaphore.resume();
-        logger.debug(logInit() + ") resumed");
+        barrier.resume();
+        if (logger.isDebugEnabled()) {
+            logger.debug(logInit() + "resumed");
+        }
     }
 
     /**
@@ -196,7 +214,7 @@ public class MessageProcessor<E> {
     }
 
     boolean accessTrafficControl() {
-        simpleSemaphore.access();
+        barrier.access();
         return alive.get();
     }
 
@@ -216,8 +234,15 @@ public class MessageProcessor<E> {
 
     public void addMessage(E message) throws InterruptedException {
         if (messageQueue != null) {
-            logger.debug(logInit() + ") added message");
+            if (logger.isDebugEnabled()) {
+                logger.debug(logInit() + "added message");
+            }
             messageQueue.put(message);
+            if (queueSizeWarning != null && queueSize() > queueSizeWarning) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn(logInit() + "size of queue is " + queueSize());
+                }
+            }
         } else {
             throw new IllegalStateException("Tried to add a message with no queue configured");
         }
@@ -225,7 +250,9 @@ public class MessageProcessor<E> {
 
     public E takeMessage() throws InterruptedException {
         if (messageQueue != null) {
-            logger.debug(logInit() + ") removed message");
+            if (logger.isDebugEnabled()) {
+                logger.debug(logInit() + "removed message");
+            }
             return messageQueue.take();
         } else {
             throw new IllegalStateException("Tried to retrieve a message with no queue configured");
@@ -262,7 +289,9 @@ public class MessageProcessor<E> {
                 messageReaderHandlerThread.getMessageReader().stop();
                 messageReaderHandlerThread.interrupt();
             }
-            logger.debug(logInit() + ") stopped");
+            if (logger.isDebugEnabled()) {
+                logger.debug(logInit() + "stopped");
+            }
         }
     }
 
@@ -290,6 +319,14 @@ public class MessageProcessor<E> {
     }
 
     private String logInit() {
-        return "Message processor (" + name;
+        return logInit(null);
+    }
+
+    public String logInit(String component) {
+        if (component != null) {
+            return "MessageProcessor/" + component + " [" + name + "]: ";
+        } else {
+            return "MessageProcessor [" + name + "]: ";
+        }
     }
 }

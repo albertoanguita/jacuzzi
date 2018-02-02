@@ -1,9 +1,14 @@
 package org.aanguita.jacuzzi.queues.processor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * todo change to Executor
  */
 class MessageReaderHandlerThread<E> extends Thread {
+
+    private static final Logger logger = LoggerFactory.getLogger(MessageReaderHandlerThread.class);
 
     private MessageProcessor<E> messageProcessor;
 
@@ -39,6 +44,9 @@ class MessageReaderHandlerThread<E> extends Thread {
             messageProcessor.accessTrafficControl();
             E message = messageReader.readMessage();
             messageProcessor.accessTrafficControl();
+            if (logger.isDebugEnabled()) {
+                logger.debug(messageProcessor.logInit("MessageReaderHandler") + "handling message");
+            }
             messageHandler.handleMessage(message);
             return false;
         } catch (FinishReadingMessagesException e) {
@@ -47,7 +55,9 @@ class MessageReaderHandlerThread<E> extends Thread {
         } catch (Throwable e) {
             // user should not let any exceptions to reach this level -> error exposed in console
             // todo, handle better
-            e.printStackTrace();
+            if (logger.isErrorEnabled()) {
+                logger.error("Error processing a message", e);
+            }
             return true;
         }
     }

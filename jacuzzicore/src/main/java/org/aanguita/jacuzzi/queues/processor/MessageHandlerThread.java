@@ -1,5 +1,8 @@
 package org.aanguita.jacuzzi.queues.processor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Class description
  * <p/>
@@ -9,6 +12,7 @@ package org.aanguita.jacuzzi.queues.processor;
  */
 class MessageHandlerThread<E> extends Thread {
 
+    private static final Logger logger = LoggerFactory.getLogger(MessageHandlerThread.class);
 
     private MessageProcessor<E> messageProcessor;
 
@@ -33,6 +37,9 @@ class MessageHandlerThread<E> extends Thread {
             E message = messageProcessor.takeMessage();
             messageProcessor.accessTrafficControl();
             messageHandler.handleMessage(message);
+            if (logger.isDebugEnabled()) {
+                logger.debug(messageProcessor.logInit("MessageHandler") + "handling message");
+            }
             return false;
         } catch (InterruptedException e) {
             // only the MessageProcessor can interrupt this thread, cannot be an error

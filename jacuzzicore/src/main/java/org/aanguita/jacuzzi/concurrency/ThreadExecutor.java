@@ -56,11 +56,6 @@ public class ThreadExecutor {
         public V call() throws Exception {
             try {
                 return start() ? task.call() : null;
-            } catch (Throwable e) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("UNEXPECTED EXCEPTION THROWN BY CALLABLE IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
-                }
-                return null;
             } finally {
                 end();
             }
@@ -81,10 +76,6 @@ public class ThreadExecutor {
             try {
                 if (start()) {
                     task.run();
-                }
-            } catch (Throwable e) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("UNEXPECTED EXCEPTION THROWN BY RUNNABLE IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
                 }
             } finally {
                 end();

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * This class implements a Monitor which is waiting for events and asynchronously performs actions upon such events.
@@ -74,6 +75,8 @@ public class Monitor {
 
     private final String threadName;
 
+    private final Consumer<Throwable> throwableConsumer;
+
     private final String threadExecutorClientId;
 
 
@@ -82,6 +85,10 @@ public class Monitor {
     }
 
     public Monitor(StateSolver stateSolver, String threadName) {
+        this(stateSolver, threadName, null);
+    }
+
+    public Monitor(StateSolver stateSolver, String threadName, Consumer<Throwable> throwableConsumer) {
         this.stateSolver = stateSolver;
         future = null;
         stateChangeFlag = new AtomicBoolean(false);
@@ -90,6 +97,7 @@ public class Monitor {
         alive = new AtomicBoolean(true);
         this.threadName = threadName;
         threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");
+        this.throwableConsumer = throwableConsumer;
     }
 
     /**
@@ -160,9 +168,11 @@ public class Monitor {
         } catch (Throwable e) {
             //unexpected exception obtained. Print error and terminate
             if (logger.isErrorEnabled()) {
-                logger.error("UNEXPECTED EXCEPTION THROWN BY MONITOR IMPLEMENTATION. THE MONITOR WILL STOP EXECUTING. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
+                logger.error("UNEXPECTED EXCEPTION THROWN BY MONITOR IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
             }
-            stop();
+            if (throwableConsumer != null) {
+                throwableConsumer.accept(e);
+            }
             return true;
         }
     }

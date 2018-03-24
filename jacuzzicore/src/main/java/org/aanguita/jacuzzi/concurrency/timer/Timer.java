@@ -2,6 +2,8 @@ package org.aanguita.jacuzzi.concurrency.timer;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 
+import java.util.function.Consumer;
+
 /**
  * This class offers a timer which activates after a specified time, invoking a given method. The timer will keep
  * activating itself periodically, until the given method tells it to stop.
@@ -25,7 +27,11 @@ public class Timer extends AbstractTimer {
     }
 
     public Timer(long millis, TimerAction timerAction, boolean start, String threadName) {
-        super(millis, threadName);
+        this(millis, timerAction, true, threadName, null);
+    }
+
+    public Timer(long millis, TimerAction timerAction, boolean start, String threadName, Consumer<Throwable> throwableConsumer) {
+        super(millis, threadName, throwableConsumer);
         this.timerAction = timerAction;
         initialize(start);
     }

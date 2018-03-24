@@ -2,6 +2,8 @@ package org.aanguita.jacuzzi.concurrency.timer;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 
+import java.util.function.Consumer;
+
 /**
  * Created by Alberto on 03/12/2016.
  */
@@ -23,7 +25,11 @@ public class ParametrizedTimer<T> extends AbstractTimer {
     }
 
     public ParametrizedTimer(long millis, ParametrizedTimerAction<T> timerAction, T data, boolean start, String threadName) {
-        super(millis, threadName);
+        this(millis, timerAction, data, true, threadName, null);
+    }
+
+    public ParametrizedTimer(long millis, ParametrizedTimerAction<T> timerAction, T data, boolean start, String threadName, Consumer<Throwable> throwableConsumer) {
+        super(millis, threadName, throwableConsumer);
         this.timerAction = timerAction;
         this.data = data;
         initialize(start);

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * Created by Alberto on 03/12/2016.
@@ -68,6 +69,8 @@ public abstract class AbstractTimer extends StringIdClass {
      */
     private final String threadName;
 
+    private final Consumer<Throwable> throwableConsumer;
+
     /**
      * The activated wake up task object (used to check that the valid wake up task object is the one waking us up)
      */
@@ -75,12 +78,13 @@ public abstract class AbstractTimer extends StringIdClass {
 
     private String threadExecutorClientId;
 
-    protected AbstractTimer(long millis, String threadName) {
+    protected AbstractTimer(long millis, String threadName, Consumer<Throwable> throwableConsumer) {
         validateTime(millis);
         this.millis = millis;
         active = new AtomicBoolean(false);
         remainingTimeWhenStopped = millis;
         this.threadName = threadName + ".Timer";
+        this.throwableConsumer = throwableConsumer;
     }
 
     protected void initialize(boolean start) {
@@ -123,6 +127,9 @@ public abstract class AbstractTimer extends StringIdClass {
                 //unexpected exception obtained. Print error and terminate
                 if (logger.isErrorEnabled()) {
                     logger.error("UNEXPECTED EXCEPTION THROWN BY TIMER ACTION IMPLEMENTATION. THE TIMER WILL STOP EXECUTING. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
+                }
+                if (throwableConsumer != null) {
+                    throwableConsumer.accept(e);
                 }
                 stop();
             }

@@ -1,12 +1,12 @@
 package org.aanguita.jacuzzi.concurrency;
 
-import org.aanguita.jacuzzi.concurrency.controller.ConcurrencyController;
 import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 /**
  * This class provides static methods for launching named threads (runnable and callable implementations),
@@ -19,26 +19,25 @@ public class ThreadExecutor {
 
     private static class Task {
 
-        protected final ConcurrencyController concurrencyController;
-
-        protected final String concurrentActivity;
-
         private final String threadName;
+        
+        private final Consumer<RuntimeException> exceptionConsumer;
 
-        public Task(ConcurrencyController concurrencyController, String concurrentActivity, String threadName) {
-            this.concurrencyController = concurrencyController;
-            this.concurrentActivity = concurrentActivity;
+        Task(String threadName, Consumer<RuntimeException> exceptionConsumer) {
             this.threadName = threadName;
+            this.exceptionConsumer = exceptionConsumer;
         }
 
         protected boolean start() {
             Thread.currentThread().setName(threadName);
-            return concurrencyController == null || concurrencyController.beginActivity(concurrentActivity);
+            return true;
         }
-
-        protected void end() {
-            if (concurrencyController != null) {
-                concurrencyController.endActivity(concurrentActivity);
+        
+        void consumeRuntimeException(RuntimeException t) {
+            if (exceptionConsumer != null) {
+                exceptionConsumer.accept(t);
+            } else {
+                throw t;
             }
         }
     }
@@ -47,17 +46,19 @@ public class ThreadExecutor {
 
         private final Callable<V> task;
 
-        public InnerCallable(Callable<V> task, ConcurrencyController concurrencyController, String concurrentActivity, String threadName) {
-            super(concurrencyController, concurrentActivity, threadName);
+        InnerCallable(Callable<V> task, String threadName, Consumer<RuntimeException> exceptionConsumer) {
+            super(threadName, exceptionConsumer);
             this.task = task;
         }
 
         @Override
         public V call() throws Exception {
+            start();
             try {
-                return start() ? task.call() : null;
-            } finally {
-                end();
+                return task.call();
+            } catch (RuntimeException t) {
+                consumeRuntimeException(t);
+                return null;
             }
         }
     }
@@ -66,19 +67,18 @@ public class ThreadExecutor {
 
         private final Runnable task;
 
-        public InnerRunnable(Runnable task, ConcurrencyController concurrencyController, String concurrentActivity, String threadName) {
-            super(concurrencyController, concurrentActivity, threadName);
+        InnerRunnable(Runnable task, String threadName, Consumer<RuntimeException> exceptionConsumer) {
+            super(threadName, exceptionConsumer);
             this.task = task;
         }
 
         @Override
         public void run() {
+            start();
             try {
-                if (start()) {
-                    task.run();
-                }
-            } finally {
-                end();
+                task.run();
+            } catch (RuntimeException t) {
+                consumeRuntimeException(t);
             }
         }
     }
@@ -243,112 +243,15 @@ public class ThreadExecutor {
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
      *
-     * @param task task to execute
-     * @return a TaskSemaphore that allows invoker to know when the task has been completed
-     * (its subsequent use is optional, only necessary if the parent thread must know when the
-     * child thread has finished its task. If not necessary it can just be ignored)
-     */
-    public static <T> Future<T> submit(Callable<T> task, String threadName) {
-        return submit(task, threadName, null, null);
-    }
-
-    /**
-     * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
-     * TaskSemaphore object allows to wait for the finalization of the task
-     * <p>
-     * Previous registration is not required
-     *
-     * @param task task to execute
-     * @return a TaskSemaphore that allows invoker to know when the task has been completed
-     * (its subsequent use is optional, only necessary if the parent thread must know when the
-     * child thread has finished its task. If not necessary it can just be ignored)
-     */
-    public static <T> Future<T> submitUnregistered(Callable<T> task, String threadName) {
-        String id = registerClient();
-        Future<T> future = submit(task, threadName, null, null);
-        unregisterClient(id);
-        return future;
-    }
-
-    /**
-     * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
-     * TaskSemaphore object allows to wait for the finalization of the task
-     *
-     * @param task task to execute
-     * @return a TaskSemaphore that allows invoker to know when the task has been completed
-     * (its subsequent use is optional, only necessary if the parent thread must know when the
-     * child thread has finished its task. If not necessary it can just be ignored)
-     */
-    public static Future<?> submit(Runnable task, String threadName) {
-        return submit(task, threadName, null, null);
-    }
-
-    /**
-     * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
-     * TaskSemaphore object allows to wait for the finalization of the task
-     * <p>
-     * Previous registration is not required
-     *
-     * @param task task to execute
-     * @return a TaskSemaphore that allows invoker to know when the task has been completed
-     * (its subsequent use is optional, only necessary if the parent thread must know when the
-     * child thread has finished its task. If not necessary it can just be ignored)
-     */
-    public static Future<?> submitUnregistered(Runnable task, String threadName) {
-        String id = registerClient();
-        Future<?> future = submit(task, threadName, null, null);
-        unregisterClient(id);
-        return future;
-    }
-
-    /**
-     * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
-     * TaskSemaphore object allows to wait for the finalization of the task
-     *
-     * @param task task to execute
-     * @return a TaskSemaphore that allows invoker to know when the task has been completed
-     * (its subsequent use is optional, only necessary if the parent thread must know when the
-     * child thread has finished its task. If not necessary it can just be ignored)
-     */
-    public static <T> Future<T> submit(Runnable task, T result, String threadName) {
-        return submit(task, result, threadName, null, null);
-    }
-
-    /**
-     * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
-     * TaskSemaphore object allows to wait for the finalization of the task
-     * <p>
-     * Previous registration is not required
-     *
-     * @param task task to execute
-     * @return a TaskSemaphore that allows invoker to know when the task has been completed
-     * (its subsequent use is optional, only necessary if the parent thread must know when the
-     * child thread has finished its task. If not necessary it can just be ignored)
-     */
-    public static <T> Future<T> submitUnregistered(Runnable task, T result, String threadName) {
-        String id = registerClient();
-        Future<T> future = submit(task, result, threadName, null, null);
-        unregisterClient(id);
-        return future;
-    }
-
-    /**
-     * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
-     * TaskSemaphore object allows to wait for the finalization of the task
-     *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
      */
-    public static <T> Future<T> submit(
+    public static synchronized <T> Future<T> submit(
             Callable<T> task,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        return submit(task, ThreadUtil.invokerName(1), concurrencyController, concurrentActivity);
+            String threadName) {
+        return submit(task, threadName, null);
     }
 
     /**
@@ -358,21 +261,14 @@ public class ThreadExecutor {
      * Previous registration is not required
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
      */
-    public static <T> Future<T> submitUnregistered(
+    public static synchronized <T> Future<T> submitUnregistered(
             Callable<T> task,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        String id = registerClient();
-        Future<T> future = submit(task, ThreadUtil.invokerName(1), concurrencyController, concurrentActivity);
-        unregisterClient(id);
-        return future;
+            String threadName) {
+        return submitUnregistered(task, threadName, null);
     }
 
     /**
@@ -380,18 +276,14 @@ public class ThreadExecutor {
      * TaskSemaphore object allows to wait for the finalization of the task
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
      */
-    public static Future<?> submit(
+    public static synchronized Future<?> submit(
             Runnable task,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        return submit(task, ThreadUtil.invokerName(1), concurrencyController, concurrentActivity);
+            String threadName) {
+        return submit(task, threadName, (Consumer<RuntimeException>) null);
     }
 
     /**
@@ -401,21 +293,14 @@ public class ThreadExecutor {
      * Previous registration is not required
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
      */
-    public static Future<?> submitUnregistered(
+    public static synchronized Future<?> submitUnregistered(
             Runnable task,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        String id = registerClient();
-        Future<?> future = submit(task, ThreadUtil.invokerName(1), concurrencyController, concurrentActivity);
-        unregisterClient(id);
-        return future;
+            String threadName) {
+        return submitUnregistered(task, threadName, (Consumer<RuntimeException>) null);
     }
 
     /**
@@ -423,19 +308,15 @@ public class ThreadExecutor {
      * TaskSemaphore object allows to wait for the finalization of the task
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
      */
-    public static <T> Future<T> submit(
+    public static synchronized <T> Future<T> submit(
             Runnable task,
             T result,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        return submit(task, result, ThreadUtil.invokerName(1), concurrencyController, concurrentActivity);
+            String threadName) {
+        return submit(task, result, threadName, null);
     }
 
     /**
@@ -445,32 +326,23 @@ public class ThreadExecutor {
      * Previous registration is not required
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
      */
-    public static <T> Future<T> submitUnregistered(
+    public static synchronized <T> Future<T> submitUnregistered(
             Runnable task,
             T result,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        String id = registerClient();
-        Future<T> future = submit(task, result, ThreadUtil.invokerName(1), concurrencyController, concurrentActivity);
-        unregisterClient(id);
-        return future;
+            String threadName) {
+        return submitUnregistered(task, result, threadName, null);
     }
+
 
     /**
      * Executes a task in parallel mode. A dedicated thread is created for executing this new task. The
      * TaskSemaphore object allows to wait for the finalization of the task
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
@@ -478,9 +350,8 @@ public class ThreadExecutor {
     public static synchronized <T> Future<T> submit(
             Callable<T> task,
             String threadName,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        return executorService.submit(new InnerCallable<>(task, concurrencyController, concurrentActivity, threadName));
+            Consumer<RuntimeException> exceptionConsumer) {
+        return executorService.submit(new InnerCallable<>(task, threadName, exceptionConsumer));
     }
 
     /**
@@ -490,9 +361,6 @@ public class ThreadExecutor {
      * Previous registration is not required
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
@@ -500,10 +368,9 @@ public class ThreadExecutor {
     public static synchronized <T> Future<T> submitUnregistered(
             Callable<T> task,
             String threadName,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
+            Consumer<RuntimeException> exceptionConsumer) {
         String id = registerClient();
-        Future<T> future = executorService.submit(new InnerCallable<>(task, concurrencyController, concurrentActivity, threadName));
+        Future<T> future = executorService.submit(new InnerCallable<>(task, threadName, exceptionConsumer));
         unregisterClient(id);
         return future;
     }
@@ -513,9 +380,6 @@ public class ThreadExecutor {
      * TaskSemaphore object allows to wait for the finalization of the task
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
@@ -523,9 +387,8 @@ public class ThreadExecutor {
     public static synchronized Future<?> submit(
             Runnable task,
             String threadName,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        return executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName));
+            Consumer<RuntimeException> exceptionConsumer) {
+        return executorService.submit(new InnerRunnable(task, threadName, exceptionConsumer));
     }
 
     /**
@@ -535,9 +398,6 @@ public class ThreadExecutor {
      * Previous registration is not required
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
@@ -545,10 +405,9 @@ public class ThreadExecutor {
     public static synchronized Future<?> submitUnregistered(
             Runnable task,
             String threadName,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
+            Consumer<RuntimeException> exceptionConsumer) {
         String id = registerClient();
-        Future<?> future = executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName));
+        Future<?> future = executorService.submit(new InnerRunnable(task, threadName, exceptionConsumer));
         unregisterClient(id);
         return future;
     }
@@ -558,9 +417,6 @@ public class ThreadExecutor {
      * TaskSemaphore object allows to wait for the finalization of the task
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
@@ -569,9 +425,8 @@ public class ThreadExecutor {
             Runnable task,
             T result,
             String threadName,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
-        return executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName), result);
+            Consumer<RuntimeException> exceptionConsumer) {
+        return executorService.submit(new InnerRunnable(task, threadName, exceptionConsumer), result);
     }
 
     /**
@@ -581,9 +436,6 @@ public class ThreadExecutor {
      * Previous registration is not required
      *
      * @param task                  task to execute
-     * @param concurrencyController the concurrency controller that will monitor this task
-     * @param concurrentActivity    the activity name that this parallel task is going to execute in the
-     *                              given concurrency controller
      * @return a TaskSemaphore that allows invoker to know when the task has been completed
      * (its subsequent use is optional, only necessary if the parent thread must know when the
      * child thread has finished its task. If not necessary it can just be ignored)
@@ -592,10 +444,9 @@ public class ThreadExecutor {
             Runnable task,
             T result,
             String threadName,
-            ConcurrencyController concurrencyController,
-            String concurrentActivity) {
+            Consumer<RuntimeException> exceptionConsumer) {
         String id = registerClient();
-        Future<T> future = executorService.submit(new InnerRunnable(task, concurrencyController, concurrentActivity, threadName), result);
+        Future<T> future = executorService.submit(new InnerRunnable(task, threadName, exceptionConsumer), result);
         unregisterClient(id);
         return future;
     }
@@ -624,10 +475,22 @@ public class ThreadExecutor {
      * @param tasks   tasks to execute
      */
     public static synchronized void submitBlock(long timeout, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
+        submitBlock(timeout, null, tasks);
+    }
+
+    /**
+     * Executes several tasks in parallel, and waits for all of them to finish
+     * <p>
+     * Previous registration is not required
+     *
+     * @param timeout timeout to wait for each of the tasks
+     * @param tasks   tasks to execute
+     */
+    public static synchronized void submitBlock(long timeout, Consumer<RuntimeException> exceptionConsumer, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
         String id = registerClient();
         Collection<Future<?>> futures = new ArrayList<>();
         for (Runnable task : tasks) {
-            futures.add(executorService.submit(new InnerRunnable(task, null, null, ThreadUtil.invokerName(1))));
+            futures.add(executorService.submit(new InnerRunnable(task, ThreadUtil.invokerName(1), exceptionConsumer)));
         }
         for (Future<?> future : futures) {
             if (timeout > 0) {
@@ -665,6 +528,21 @@ public class ThreadExecutor {
         // first task runs in this thread. Rest of tasks run in separate threads
         String id = registerClient();
         submitBlock(timeout, tasks);
+        unregisterClient(id);
+    }
+
+    /**
+     * Executes several tasks in parallel, and waits for all of them to finish
+     * <p>
+     * Previous registration is not required
+     *
+     * @param timeout timeout to wait for each of the tasks
+     * @param tasks   tasks to execute
+     */
+    public static synchronized void submitBlockUnregistered(long timeout, Consumer<RuntimeException> exceptionConsumer, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
+        // first task runs in this thread. Rest of tasks run in separate threads
+        String id = registerClient();
+        submitBlock(timeout, exceptionConsumer, tasks);
         unregisterClient(id);
     }
 }

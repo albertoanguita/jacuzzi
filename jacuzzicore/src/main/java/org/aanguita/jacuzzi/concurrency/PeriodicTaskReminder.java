@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * The periodic task reminder raises one thread for invoking heterogeneous periodic tasks. Clients can register their periodic tasks for being
@@ -90,9 +91,13 @@ public class PeriodicTaskReminder {
 
     // TODO: 21/09/2017 add possibility of setting number of times that the task is executed
     public synchronized void addPeriodicTask(String taskName, Runnable task, boolean inBackground, long period, boolean runNow) {
+        addPeriodicTask(taskName, task, inBackground, period, runNow, null);
+    }
+
+    public synchronized void addPeriodicTask(String taskName, Runnable task, boolean inBackground, long period, boolean runNow, Consumer<RuntimeException> exceptionConsumer) {
         LOGGER.info(name + " adding new task: " + taskName);
         taskElements.put(taskName, new TaskElement("PeriodicTaskReminder(" + name + "):" + taskName, task, inBackground, period, null));
-        TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, runNow ? 0 : period, (alertName) -> runTask(taskName));
+        TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, runNow ? 0 : period, (alertName) -> runTask(taskName), exceptionConsumer);
     }
 
     private void runTask(String taskName) {

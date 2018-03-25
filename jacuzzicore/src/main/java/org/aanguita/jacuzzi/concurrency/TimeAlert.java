@@ -27,10 +27,13 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
 
         private final Consumer<String> consumer;
 
-        private Alert(String name, long millis, Consumer<String> consumer) {
+        private final Consumer<RuntimeException> exceptionConsumer;
+
+        private Alert(String name, long millis, Consumer<String> consumer, Consumer<RuntimeException> exceptionConsumer) {
             this.name = name;
             this.timeToGoOff = System.currentTimeMillis() + millis;
             this.consumer = consumer;
+            this.exceptionConsumer = exceptionConsumer;
         }
 
         private long getRemainingTime() {
@@ -82,13 +85,17 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
     }
 
     public synchronized void addAlert(String alertName, long millis, Consumer<String> consumer) {
+        addAlert(alertName, millis, consumer, null);
+    }
+
+    public synchronized void addAlert(String alertName, long millis, Consumer<String> consumer, Consumer<RuntimeException> exceptionConsumer) {
         if (millis < 0) {
             throw new IllegalArgumentException("Invalid time for alert: " + millis);
         }
         if (activeAlerts.containsKey(alertName)) {
             removeAlert(alertName);
         }
-        Alert alert = new Alert(alertName, millis, consumer);
+        Alert alert = new Alert(alertName, millis, consumer, exceptionConsumer);
         activeAlerts.put(alertName, alert);
         alertQueue.add(alert);
         if (activeAlerts.size() == 1) {
@@ -98,16 +105,24 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
     }
 
     public synchronized void addAlertIfEarlier(String alertName, long millis, Consumer<String> consumer) {
+        addAlertIfEarlier(alertName, millis, consumer, null);
+    }
+
+    public synchronized void addAlertIfEarlier(String alertName, long millis, Consumer<String> consumer, Consumer<RuntimeException> exceptionConsumer) {
         Long remainingTime = getAlertRemainingTime(alertName);
         if (remainingTime == null || remainingTime > millis) {
-            addAlert(alertName, millis, consumer);
+            addAlert(alertName, millis, consumer, exceptionConsumer);
         }
     }
 
     public synchronized void addAlertIfLater(String alertName, long millis, Consumer<String> consumer) {
+        addAlertIfLater(alertName, millis, consumer, null);
+    }
+
+    public synchronized void addAlertIfLater(String alertName, long millis, Consumer<String> consumer, Consumer<RuntimeException> exceptionConsumer) {
         Long remainingTime = getAlertRemainingTime(alertName);
         if (remainingTime == null || remainingTime < millis) {
-            addAlert(alertName, millis, consumer);
+            addAlert(alertName, millis, consumer, exceptionConsumer);
         }
     }
 
@@ -153,7 +168,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
     public synchronized Long wakeUp(ParametrizedTimer<String> timer, String alertName) {
         if (alertName.equals(nextAlert) && activeAlerts.containsKey(alertName)) {
             Alert alert = activeAlerts.get(alertName);
-            ThreadExecutor.submit(() -> alert.consumer.accept(alertName), this.getClass().getName() + "." + alert);
+            ThreadExecutor.submit(() -> alert.consumer.accept(alertName), this.getClass().getName() + "." + alert, alert.exceptionConsumer);
             removeAlert(nextAlert);
             activateTimer();
         }

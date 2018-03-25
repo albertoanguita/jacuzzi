@@ -21,9 +21,9 @@ public class ThreadExecutor {
 
         private final String threadName;
         
-        private final Consumer<RuntimeException> exceptionConsumer;
+        private final Consumer<Exception> exceptionConsumer;
 
-        Task(String threadName, Consumer<RuntimeException> exceptionConsumer) {
+        Task(String threadName, Consumer<Exception> exceptionConsumer) {
             this.threadName = threadName;
             this.exceptionConsumer = exceptionConsumer;
         }
@@ -33,11 +33,11 @@ public class ThreadExecutor {
             return true;
         }
         
-        void consumeRuntimeException(RuntimeException t) {
+        void consumeRuntimeException(RuntimeException e) {
             if (exceptionConsumer != null) {
-                exceptionConsumer.accept(t);
+                exceptionConsumer.accept(e);
             } else {
-                throw t;
+                throw e;
             }
         }
     }
@@ -46,7 +46,7 @@ public class ThreadExecutor {
 
         private final Callable<V> task;
 
-        InnerCallable(Callable<V> task, String threadName, Consumer<RuntimeException> exceptionConsumer) {
+        InnerCallable(Callable<V> task, String threadName, Consumer<Exception> exceptionConsumer) {
             super(threadName, exceptionConsumer);
             this.task = task;
         }
@@ -56,8 +56,8 @@ public class ThreadExecutor {
             start();
             try {
                 return task.call();
-            } catch (RuntimeException t) {
-                consumeRuntimeException(t);
+            } catch (RuntimeException e) {
+                consumeRuntimeException(e);
                 return null;
             }
         }
@@ -67,7 +67,7 @@ public class ThreadExecutor {
 
         private final Runnable task;
 
-        InnerRunnable(Runnable task, String threadName, Consumer<RuntimeException> exceptionConsumer) {
+        InnerRunnable(Runnable task, String threadName, Consumer<Exception> exceptionConsumer) {
             super(threadName, exceptionConsumer);
             this.task = task;
         }
@@ -77,8 +77,8 @@ public class ThreadExecutor {
             start();
             try {
                 task.run();
-            } catch (RuntimeException t) {
-                consumeRuntimeException(t);
+            } catch (RuntimeException e) {
+                consumeRuntimeException(e);
             }
         }
     }
@@ -283,7 +283,7 @@ public class ThreadExecutor {
     public static synchronized Future<?> submit(
             Runnable task,
             String threadName) {
-        return submit(task, threadName, (Consumer<RuntimeException>) null);
+        return submit(task, threadName, (Consumer<Exception>) null);
     }
 
     /**
@@ -300,7 +300,7 @@ public class ThreadExecutor {
     public static synchronized Future<?> submitUnregistered(
             Runnable task,
             String threadName) {
-        return submitUnregistered(task, threadName, (Consumer<RuntimeException>) null);
+        return submitUnregistered(task, threadName, (Consumer<Exception>) null);
     }
 
     /**
@@ -350,7 +350,7 @@ public class ThreadExecutor {
     public static synchronized <T> Future<T> submit(
             Callable<T> task,
             String threadName,
-            Consumer<RuntimeException> exceptionConsumer) {
+            Consumer<Exception> exceptionConsumer) {
         return executorService.submit(new InnerCallable<>(task, threadName, exceptionConsumer));
     }
 
@@ -368,7 +368,7 @@ public class ThreadExecutor {
     public static synchronized <T> Future<T> submitUnregistered(
             Callable<T> task,
             String threadName,
-            Consumer<RuntimeException> exceptionConsumer) {
+            Consumer<Exception> exceptionConsumer) {
         String id = registerClient();
         Future<T> future = executorService.submit(new InnerCallable<>(task, threadName, exceptionConsumer));
         unregisterClient(id);
@@ -387,7 +387,7 @@ public class ThreadExecutor {
     public static synchronized Future<?> submit(
             Runnable task,
             String threadName,
-            Consumer<RuntimeException> exceptionConsumer) {
+            Consumer<Exception> exceptionConsumer) {
         return executorService.submit(new InnerRunnable(task, threadName, exceptionConsumer));
     }
 
@@ -405,7 +405,7 @@ public class ThreadExecutor {
     public static synchronized Future<?> submitUnregistered(
             Runnable task,
             String threadName,
-            Consumer<RuntimeException> exceptionConsumer) {
+            Consumer<Exception> exceptionConsumer) {
         String id = registerClient();
         Future<?> future = executorService.submit(new InnerRunnable(task, threadName, exceptionConsumer));
         unregisterClient(id);
@@ -425,7 +425,7 @@ public class ThreadExecutor {
             Runnable task,
             T result,
             String threadName,
-            Consumer<RuntimeException> exceptionConsumer) {
+            Consumer<Exception> exceptionConsumer) {
         return executorService.submit(new InnerRunnable(task, threadName, exceptionConsumer), result);
     }
 
@@ -444,7 +444,7 @@ public class ThreadExecutor {
             Runnable task,
             T result,
             String threadName,
-            Consumer<RuntimeException> exceptionConsumer) {
+            Consumer<Exception> exceptionConsumer) {
         String id = registerClient();
         Future<T> future = executorService.submit(new InnerRunnable(task, threadName, exceptionConsumer), result);
         unregisterClient(id);
@@ -486,7 +486,7 @@ public class ThreadExecutor {
      * @param timeout timeout to wait for each of the tasks
      * @param tasks   tasks to execute
      */
-    public static synchronized void submitBlock(long timeout, Consumer<RuntimeException> exceptionConsumer, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
+    public static synchronized void submitBlock(long timeout, Consumer<Exception> exceptionConsumer, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
         String id = registerClient();
         Collection<Future<?>> futures = new ArrayList<>();
         for (Runnable task : tasks) {
@@ -539,7 +539,7 @@ public class ThreadExecutor {
      * @param timeout timeout to wait for each of the tasks
      * @param tasks   tasks to execute
      */
-    public static synchronized void submitBlockUnregistered(long timeout, Consumer<RuntimeException> exceptionConsumer, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
+    public static synchronized void submitBlockUnregistered(long timeout, Consumer<Exception> exceptionConsumer, Runnable... tasks) throws ExecutionException, InterruptedException, TimeoutException {
         // first task runs in this thread. Rest of tasks run in separate threads
         String id = registerClient();
         submitBlock(timeout, exceptionConsumer, tasks);

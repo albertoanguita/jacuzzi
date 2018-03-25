@@ -3,10 +3,12 @@ package org.aanguita.jacuzzi.queues.processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Consumer;
+
 /**
  * todo change to Executor
  */
-class MessageReaderHandlerThread<E> extends Thread {
+class MessageReaderHandlerThread<E> extends MessageProcessorAbstractThread {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageReaderHandlerThread.class);
 
@@ -17,7 +19,11 @@ class MessageReaderHandlerThread<E> extends Thread {
     private MessageHandler<E> messageHandler;
 
     MessageReaderHandlerThread(String name, MessageProcessor<E> messageProcessor, MessageReader<E> messageReader, MessageHandler<E> messageHandler) {
-        super(name + "/MessageReaderHandlerThread");
+        this(name, messageProcessor, messageReader, messageHandler, null);
+    }
+
+    MessageReaderHandlerThread(String name, MessageProcessor<E> messageProcessor, MessageReader<E> messageReader, MessageHandler<E> messageHandler, Consumer<Exception> exceptionConsumer) {
+        super(name + "/MessageReaderHandlerThread", exceptionConsumer);
         this.messageProcessor = messageProcessor;
         this.messageReader = messageReader;
         this.messageHandler = messageHandler;
@@ -52,12 +58,12 @@ class MessageReaderHandlerThread<E> extends Thread {
         } catch (FinishReadingMessagesException e) {
             // the message reader has finished
             return true;
-        } catch (Throwable e) {
-            // user should not let any exceptions to reach this level -> error exposed in console
-            // todo, handle better
+        } catch (Exception e) {
+            //unexpected exception obtained. Print error and terminate
             if (logger.isErrorEnabled()) {
-                logger.error("Error processing a message", e);
+                logger.error("UNEXPECTED EXCEPTION THROWN BY MESSAGE READER HANDLER IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO EXCEPTIONS ARE THROWN AT THIS LEVEL", e);
             }
+            consumeException(e);
             return true;
         }
     }

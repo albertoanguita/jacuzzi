@@ -3,6 +3,8 @@ package org.aanguita.jacuzzi.queues.processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Consumer;
+
 /**
  * Class description
  * <p/>
@@ -10,7 +12,7 @@ import org.slf4j.LoggerFactory;
  * Date: 08-mar-2010<br>
  * Last Modified: 08-mar-2010
  */
-class MessageHandlerThread<E> extends Thread {
+class MessageHandlerThread<E> extends MessageProcessorAbstractThread {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageHandlerThread.class);
 
@@ -19,7 +21,11 @@ class MessageHandlerThread<E> extends Thread {
     private MessageHandler<E> messageHandler;
 
     MessageHandlerThread(String name, MessageProcessor<E> messageProcessor, MessageHandler<E> messageHandler) {
-        super(name + "/MessageHandlerThread");
+        this(name, messageProcessor, messageHandler, null);
+    }
+
+    MessageHandlerThread(String name, MessageProcessor<E> messageProcessor, MessageHandler<E> messageHandler, Consumer<Exception> exceptionConsumer) {
+        super(name + "/MessageHandlerThread", exceptionConsumer);
         this.messageProcessor = messageProcessor;
         this.messageHandler = messageHandler;
     }
@@ -44,10 +50,12 @@ class MessageHandlerThread<E> extends Thread {
         } catch (InterruptedException e) {
             // only the MessageProcessor can interrupt this thread, cannot be an error
             return true;
-        } catch (Throwable e) {
-            // user should not let any exceptions to reach this level -> error exposed in console
-            // todo how to handle this
-            e.printStackTrace();
+        } catch (Exception e) {
+            //unexpected exception obtained. Print error and terminate
+            if (logger.isErrorEnabled()) {
+                logger.error("UNEXPECTED EXCEPTION THROWN BY MESSAGE HANDLER IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO EXCEPTIONS ARE THROWN AT THIS LEVEL", e);
+            }
+            consumeException(e);
             return true;
         }
     }

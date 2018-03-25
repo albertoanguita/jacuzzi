@@ -28,8 +28,8 @@ public class ParametrizedTimer<T> extends AbstractTimer {
         this(millis, timerAction, data, true, threadName, null);
     }
 
-    public ParametrizedTimer(long millis, ParametrizedTimerAction<T> timerAction, T data, boolean start, String threadName, Consumer<Throwable> throwableConsumer) {
-        super(millis, threadName, throwableConsumer);
+    public ParametrizedTimer(long millis, ParametrizedTimerAction<T> timerAction, T data, boolean start, String threadName, Consumer<Exception> exceptionConsumer) {
+        super(millis, threadName, exceptionConsumer);
         this.timerAction = timerAction;
         this.data = data;
         initialize(start);

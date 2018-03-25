@@ -1,5 +1,6 @@
 package org.aanguita.jacuzzi.queues;
 
+import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.aanguita.jacuzzi.concurrency.monitor.Monitor;
 import org.aanguita.jacuzzi.concurrency.monitor.StateSolver;
 
@@ -47,16 +48,20 @@ public class OnDemandQueueProcessor<T> implements StateSolver {
     }
 
     public OnDemandQueueProcessor(Consumer<T> messageConsumer, int queueCapacity, int maxThreads) {
+        this(messageConsumer, queueCapacity, maxThreads, "OnDemandQueueProcessor", null);
+    }
+
+    public OnDemandQueueProcessor(Consumer<T> messageConsumer, int queueCapacity, int maxThreads, String threadName, Consumer<Exception> exceptionConsumer) {
         if (maxThreads < 1) {
             throw new IllegalArgumentException("maxThreads must be a positive integer, received " + maxThreads);
         }
         eventQueue = new ArrayBlockingQueue<>(queueCapacity, MESSAGE_FAIRNESS);
-        monitors = initializeMonitors(maxThreads);
+        monitors = initializeMonitors(maxThreads, threadName, exceptionConsumer);
         this.consumer = messageConsumer;
     }
 
-    private List<Monitor> initializeMonitors(int numMonitors) {
-        return IntStream.range(0, numMonitors).mapToObj(i -> new Monitor(this)).collect(Collectors.toList());
+    private List<Monitor> initializeMonitors(int numMonitors, String threadName, Consumer<Exception> exceptionConsumer) {
+        return IntStream.range(0, numMonitors).mapToObj(i -> new Monitor(this, threadName + "[" + i + "]", exceptionConsumer)).collect(Collectors.toList());
     }
 
     public void addEvent(T event) {
@@ -79,6 +84,7 @@ public class OnDemandQueueProcessor<T> implements StateSolver {
             }
         }
         // all are working
+        // TODO: 26/03/2018 we should wait for the first to finish, not just a random monitor
         monitors.get(0).stateChange();
     }
 

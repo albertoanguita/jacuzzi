@@ -1,5 +1,10 @@
 package org.aanguita.jacuzzi.queues.processor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.function.Consumer;
+
 /**
  * This thread cannot be stopped by its corresponding MessageProcessor, because the readMessage method does not throw
  * an InterruptedException. It will therefore be responsibility of the user to stop it by means of other exceptions
@@ -10,14 +15,20 @@ package org.aanguita.jacuzzi.queues.processor;
  * Date: 25-mar-2010<br>
  * Last Modified: 25-mar-2010
  */
-class MessageReaderThread<E> extends Thread {
+class MessageReaderThread<E> extends MessageProcessorAbstractThread {
+
+    private static final Logger logger = LoggerFactory.getLogger(MessageReaderThread.class);
 
     private MessageProcessor<E> messageProcessor;
 
     private MessageReader<E> messageReader;
 
     MessageReaderThread(String name, MessageProcessor<E> messageProcessor, MessageReader<E> messageReader) {
-        super(name + "/MessageReaderThread");
+        this(name, messageProcessor, messageReader, null);
+    }
+
+    MessageReaderThread(String name, MessageProcessor<E> messageProcessor, MessageReader<E> messageReader, Consumer<Exception> exceptionConsumer) {
+        super(name + "/MessageReaderThread", exceptionConsumer);
         this.messageProcessor = messageProcessor;
         this.messageReader = messageReader;
     }
@@ -48,10 +59,12 @@ class MessageReaderThread<E> extends Thread {
         } catch (FinishReadingMessagesException e) {
             // the message reader finished
             return true;
-        } catch (Throwable e) {
-            // user should not let any exceptions to reach this level -> error exposed in console
-            // todo
-            e.printStackTrace();
+        } catch (Exception e) {
+            //unexpected exception obtained. Print error and terminate
+            if (logger.isErrorEnabled()) {
+                logger.error("UNEXPECTED EXCEPTION THROWN BY MESSAGE READER IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO EXCEPTIONS ARE THROWN AT THIS LEVEL", e);
+            }
+            consumeException(e);
             return true;
         }
         return false;

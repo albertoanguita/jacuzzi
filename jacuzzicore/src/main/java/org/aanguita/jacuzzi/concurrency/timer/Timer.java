@@ -30,8 +30,8 @@ public class Timer extends AbstractTimer {
         this(millis, timerAction, true, threadName, null);
     }
 
-    public Timer(long millis, TimerAction timerAction, boolean start, String threadName, Consumer<Throwable> throwableConsumer) {
-        super(millis, threadName, throwableConsumer);
+    public Timer(long millis, TimerAction timerAction, boolean start, String threadName, Consumer<Exception> exceptionConsumer) {
+        super(millis, threadName, exceptionConsumer);
         this.timerAction = timerAction;
         initialize(start);
     }

@@ -75,7 +75,7 @@ public class Monitor {
 
     private final String threadName;
 
-    private final Consumer<Throwable> throwableConsumer;
+    private final Consumer<Exception> exceptionConsumer;
 
     private final String threadExecutorClientId;
 
@@ -88,7 +88,7 @@ public class Monitor {
         this(stateSolver, threadName, null);
     }
 
-    public Monitor(StateSolver stateSolver, String threadName, Consumer<Throwable> throwableConsumer) {
+    public Monitor(StateSolver stateSolver, String threadName, Consumer<Exception> exceptionConsumer) {
         this.stateSolver = stateSolver;
         future = null;
         stateChangeFlag = new AtomicBoolean(false);
@@ -97,7 +97,7 @@ public class Monitor {
         alive = new AtomicBoolean(true);
         this.threadName = threadName;
         threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");
-        this.throwableConsumer = throwableConsumer;
+        this.exceptionConsumer = exceptionConsumer;
     }
 
     /**
@@ -165,13 +165,13 @@ public class Monitor {
     private boolean executeAction() {
         try {
             return stateSolver.solveState();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             //unexpected exception obtained. Print error and terminate
             if (logger.isErrorEnabled()) {
-                logger.error("UNEXPECTED EXCEPTION THROWN BY MONITOR IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO THROWABLES ARE THROWN AT THIS LEVEL", e);
+                logger.error("UNEXPECTED EXCEPTION THROWN BY MONITOR IMPLEMENTATION. PLEASE CORRECT THE CODE SO NO EXCEPTIONS ARE THROWN AT THIS LEVEL", e);
             }
-            if (throwableConsumer != null) {
-                throwableConsumer.accept(e);
+            if (exceptionConsumer != null) {
+                exceptionConsumer.accept(e);
             }
             return true;
         }

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 
 /**
@@ -62,6 +63,10 @@ abstract class AbstractEventHub implements EventHub {
     private boolean running;
 
     AbstractEventHub(String name) {
+        this(name, null);
+    }
+
+    AbstractEventHub(String name, Consumer<Exception> exceptionConsumer) {
         this.name = name;
         subscribers = new HashMap<>();
         channelCache = new Cache();

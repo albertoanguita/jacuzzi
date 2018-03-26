@@ -19,7 +19,7 @@ public class OnDemandQueueProcessor<T> implements StateSolver {
     /**
      * Default capacity for the event queue
      */
-    private final static int DEFAULT_QUEUE_CAPACITY = 1024;
+    public final static int DEFAULT_QUEUE_CAPACITY = 1024;
 
     /**
      * Fairness of petitions is always true

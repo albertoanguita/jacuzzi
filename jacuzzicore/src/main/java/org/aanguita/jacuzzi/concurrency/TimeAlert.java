@@ -27,9 +27,9 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
 
         private final Consumer<String> consumer;
 
-        private final Consumer<RuntimeException> exceptionConsumer;
+        private final Consumer<Exception> exceptionConsumer;
 
-        private Alert(String name, long millis, Consumer<String> consumer, Consumer<RuntimeException> exceptionConsumer) {
+        private Alert(String name, long millis, Consumer<String> consumer, Consumer<Exception> exceptionConsumer) {
             this.name = name;
             this.timeToGoOff = System.currentTimeMillis() + millis;
             this.consumer = consumer;
@@ -88,7 +88,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         addAlert(alertName, millis, consumer, null);
     }
 
-    public synchronized void addAlert(String alertName, long millis, Consumer<String> consumer, Consumer<RuntimeException> exceptionConsumer) {
+    public synchronized void addAlert(String alertName, long millis, Consumer<String> consumer, Consumer<Exception> exceptionConsumer) {
         if (millis < 0) {
             throw new IllegalArgumentException("Invalid time for alert: " + millis);
         }
@@ -108,7 +108,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         addAlertIfEarlier(alertName, millis, consumer, null);
     }
 
-    public synchronized void addAlertIfEarlier(String alertName, long millis, Consumer<String> consumer, Consumer<RuntimeException> exceptionConsumer) {
+    public synchronized void addAlertIfEarlier(String alertName, long millis, Consumer<String> consumer, Consumer<Exception> exceptionConsumer) {
         Long remainingTime = getAlertRemainingTime(alertName);
         if (remainingTime == null || remainingTime > millis) {
             addAlert(alertName, millis, consumer, exceptionConsumer);
@@ -119,7 +119,7 @@ public class TimeAlert implements ParametrizedTimerAction<String> {
         addAlertIfLater(alertName, millis, consumer, null);
     }
 
-    public synchronized void addAlertIfLater(String alertName, long millis, Consumer<String> consumer, Consumer<RuntimeException> exceptionConsumer) {
+    public synchronized void addAlertIfLater(String alertName, long millis, Consumer<String> consumer, Consumer<Exception> exceptionConsumer) {
         Long remainingTime = getAlertRemainingTime(alertName);
         if (remainingTime == null || remainingTime < millis) {
             addAlert(alertName, millis, consumer, exceptionConsumer);

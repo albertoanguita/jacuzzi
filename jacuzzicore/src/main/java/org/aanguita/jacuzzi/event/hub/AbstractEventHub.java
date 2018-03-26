@@ -181,12 +181,21 @@ abstract class AbstractEventHub implements EventHub {
     }
 
     @Override
-    public synchronized void registerSubscriber(EventHubSubscriber subscriber, EventHubFactory.Type type) {
+    public synchronized void registerSubscriber(EventHubSubscriber subscriber, EventHubFactory.Type type, Consumer<Exception> exceptionConsumer) {
         if (alive.get()) {
             if (subscribers.containsKey(getSubscriberId(subscriber))) {
                 throw new IllegalArgumentException("Subscriber id already registered: " + getSubscriberId(subscriber));
             } else {
-                subscribers.put(getSubscriberId(subscriber), new SubscriberData(getSubscriberId(subscriber), subscriber, SubscriberProcessorFactory.createSubscriberProcessor(type, getSubscriberId(subscriber), subscriber)));
+                subscribers.put(
+                        getSubscriberId(subscriber),
+                        new SubscriberData(
+                                getSubscriberId(subscriber),
+                                subscriber,
+                                SubscriberProcessorFactory.createSubscriberProcessor(
+                                        type,
+                                        "EventHubSubscriber[" + name + "@" + getSubscriberId(subscriber) + "]",
+                                        subscriber,
+                                        exceptionConsumer)));
             }
         }
     }

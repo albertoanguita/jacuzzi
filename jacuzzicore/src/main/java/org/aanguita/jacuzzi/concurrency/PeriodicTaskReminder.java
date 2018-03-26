@@ -94,7 +94,7 @@ public class PeriodicTaskReminder {
         addPeriodicTask(taskName, task, inBackground, period, runNow, null);
     }
 
-    public synchronized void addPeriodicTask(String taskName, Runnable task, boolean inBackground, long period, boolean runNow, Consumer<RuntimeException> exceptionConsumer) {
+    public synchronized void addPeriodicTask(String taskName, Runnable task, boolean inBackground, long period, boolean runNow, Consumer<Exception> exceptionConsumer) {
         LOGGER.info(name + " adding new task: " + taskName);
         taskElements.put(taskName, new TaskElement("PeriodicTaskReminder(" + name + "):" + taskName, task, inBackground, period, null));
         TimeAlert.getInstance(getTimeAlertId()).addAlert(taskName, runNow ? 0 : period, (alertName) -> runTask(taskName), exceptionConsumer);

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  *
@@ -18,7 +19,7 @@ public class MessageProcessor<E> {
     /**
      * Default capacity for the event queue
      */
-    private final static int DEFAULT_QUEUE_CAPACITY = 1024;
+    public final static int DEFAULT_QUEUE_CAPACITY = 1024;
 
     /**
      * Name of this message processor (logging purposes)
@@ -59,11 +60,6 @@ public class MessageProcessor<E> {
      * Traffic control object for pausing the message processing system
      */
     private final Barrier barrier;
-
-    /**
-     * If not null, when adding a new message and above this value, a warning will be logged
-     */
-    private final Integer queueSizeWarning;
 
     /**
      * Indicates if this message processor is alive. Once stopped, a message processor cannot come to live again
@@ -111,7 +107,7 @@ public class MessageProcessor<E> {
         this(name, messageReader, messageHandler, queueCapacity, separateThreads, null);
     }
 
-    public MessageProcessor(String name, MessageReader<E> messageReader, MessageHandler<E> messageHandler, int queueCapacity, boolean separateThreads, Integer queueSizeWarning) throws IllegalArgumentException {
+    public MessageProcessor(String name, MessageReader<E> messageReader, MessageHandler<E> messageHandler, int queueCapacity, boolean separateThreads, Consumer<Exception> exceptionConsumer) throws IllegalArgumentException {
         if (name == null) {
             throw new IllegalArgumentException("name must not be null");
         } else if (separateThreads && messageReader == null && messageHandler == null) {
@@ -121,12 +117,11 @@ public class MessageProcessor<E> {
         }
         this.name = name;
         messageQueue = initializeMessageQueue(separateThreads, queueCapacity);
-        messageReaderThread = initializeMessageReaderThread(messageReader, separateThreads, name);
-        messageHandlerThread = initializeMessageHandlerThread(messageHandler, separateThreads, name);
-        messageReaderHandlerThread = initializeMessageReaderHandlerThread(messageReader, messageHandler, separateThreads, name);
+        messageReaderThread = initializeMessageReaderThread(messageReader, separateThreads, name, exceptionConsumer);
+        messageHandlerThread = initializeMessageHandlerThread(messageHandler, separateThreads, name, exceptionConsumer);
+        messageReaderHandlerThread = initializeMessageReaderHandlerThread(messageReader, messageHandler, separateThreads, name, exceptionConsumer);
         this.separateThreads = separateThreads;
         barrier = new Barrier();
-        this.queueSizeWarning = queueSizeWarning;
         alive = new AtomicBoolean(true);
         if (logger.isDebugEnabled()) {
             logger.debug(logInit() + "initialized");
@@ -141,25 +136,25 @@ public class MessageProcessor<E> {
         }
     }
 
-    private MessageReaderThread initializeMessageReaderThread(MessageReader messageReader, boolean separateThreads, String name) {
+    private MessageReaderThread initializeMessageReaderThread(MessageReader<E> messageReader, boolean separateThreads, String name, Consumer<Exception> exceptionConsumer) {
         if (messageReader != null && separateThreads) {
-            return new MessageReaderThread(name, this, messageReader);
+            return new MessageReaderThread<>(name, this, messageReader, exceptionConsumer);
         } else {
             return null;
         }
     }
 
-    private MessageHandlerThread initializeMessageHandlerThread(MessageHandler messageHandler, boolean separateThreads, String name) {
+    private MessageHandlerThread initializeMessageHandlerThread(MessageHandler<E> messageHandler, boolean separateThreads, String name, Consumer<Exception> exceptionConsumer) {
         if (messageHandler != null && separateThreads) {
-            return new MessageHandlerThread(name, this, messageHandler);
+            return new MessageHandlerThread<>(name, this, messageHandler, exceptionConsumer);
         } else {
             return null;
         }
     }
 
-    private MessageReaderHandlerThread initializeMessageReaderHandlerThread(MessageReader messageReader, MessageHandler messageHandler, boolean separateThreads, String name) {
+    private MessageReaderHandlerThread initializeMessageReaderHandlerThread(MessageReader<E> messageReader, MessageHandler<E> messageHandler, boolean separateThreads, String name, Consumer<Exception> exceptionConsumer) {
         if (messageReader != null && messageHandler != null && !separateThreads) {
-            return new MessageReaderHandlerThread(name, this, messageReader, messageHandler);
+            return new MessageReaderHandlerThread<>(name, this, messageReader, messageHandler, exceptionConsumer);
         } else {
             return null;
         }
@@ -238,11 +233,6 @@ public class MessageProcessor<E> {
                 logger.debug(logInit() + "added message");
             }
             messageQueue.put(message);
-            if (queueSizeWarning != null && queueSize() > queueSizeWarning) {
-                if (logger.isWarnEnabled()) {
-                    logger.warn(logInit() + "size of queue is " + queueSize());
-                }
-            }
         } else {
             throw new IllegalStateException("Tried to add a message with no queue configured");
         }
@@ -322,7 +312,7 @@ public class MessageProcessor<E> {
         return logInit(null);
     }
 
-    public String logInit(String component) {
+    String logInit(String component) {
         if (component != null) {
             return "MessageProcessor/" + component + " [" + name + "]: ";
         } else {

@@ -9,7 +9,7 @@ public class SynchronousSubscriberProcessor implements SubscriberProcessor {
 
     private final EventHubSubscriber eventHubSubscriber;
 
-    SynchronousSubscriberProcessor(String subscriberId, EventHubSubscriber eventHubSubscriber) {
+    SynchronousSubscriberProcessor(EventHubSubscriber eventHubSubscriber) {
         this.eventHubSubscriber = eventHubSubscriber;
     }
 

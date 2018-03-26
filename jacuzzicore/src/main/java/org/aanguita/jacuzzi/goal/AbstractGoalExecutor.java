@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.goal;
 
-import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
+import org.aanguita.jacuzzi.concurrency.Barrier;
 
 import java.util.concurrent.TimeoutException;
 
@@ -16,13 +16,13 @@ public abstract class AbstractGoalExecutor<S> implements GoalExecutor<S> {
 
     private final StateHooks<S> stateHooks;
 
-    private final SimpleSemaphore atDesiredState;
+    private final Barrier atDesiredState;
 
     public AbstractGoalExecutor(S initialState, String threadName) {
         this.state = initialState;
         this.goal = initialState;
         stateHooks = new StateHooks<>(initialState, threadName + ".GoalExecutor.StateHooks");
-        atDesiredState = new SimpleSemaphore();
+        atDesiredState = new Barrier();
     }
 
     public synchronized S getState() {

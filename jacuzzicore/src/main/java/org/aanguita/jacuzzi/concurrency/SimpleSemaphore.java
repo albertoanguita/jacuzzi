@@ -1,7 +1,5 @@
 package org.aanguita.jacuzzi.concurrency;
 
-import java.util.concurrent.TimeoutException;
-
 /**
  * @deprecated Use Barrier
  */

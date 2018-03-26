@@ -1,6 +1,6 @@
 package org.aanguita.jacuzzi.concurrency.monitor;
 
-import org.aanguita.jacuzzi.concurrency.SimpleSemaphore;
+import org.aanguita.jacuzzi.concurrency.Barrier;
 import org.aanguita.jacuzzi.concurrency.ThreadExecutor;
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
 import org.slf4j.Logger;
@@ -69,7 +69,7 @@ public class Monitor {
     /**
      * A block element for client that want to wait until the state is solved
      */
-    private final SimpleSemaphore blockUntilStateSolve;
+    private final Barrier blockUntilStateSolve;
 
     private final AtomicBoolean alive;
 
@@ -93,7 +93,7 @@ public class Monitor {
         future = null;
         stateChangeFlag = new AtomicBoolean(false);
         daemonThreadFlag = new AtomicBoolean(false);
-        blockUntilStateSolve = new SimpleSemaphore();
+        blockUntilStateSolve = new Barrier();
         alive = new AtomicBoolean(true);
         this.threadName = threadName;
         threadExecutorClientId = ThreadExecutor.registerClient(this.getClass().getName() + "(" + threadName + ")");

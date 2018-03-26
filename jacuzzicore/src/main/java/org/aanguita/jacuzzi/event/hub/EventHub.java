@@ -3,6 +3,7 @@ package org.aanguita.jacuzzi.event.hub;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Created by Alberto on 07/10/2016.
@@ -30,7 +31,11 @@ public interface EventHub {
 
     Collection<String> getSubscribers();
 
-    void registerSubscriber(EventHubSubscriber subscriber, EventHubFactory.Type type);
+    default void registerSubscriber(EventHubSubscriber subscriber, EventHubFactory.Type type) {
+        registerSubscriber(subscriber, type, null);
+    }
+
+    void registerSubscriber(EventHubSubscriber subscriber, EventHubFactory.Type type, Consumer<Exception> exceptionConsumer);
 
 //    void subscribe(EventHubSubscriber subscriber, EventHubFactory.Type type, String... channelExpressions);
 

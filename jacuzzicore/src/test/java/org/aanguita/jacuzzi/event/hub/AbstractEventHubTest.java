@@ -1,15 +1,14 @@
 package org.aanguita.jacuzzi.event.hub;
 
 import org.aanguita.jacuzzi.concurrency.ThreadUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
 
@@ -277,6 +276,32 @@ public class AbstractEventHubTest {
         assertEquals(8, mockedSubscriberAll.publications.size());
         assertEquals(4, mockedSubscriberSome.publications.size());
         assertEquals(2, mockedSubscriberOne.publications.size());
+    }
+
+    @Test
+    public void testException() {
+        final AtomicBoolean exceptionProcessed = new AtomicBoolean(false);
+        EventHubSubscriber subscriber = new EventHubSubscriber() {
+            @Override
+            public String getId() {
+                return "EXCEPTION_SUBSCRIBER";
+            }
+
+            @Override
+            public void event(Publication publication) {
+                System.out.println("Received an event. Throwing exception...");
+                throw new NullPointerException("Null exception");
+            }
+        };
+        eventHub.registerSubscriber(subscriber,
+                EventHubFactory.Type.ASYNCHRONOUS, e -> {
+                    System.out.println("Exception received: " + e.getMessage());
+                    exceptionProcessed.set(true);
+                });
+        eventHub.subscribe(subscriber, "*");
+        eventHub.publish("aChannel", "hello");
+        ThreadUtil.safeSleep(100);
+        assertTrue(exceptionProcessed.get());
     }
 
     private void verifyMatches(Publication publication, String hubName, String channel, long time, Object... messages) {

@@ -4,6 +4,7 @@ import org.aanguita.jacuzzi.queues.processor.MessageHandler;
 import org.aanguita.jacuzzi.queues.processor.MessageProcessor;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by Alberto on 08/10/2016.
@@ -18,7 +19,11 @@ class AsynchronousPermanentThreadEventHub extends QueuedEventHub {
     }
 
     AsynchronousPermanentThreadEventHub(String name) {
-        super(name);
+        this(name, null);
+    }
+
+    AsynchronousPermanentThreadEventHub(String name, Consumer<Exception> exceptionConsumer) {
+        super(name, exceptionConsumer);
         publicationMessageProcessor = new MessageProcessor<>(name + ".MessageProcessor", new MessageHandler<QueuedPublication>() {
             @Override
             public void handleMessage(QueuedPublication queuedPublication) {

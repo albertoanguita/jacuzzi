@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jacuzzi</artifactId>
         <groupId>com.github.albertoanguita</groupId>
-        <version>0.3.1</version>
+        <version>0.3.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -18,17 +18,17 @@
         <dependency>
             <groupId>com.github.albertoanguita</groupId>
             <artifactId>jacuzzi-core</artifactId>
-            <version>0.3.1</version>
+            <version>0.3.2</version>
         </dependency>
         <dependency>
             <groupId>com.github.albertoanguita</groupId>
             <artifactId>jacuzzi-database</artifactId>
-            <version>0.3.1</version>
+            <version>0.3.2</version>
         </dependency>
         <dependency>
             <groupId>com.github.albertoanguita</groupId>
             <artifactId>jacuzzi-annotations</artifactId>
-            <version>0.3.1</version>
+            <version>0.3.2</version>
         </dependency>
     </dependencies>
 

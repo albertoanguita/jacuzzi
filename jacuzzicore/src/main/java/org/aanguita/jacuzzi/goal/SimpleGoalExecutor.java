@@ -49,7 +49,7 @@ public class SimpleGoalExecutor<S> extends AbstractGoalExecutor<S> implements St
     }
 
     public SimpleGoalExecutor(S initialState, Transitions<S> transitions, String threadName, Consumer<Exception> exceptionConsumer) {
-        super(initialState, threadName);
+        super(initialState, threadName, exceptionConsumer);
         this.transitions = transitions;
         monitor = new Monitor(this, threadName + ".GoalExecutor", exceptionConsumer);
         transitionTimer = new Timer(0, this, false, threadName + ".GoalExecutor.TransitionTimer", exceptionConsumer);

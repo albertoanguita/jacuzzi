@@ -92,6 +92,8 @@ public class StateHooks<S> {
 
     private final String threadName;
 
+    private final Consumer<Exception> exceptionConsumer;
+
     public StateHooks(S state) {
         this(state, ThreadUtil.invokerName(1), null);
     }
@@ -102,9 +104,10 @@ public class StateHooks<S> {
         registeredEnterStateHooks = new HashMap<>();
         registeredPeriodicHooks = new HashMap<>();
         registeredExitStateHooks = new HashMap<>();
-        eventHub = EventHubFactory.createEventHub(threadName + AlphaNumFactory.getStaticId(), EventHubFactory.Type.SYNCHRONOUS);
+        eventHub = EventHubFactory.createEventHub(threadName + AlphaNumFactory.getStaticId(), EventHubFactory.Type.SYNCHRONOUS, exceptionConsumer);
         eventHub.start();
         this.threadName = threadName;
+        this.exceptionConsumer = exceptionConsumer;
     }
 
     public synchronized void setState(S state) {
@@ -228,7 +231,10 @@ public class StateHooks<S> {
                         } else {
                             return 0L;
                         }
-                    }, threadName);
+                    },
+                    true,
+                    threadName,
+                    exceptionConsumer);
         } else if (!registeredPeriodicHooks.containsKey(state) && periodicHookTimer != null) {
             periodicHookTimer.stop();
         }

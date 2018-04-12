@@ -22,7 +22,7 @@ public abstract class AbstractGoalExecutor<S> implements GoalExecutor<S> {
     public AbstractGoalExecutor(S initialState, String threadName, Consumer<Exception> exceptionConsumer) {
         this.state = initialState;
         this.goal = initialState;
-        stateHooks = new StateHooks<>(initialState, threadName + ".GoalExecutor.StateHooks");
+        stateHooks = new StateHooks<>(initialState, threadName + ".GoalExecutor.StateHooks", exceptionConsumer);
         atDesiredState = new Barrier();
     }
 

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * This class provides an implementation of the GoalExecutor interface which relies on the underlying execution of
@@ -155,7 +156,11 @@ public class MetaGoalExecutor<S> extends AbstractGoalExecutor<S> {
     }
 
     public MetaGoalExecutor(S initialMetaState, MetaSteps<S> metaSteps, String threadName) {
-        super(initialMetaState, threadName);
+        this(initialMetaState, metaSteps, threadName, null);
+    }
+
+    public MetaGoalExecutor(S initialMetaState, MetaSteps<S> metaSteps, String threadName, Consumer<Exception> exceptionConsumer) {
+        super(initialMetaState, threadName, exceptionConsumer);
         this.metaSteps = metaSteps;
         this.currentStep = null;
         this.currentUnfinishedGoalExecutors = null;

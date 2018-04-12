@@ -7,6 +7,7 @@ import org.aanguita.jacuzzi.id.AlphaNumFactory;
 import org.aanguita.jacuzzi.id.StringIdClass;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * This class allows to register hook methods that must be invoked when certain state among a set of possible states
@@ -92,10 +93,10 @@ public class StateHooks<S> {
     private final String threadName;
 
     public StateHooks(S state) {
-        this(state, ThreadUtil.invokerName(1));
+        this(state, ThreadUtil.invokerName(1), null);
     }
 
-    public StateHooks(S state, String threadName) {
+    public StateHooks(S state, String threadName, Consumer<Exception> exceptionConsumer) {
         this.state = state;
         oldState = state;
         registeredEnterStateHooks = new HashMap<>();

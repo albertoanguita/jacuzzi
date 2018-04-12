@@ -9,6 +9,7 @@ import org.aanguita.jacuzzi.concurrency.timer.TimerAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * Created by Alberto on 30/10/2016.
@@ -44,10 +45,14 @@ public class SimpleGoalExecutor<S> extends AbstractGoalExecutor<S> implements St
     }
 
     public SimpleGoalExecutor(S initialState, Transitions<S> transitions, String threadName) {
+        this(initialState, transitions, threadName, null);
+    }
+
+    public SimpleGoalExecutor(S initialState, Transitions<S> transitions, String threadName, Consumer<Exception> exceptionConsumer) {
         super(initialState, threadName);
         this.transitions = transitions;
-        monitor = new Monitor(this, threadName + ".GoalExecutor");
-        transitionTimer = new Timer(0, this, false, threadName + ".GoalExecutor.TransitionTimer");
+        monitor = new Monitor(this, threadName + ".GoalExecutor", exceptionConsumer);
+        transitionTimer = new Timer(0, this, false, threadName + ".GoalExecutor.TransitionTimer", exceptionConsumer);
         globalBehavior = null;
         stateBehavior = new HashMap<>();
         stateGoalBehavior = new HashMap<>();

@@ -3,6 +3,7 @@ package org.aanguita.jacuzzi.goal;
 import org.aanguita.jacuzzi.concurrency.Barrier;
 
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * Created by Alberto on 12/03/2017.
@@ -18,7 +19,7 @@ public abstract class AbstractGoalExecutor<S> implements GoalExecutor<S> {
 
     private final Barrier atDesiredState;
 
-    public AbstractGoalExecutor(S initialState, String threadName) {
+    public AbstractGoalExecutor(S initialState, String threadName, Consumer<Exception> exceptionConsumer) {
         this.state = initialState;
         this.goal = initialState;
         stateHooks = new StateHooks<>(initialState, threadName + ".GoalExecutor.StateHooks");
